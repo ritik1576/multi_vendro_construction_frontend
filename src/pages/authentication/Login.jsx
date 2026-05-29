@@ -5,7 +5,6 @@ import { ShieldCheck, FileText, Mail, Loader2, ArrowRight } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import InputField from '../../components/auth/InputField';
 import PasswordField from '../../components/auth/PasswordField';
-import { loginRequest } from '../../redux/authActions';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -15,8 +14,8 @@ const Login = () => {
 
   const [errors, setErrors] = useState({});
   
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  // We'll keep these selectors in case we use them later, but we aren't dispatching login right now
   const { isLoading, isAuthenticated, error: authError } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -59,7 +58,7 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      dispatch(loginRequest(formData));
+      alert('Login API not yet integrated. Coming soon!');
     }
   };
 
