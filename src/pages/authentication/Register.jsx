@@ -35,9 +35,7 @@ const Register = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    if (authError) {
-      alert(authError);
-    }
+    // We handle the error directly in the UI now, no more alerts
   }, [authError]);
 
   const validate = () => {
@@ -170,6 +168,12 @@ const Register = () => {
                 <h2 className="text-[22px] font-bold text-[#111827] tracking-tight mb-1">Create Account</h2>
                 <p className="text-[13px] text-gray-500">Start sourcing better today</p>
               </div>
+
+              {authError && (
+                <div className="mb-4 p-3 rounded-[6px] bg-red-50 border border-red-200 text-[12px] text-red-600 font-medium">
+                  {authError}
+                </div>
+              )}
 
               {/* Role Selector */}
               <div className="flex bg-[#f4f6fb] p-1 rounded-[6px] mb-5">

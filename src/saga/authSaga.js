@@ -1,60 +1,38 @@
-import { call, put, takeLatest, delay } from 'redux-saga/effects';
+import { call, put, takeLatest } from 'redux-saga/effects';
 import {
-  LOGIN_REQUEST,
-  loginSuccess,
-  loginFailure,
   REGISTER_REQUEST,
   registerSuccess,
   registerFailure
 } from '../redux/authActions';
-
-// Simulated API calls
-const apiLogin = async (credentials) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (credentials.email && credentials.password) {
-        resolve({ id: 1, name: 'Test User', email: credentials.email, role: credentials.role || 'Customer' });
-      } else {
-        reject(new Error('Invalid credentials'));
-      }
-    }, 1500);
-  });
-};
-
-const apiRegister = async (userData) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (userData.email && userData.password) {
-        resolve({ id: 2, ...userData });
-      } else {
-        reject(new Error('Registration failed'));
-      }
-    }, 1500);
-  });
-};
-
-function* handleLogin(action) {
-  try {
-    const user = yield call(apiLogin, action.payload);
-    yield put(loginSuccess(user));
-    // Optional: add redirection here or handle it in component
-    alert('Logged in successfully!');
-  } catch (error) {
-    yield put(loginFailure(error.message));
-  }
-}
+import authService from '../services/authService';
+import { setToken } from '../utils/token';
 
 function* handleRegister(action) {
   try {
-    const user = yield call(apiRegister, action.payload);
-    yield put(registerSuccess(user));
+    const responseData = yield call(authService.register, action.payload);
+    
+    // Check if a token was returned and persist it
+    if (responseData.token) {
+      setToken(responseData.token);
+    }
+    
+    // Store user data in Redux (fallback to the whole response if user object isn't wrapped)
+    const userDetails = responseData.user || responseData;
+    
+    yield put(registerSuccess(userDetails));
     alert('Account created successfully!');
   } catch (error) {
-    yield put(registerFailure(error.message));
+    // Extract backend error message cleanly
+    const errorMessage = 
+      error.response?.data?.message || 
+      error.response?.data?.error || 
+      error.message || 
+      'An unexpected error occurred during registration.';
+      
+    yield put(registerFailure(errorMessage));
   }
 }
 
 export default function* authSaga() {
-  yield takeLatest(LOGIN_REQUEST, handleLogin);
   yield takeLatest(REGISTER_REQUEST, handleRegister);
 }
