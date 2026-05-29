@@ -1,1 +1,31 @@
-/* Removed default styling */
+@import "tailwindcss";
+
+@theme {
+  --color-primary-main: #233876;
+  --color-primary-light: #4A63A8;
+  --color-primary-dark: #1A2859;
+  --color-secondary-main: #EA580C;
+  --color-secondary-dark: #C2410C;
+  --color-success-main: #10B981;
+  --color-danger-main: #DC2626;
+  --color-info-main: #2563EB;
+  
+  --color-customBackground-default: #F8F9FB;
+  --color-customBackground-paper: #FFFFFF;
+  
+  --color-customText-primary: #111827;
+  --color-customText-secondary: #4B5563;
+  --color-customText-disabled: #9CA3AF;
+  
+  --color-customBorder-light: #E5E7EB;
+  --color-customBorder-main: #D1D5DB;
+  --color-customBorder-dark: #9CA3AF;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-customBackground-default);
+    color: var(--color-customText-primary);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+}
