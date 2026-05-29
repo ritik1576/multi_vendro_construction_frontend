@@ -1,11 +1,9 @@
 
 
+import AppRoutes from './routes/AppRoutes.js'
+
 function App() {
-  return (
-    <>
-      <div>InfraMart Frontend Setup</div>
-    </>
-  )
+  return <AppRoutes />
 }
 
 export default App
