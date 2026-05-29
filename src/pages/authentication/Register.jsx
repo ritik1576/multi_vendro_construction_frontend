@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Users, TrendingUp, ClipboardList, User, Mail, Phone, Loader2, ArrowRight, Building2, MapPin, FileDigit } from 'lucide-react';
@@ -6,6 +6,7 @@ import Navbar from '../../components/landing/Navbar';
 import InputField from '../../components/auth/InputField';
 import PasswordField from '../../components/auth/PasswordField';
 import { registerRequest } from '../../redux/authActions';
+import { isValidAuthSession } from '../../utils/authSession';
 
 const Register = () => {
   const [role, setRole] = useState('Customer');
@@ -26,13 +27,13 @@ const Register = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isLoading, isAuthenticated, error: authError } = useSelector((state) => state.auth);
+  const { isLoading, registrationSuccess, error: authError } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
+    if (registrationSuccess && isValidAuthSession()) {
+      navigate('/products', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [registrationSuccess, navigate]);
 
   useEffect(() => {
     if (authError) {

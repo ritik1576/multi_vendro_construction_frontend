@@ -1,5 +1,4 @@
-import React from 'react';
-import { Search, ShoppingCart, Bell } from 'lucide-react';
+import { Search, ShoppingCart, Bell, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
@@ -8,6 +7,9 @@ const Navbar = () => {
   const isRegisterPage = location.pathname.includes('/register');
   const isLoginPage = location.pathname.includes('/login');
   const isForgotPasswordPage = location.pathname.includes('/forgot-password');
+  const isProductsPage = location.pathname === '/products';
+  const isProductDetailPage = location.pathname.startsWith('/product/');
+  const isCustomerProductPage = isProductsPage || isProductDetailPage;
   const isAuthPage = isRegisterPage || isLoginPage || isForgotPasswordPage;
   const hideSearchAndIcons = isLandingPage || isAuthPage;
 
@@ -29,7 +31,17 @@ const Navbar = () => {
 
           {/* Search Bar */}
           {!hideSearchAndIcons && (
-            <div className="hidden md:flex flex-1 max-w-lg mx-8 relative">
+            <button className="hidden lg:flex items-center gap-2 rounded-md border border-customBorder-light bg-gray-50 px-3 py-2 text-left hover:bg-orange-50 transition-colors" type="button">
+              <MapPin className="h-4 w-4 text-secondary-main" />
+              <span className="flex flex-col leading-none">
+                <span className="text-[10px] font-bold uppercase text-customText-disabled">Deliver to</span>
+                <span className="mt-1 text-xs font-bold text-customText-primary">Mumbai GPO</span>
+              </span>
+            </button>
+          )}
+
+          {!hideSearchAndIcons && (
+            <div className="hidden md:flex flex-1 max-w-md mx-5 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-customText-disabled" />
               </div>
@@ -61,7 +73,8 @@ const Navbar = () => {
               </>
             )}
             
-            <div className="hidden md:flex items-center space-x-2 ml-2 pl-4 border-l border-customBorder-light">
+            {!isCustomerProductPage && (
+              <div className="hidden md:flex items-center space-x-2 ml-2 pl-4 border-l border-customBorder-light">
               {isAuthPage && (
                 <Link to="/" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
                   Home
@@ -77,7 +90,8 @@ const Navbar = () => {
                   Register
                 </Link>
               )}
-            </div>
+              </div>
+            )}
           </div>
           
         </div>

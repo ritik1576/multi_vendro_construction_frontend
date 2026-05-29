@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ShieldCheck, FileText, Mail, Loader2, ArrowRight } from 'lucide-react';
@@ -6,6 +6,7 @@ import Navbar from '../../components/landing/Navbar';
 import InputField from '../../components/auth/InputField';
 import PasswordField from '../../components/auth/PasswordField';
 import { loginRequest } from '../../redux/authActions';
+import { isValidAuthSession } from '../../utils/authSession';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -14,16 +15,17 @@ const Login = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [loginSubmitted, setLoginSubmitted] = useState(false);
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isLoading, isAuthenticated, error: authError } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
+    if (loginSubmitted && isAuthenticated && isValidAuthSession()) {
+      navigate('/products', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, loginSubmitted, navigate]);
 
   useEffect(() => {
     if (authError) {
@@ -59,6 +61,7 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
+      setLoginSubmitted(true);
       dispatch(loginRequest(formData));
     }
   };

@@ -6,12 +6,16 @@ import {
   REGISTER_SUCCESS,
   REGISTER_FAILURE
 } from './authActions';
+import { getAuthSession } from '../utils/authSession';
+
+const storedSession = getAuthSession();
 
 const initialState = {
-  user: null,
-  isAuthenticated: false,
+  user: storedSession?.user || null,
+  isAuthenticated: Boolean(storedSession),
   isLoading: false,
   error: null,
+  registrationSuccess: false,
 };
 
 const authReducer = (state = initialState, action) => {
@@ -22,8 +26,17 @@ const authReducer = (state = initialState, action) => {
         ...state,
         isLoading: true,
         error: null,
+        registrationSuccess: false,
       };
     case LOGIN_SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        isAuthenticated: true,
+        user: action.payload,
+        error: null,
+        registrationSuccess: false,
+      };
     case REGISTER_SUCCESS:
       return {
         ...state,
@@ -31,6 +44,7 @@ const authReducer = (state = initialState, action) => {
         isAuthenticated: true,
         user: action.payload,
         error: null,
+        registrationSuccess: true,
       };
     case LOGIN_FAILURE:
     case REGISTER_FAILURE:
@@ -40,6 +54,7 @@ const authReducer = (state = initialState, action) => {
         isAuthenticated: false,
         user: null,
         error: action.payload,
+        registrationSuccess: false,
       };
     default:
       return state;

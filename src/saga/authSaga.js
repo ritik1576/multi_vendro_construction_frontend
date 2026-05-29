@@ -1,4 +1,4 @@
-import { call, put, takeLatest, delay } from 'redux-saga/effects';
+import { call, put, takeLatest } from 'redux-saga/effects';
 import {
   LOGIN_REQUEST,
   loginSuccess,
@@ -13,7 +13,13 @@ const apiLogin = async (credentials) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (credentials.email && credentials.password) {
-        resolve({ id: 1, name: 'Test User', email: credentials.email, role: credentials.role || 'Customer' });
+        resolve({
+          id: 1,
+          name: 'Test User',
+          email: credentials.email,
+          role: credentials.role || 'Customer',
+          token: `login-token-${Date.now()}`,
+        });
       } else {
         reject(new Error('Invalid credentials'));
       }
@@ -25,7 +31,7 @@ const apiRegister = async (userData) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (userData.email && userData.password) {
-        resolve({ id: 2, ...userData });
+        resolve({ id: 2, ...userData, token: `register-token-${Date.now()}` });
       } else {
         reject(new Error('Registration failed'));
       }
@@ -36,8 +42,9 @@ const apiRegister = async (userData) => {
 function* handleLogin(action) {
   try {
     const user = yield call(apiLogin, action.payload);
+    localStorage.setItem('authToken', user.token);
+    localStorage.setItem('authUser', JSON.stringify(user));
     yield put(loginSuccess(user));
-    // Optional: add redirection here or handle it in component
     alert('Logged in successfully!');
   } catch (error) {
     yield put(loginFailure(error.message));
@@ -47,6 +54,8 @@ function* handleLogin(action) {
 function* handleRegister(action) {
   try {
     const user = yield call(apiRegister, action.payload);
+    localStorage.setItem('authToken', user.token);
+    localStorage.setItem('authUser', JSON.stringify(user));
     yield put(registerSuccess(user));
     alert('Account created successfully!');
   } catch (error) {
