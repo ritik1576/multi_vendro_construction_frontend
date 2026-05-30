@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ChevronRight, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
+import { getCartItemPrice } from '../../context/cartUtils';
+import { useCart } from '../../context/useCart';
 import { fallbackImage, getProductById } from './productData';
 
 const statusStyles = {
@@ -72,7 +74,9 @@ function ProductError() {
 
 function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
+  const { addToCart, cartItems } = useCart();
   const product = useMemo(() => getProductById(id), [id]);
 
   if (!id) {
@@ -94,6 +98,26 @@ function ProductDetail() {
   const unit = product.unit || 'Unit not available';
   const statusClass = statusStyles[status] || 'bg-slate-100 text-slate-700 ring-slate-200';
   const specifications = product.specifications || {};
+  const isProductInCart = cartItems.some((item) => item.id === product.id);
+  const productTotal = getCartItemPrice(product) * quantity;
+  const buyNowLabel = `Buy Now ₹${productTotal.toLocaleString('en-IN')}`;
+
+  const handleCartAction = () => {
+    if (isProductInCart) {
+      navigate('/cart');
+      return;
+    }
+
+    addToCart(product, quantity);
+  };
+
+  const handleBuyNow = () => {
+    if (!isProductInCart) {
+      addToCart(product, quantity);
+    }
+
+    navigate('/cart');
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
@@ -177,12 +201,12 @@ function ProductDetail() {
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <button className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-4 text-sm font-extrabold text-white hover:bg-[#172554]" type="button">
+              <button className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-4 text-sm font-extrabold text-white hover:bg-[#172554]" onClick={handleCartAction} type="button">
                 <ShoppingCart className="h-4 w-4" />
-                Add to Cart
+                {isProductInCart ? 'Go to Cart' : 'Add to Cart'}
               </button>
-              <button className="min-h-12 rounded-lg bg-[#F97316] px-4 text-sm font-extrabold text-white hover:bg-orange-600" type="button">
-                Buy Now
+              <button className="min-h-12 rounded-lg bg-[#F97316] px-4 text-sm font-extrabold text-white hover:bg-orange-600" onClick={handleBuyNow} type="button">
+                {buyNowLabel}
               </button>
               <button className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50" type="button">
                 Request Quote

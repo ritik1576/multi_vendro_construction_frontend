@@ -6,6 +6,8 @@ import ForgotPassword from '../pages/authentication/ForgotPassword';
 import ResetPassword from '../pages/authentication/ResetPassword';
 import ProductListing from '../pages/customer/ProductListing';
 import ProductDetail from '../pages/customer/ProductDetail';
+import MyCart from '../pages/customer/MyCart';
+import OrderDetail from '../pages/customer/OrderDetail';
 import { clearAuthSession, isValidAuthSession } from '../utils/authSession';
 
 const ProtectedRoute = ({ children }) => {
@@ -41,6 +43,22 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <ProductDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <MyCart />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders/:orderId"
+          element={
+            <ProtectedRoute>
+              <OrderDetail />
             </ProtectedRoute>
           }
         />

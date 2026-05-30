@@ -1,15 +1,19 @@
 import { Search, ShoppingCart, Bell, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useCart } from '../../context/useCart';
 
 const Navbar = () => {
   const location = useLocation();
+  const { cartCount } = useCart();
   const isLandingPage = location.pathname === '/';
   const isRegisterPage = location.pathname.includes('/register');
   const isLoginPage = location.pathname.includes('/login');
   const isForgotPasswordPage = location.pathname.includes('/forgot-password');
   const isProductsPage = location.pathname === '/products';
   const isProductDetailPage = location.pathname.startsWith('/product/');
-  const isCustomerProductPage = isProductsPage || isProductDetailPage;
+  const isCartPage = location.pathname === '/cart';
+  const isOrderPage = location.pathname.startsWith('/orders/');
+  const isCustomerProductPage = isProductsPage || isProductDetailPage || isCartPage || isOrderPage;
   const isAuthPage = isRegisterPage || isLoginPage || isForgotPasswordPage;
   const hideSearchAndIcons = isLandingPage || isAuthPage;
 
@@ -40,7 +44,7 @@ const Navbar = () => {
             </button>
           )}
 
-          {!hideSearchAndIcons && (
+          {!hideSearchAndIcons && !isProductsPage && (
             <div className="hidden md:flex flex-1 max-w-md mx-5 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-customText-disabled" />
@@ -64,9 +68,14 @@ const Navbar = () => {
           <div className="flex items-center space-x-4 md:space-x-4 ml-auto">
             {!hideSearchAndIcons && (
               <>
-                <button className="text-customText-secondary hover:text-primary-main relative p-2 rounded-md hover:bg-orange-50 transition-colors">
+                <Link className="text-customText-secondary hover:text-primary-main relative p-2 rounded-md hover:bg-orange-50 transition-colors" to="/cart">
                   <ShoppingCart className="h-5 w-5" />
-                </button>
+                  {cartCount > 0 && (
+                    <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#F97316] px-1 text-[10px] font-extrabold text-white">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
                 <button className="text-customText-secondary hover:text-primary-main hidden sm:block p-2 rounded-md hover:bg-orange-50 transition-colors">
                   <Bell className="h-5 w-5" />
                 </button>
