@@ -5,6 +5,9 @@ import Register from '../pages/authentication/Register';
 import Login from '../pages/authentication/Login';
 import ForgotPassword from '../pages/authentication/ForgotPassword';
 import ResetPassword from '../pages/authentication/ResetPassword';
+import Checkout from '../pages/customer/Checkout';
+import OrderHistory from '../pages/customer/OrderHistory';
+import OrderDetail from '../pages/customer/OrderDetail';
 
 const AppRoutes = () => {
   return (
@@ -15,6 +18,9 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/orders" element={<OrderHistory />} />
+        <Route path="/orders/:id" element={<OrderDetail />} />
       </Routes>
     </Router>
   );
