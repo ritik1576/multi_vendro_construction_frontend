@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getProductsRequest } from '../../redux/productActions';
 import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import { useCart } from '../../context/useCart';
-import { fallbackImage, products } from './productData';
+import { fallbackImage } from './productData';
 
 const availability = ['In Stock', 'Limited Stock', 'Out of Stock'];
 
@@ -321,11 +323,15 @@ function ProductListing() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState(defaultFilters);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isLoading] = useState(false);
-  const [error] = useState('');
+  const dispatch = useDispatch();
+  const { products = [], loading: isLoading, error } = useSelector((state) => state.product);
 
-  const categoryOptions = useMemo(() => ['All', ...getUniqueOptions(products, 'category')], []);
-  const vendorOptions = useMemo(() => getUniqueOptions(products, 'vendor'), []);
+  useEffect(() => {
+    dispatch(getProductsRequest());
+  }, [dispatch]);
+
+  const categoryOptions = useMemo(() => ['All', ...getUniqueOptions(products, 'category')], [products]);
+  const vendorOptions = useMemo(() => getUniqueOptions(products, 'vendor'), [products]);
 
   const setFilterValue = (key, value) => {
     setFilters((currentFilters) => ({ ...currentFilters, [key]: value }));
