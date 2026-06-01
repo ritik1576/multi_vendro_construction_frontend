@@ -1,69 +1,100 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
 import {
+  REGISTER_REQUEST,
+  registerSuccess,
+  registerFailure,
   LOGIN_REQUEST,
   loginSuccess,
   loginFailure,
-  REGISTER_REQUEST,
-  registerSuccess,
-  registerFailure
+  FORGOT_PASSWORD_REQUEST,
+  forgotPasswordSuccess,
+  forgotPasswordFailure,
+  RESET_PASSWORD_REQUEST,
+  resetPasswordSuccess,
+  resetPasswordFailure
 } from '../redux/authActions';
-
-// Simulated API calls
-const apiLogin = async (credentials) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (credentials.email && credentials.password) {
-        resolve({
-          id: 1,
-          name: 'Test User',
-          email: credentials.email,
-          role: credentials.role || 'Customer',
-          token: `login-token-${Date.now()}`,
-        });
-      } else {
-        reject(new Error('Invalid credentials'));
-      }
-    }, 1500);
-  });
-};
-
-const apiRegister = async (userData) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (userData.email && userData.password) {
-        resolve({ id: 2, ...userData, token: `register-token-${Date.now()}` });
-      } else {
-        reject(new Error('Registration failed'));
-      }
-    }, 1500);
-  });
-};
-
-function* handleLogin(action) {
-  try {
-    const user = yield call(apiLogin, action.payload);
-    localStorage.setItem('authToken', user.token);
-    localStorage.setItem('authUser', JSON.stringify(user));
-    yield put(loginSuccess(user));
-    alert('Logged in successfully!');
-  } catch (error) {
-    yield put(loginFailure(error.message));
-  }
-}
+import authService from '../services/authService';
+import { setToken } from '../utils/token';
 
 function* handleRegister(action) {
   try {
-    const user = yield call(apiRegister, action.payload);
-    localStorage.setItem('authToken', user.token);
-    localStorage.setItem('authUser', JSON.stringify(user));
-    yield put(registerSuccess(user));
+    const responseData = yield call(authService.register, action.payload);
+    
+    if (responseData.token) {
+      setToken(responseData.token);
+    }
+    
+    const userDetails = responseData.user || responseData;
+    
+    yield put(registerSuccess(userDetails));
     alert('Account created successfully!');
   } catch (error) {
-    yield put(registerFailure(error.message));
+    const errorMessage = 
+      error.response?.data?.message || 
+      error.response?.data?.error || 
+      error.message || 
+      'An unexpected error occurred during registration.';
+      
+    yield put(registerFailure(errorMessage));
+  }
+}
+
+function* handleLogin(action) {
+  try {
+    const responseData = yield call(authService.login, action.payload);
+    
+    if (responseData.token) {
+      setToken(responseData.token);
+    }
+    
+    const userDetails = responseData.user || responseData;
+    
+    yield put(loginSuccess(userDetails));
+    alert('Logged in successfully!');
+  } catch (error) {
+    const errorMessage = 
+      error.response?.data?.message || 
+      error.response?.data?.error || 
+      error.message || 
+      'An unexpected error occurred during login.';
+      
+    yield put(loginFailure(errorMessage));
+  }
+}
+
+function* handleForgotPassword(action) {
+  try {
+    const responseData = yield call(authService.forgotPassword, action.payload);
+    yield put(forgotPasswordSuccess(responseData.message || 'Reset link sent successfully!'));
+  } catch (error) {
+    const errorMessage = 
+      error.response?.data?.message || 
+      error.response?.data?.error || 
+      error.message || 
+      'An unexpected error occurred while sending reset link.';
+      
+    yield put(forgotPasswordFailure(errorMessage));
+  }
+}
+
+function* handleResetPassword(action) {
+  try {
+    const responseData = yield call(authService.resetPassword, action.payload);
+    yield put(resetPasswordSuccess(responseData.message || 'Password reset successfully!'));
+  } catch (error) {
+    const errorMessage = 
+      error.response?.data?.message || 
+      error.response?.data?.error || 
+      error.message || 
+      'An unexpected error occurred while resetting password.';
+      
+    yield put(resetPasswordFailure(errorMessage));
   }
 }
 
 export default function* authSaga() {
-  yield takeLatest(LOGIN_REQUEST, handleLogin);
   yield takeLatest(REGISTER_REQUEST, handleRegister);
+  yield takeLatest(LOGIN_REQUEST, handleLogin);
+  yield takeLatest(FORGOT_PASSWORD_REQUEST, handleForgotPassword);
+  yield takeLatest(RESET_PASSWORD_REQUEST, handleResetPassword);
 }

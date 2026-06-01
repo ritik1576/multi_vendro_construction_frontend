@@ -28,10 +28,7 @@ const Login = () => {
   }, [isAuthenticated, loginSubmitted, navigate]);
 
   useEffect(() => {
-    if (authError) {
-      // In a real app, you might set this to the errors state to show on the form
-      alert(authError);
-    }
+    // We handle the error directly in the UI now, no more alerts
   }, [authError]);
 
   const validate = () => {
@@ -124,6 +121,12 @@ const Login = () => {
                 <h2 className="text-[22px] font-bold text-[#111827] tracking-tight mb-1.5">Welcome Back</h2>
                 <p className="text-[13px] text-gray-500">Access India's largest industrial marketplace</p>
               </div>
+
+              {authError && (
+                <div className="mb-4 p-3 rounded-[6px] bg-red-50 border border-red-200 text-[12px] text-red-600 font-medium">
+                  {authError}
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 

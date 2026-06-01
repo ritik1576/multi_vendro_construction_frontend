@@ -8,13 +8,16 @@ import ProductListing from '../pages/customer/ProductListing';
 import ProductDetail from '../pages/customer/ProductDetail';
 import MyCart from '../pages/customer/MyCart';
 import OrderDetail from '../pages/customer/OrderDetail';
-import { clearAuthSession, isValidAuthSession } from '../utils/authSession';
+import { useSelector } from 'react-redux';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
 
-  if (!isValidAuthSession()) {
-    clearAuthSession();
+  const isAuthenticated = useSelector(
+    (state) => state.auth.isAuthenticated
+  );
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
@@ -29,7 +32,7 @@ const AppRoutes = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+
         <Route
           path="/products"
           element={
@@ -38,6 +41,7 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/product/:id"
           element={
@@ -46,6 +50,7 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/cart"
           element={
@@ -54,6 +59,7 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/orders/:orderId"
           element={
@@ -62,6 +68,8 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
       </Routes>
     </Router>
   );

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Lock, Eye, EyeOff, ArrowLeft, RotateCcw, Loader2 } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { Lock, Eye, EyeOff, ArrowLeft, RotateCcw, Loader2, AlertCircle } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { resetPasswordRequest } from '../../redux/authActions';
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +12,10 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { token } = useParams(); // Extract secure token from URL
+  const dispatch = useDispatch();
+  const { isLoading, error: authError, successMessage } = useSelector((state) => state.auth);
 
   const calculateStrength = (pass) => {
     let score = 0;
@@ -43,11 +48,8 @@ const ResetPassword = () => {
     }
 
     setErrors({});
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      alert('Password reset successfully!');
-    }, 1500);
+    
+    dispatch(resetPasswordRequest({ password: formData.password, token }));
   };
 
   const handleChange = (e) => {
@@ -83,12 +85,39 @@ const ResetPassword = () => {
           
           <InfraMartLogo className="mb-8" />
           
-          <div className="text-center mb-8">
-            <h1 className="text-[24px] font-bold text-[#111827] tracking-tight mb-3">Create New Password</h1>
+          {!token ? (
+            <div className="text-center py-6">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <h2 className="text-[20px] font-bold text-[#111827] mb-2">Invalid Reset Link</h2>
+              <p className="text-[14px] text-gray-500 mb-6">
+                The password reset link is invalid or missing the security token. Please request a new link.
+              </p>
+              <Link to="/forgot-password" className="inline-flex items-center justify-center py-2.5 px-4 rounded-[6px] text-[14px] font-bold text-white bg-[#EA580C] hover:bg-[#d04e0a] transition-colors">
+                Request New Link
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-8">
+                <h1 className="text-[24px] font-bold text-[#111827] tracking-tight mb-3">Create New Password</h1>
             <p className="text-[14px] text-gray-500 leading-relaxed px-4">
               Please enter your new password below. Make sure it's at least 8 characters long.
             </p>
           </div>
+
+          {authError && (
+            <div className="mb-4 p-3 rounded-[6px] bg-red-50 border border-red-200 text-[12px] text-red-600 font-medium">
+              {authError}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-4 p-3 rounded-[6px] bg-green-50 border border-green-200 text-[12px] text-green-600 font-medium">
+              {successMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             
@@ -169,6 +198,8 @@ const ResetPassword = () => {
               )}
             </button>
           </form>
+          </>
+          )}
 
           <div className="mt-8 text-center">
             <Link to="/login" className="inline-flex items-center text-[13px] font-bold text-[#111827] hover:text-[#EA580C] transition-colors">

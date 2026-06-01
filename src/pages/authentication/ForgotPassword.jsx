@@ -1,32 +1,33 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, ArrowRight, Loader2, LifeBuoy } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { forgotPasswordRequest } from '../../redux/authActions';
 import Navbar from '../../components/landing/Navbar';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSent, setIsSent] = useState(false);
+  const [validationError, setValidationError] = useState('');
+  
+  const dispatch = useDispatch();
+  const { isLoading, error: authError, successMessage } = useSelector((state) => state.auth);
+
+  // We consider it "sent" if we have a success message specifically from the forgot password flow
+  // (In a more robust app, we'd clear this state on mount)
+  const isSent = !!successMessage;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!email) {
-      setError('Email Address is required');
+      setValidationError('Email Address is required');
       return;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Email Address is invalid');
+      setValidationError('Email Address is invalid');
       return;
     }
     
-    setError('');
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSent(true);
-    }, 1500);
+    setValidationError('');
+    dispatch(forgotPasswordRequest({ email }));
   };
 
   const InfraMartLogo = ({ className = "" }) => (
@@ -60,6 +61,12 @@ const ForgotPassword = () => {
             </p>
           </div>
 
+          {authError && !isSent && (
+            <div className="mb-4 p-3 rounded-[6px] bg-red-50 border border-red-200 text-[12px] text-red-600 font-medium">
+              {authError}
+            </div>
+          )}
+
           {!isSent ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               
@@ -75,10 +82,10 @@ const ForgotPassword = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@company.com"
-                    className={`block w-full pl-9 pr-3 py-2.5 bg-[#f8f9fc] border ${error ? 'border-red-500' : 'border-[#e5e7eb]'} rounded-[6px] text-[14px] text-gray-900 placeholder-gray-400 focus:ring-1 focus:ring-[#EA580C] focus:border-[#EA580C] focus:bg-white transition-colors`}
+                    className={`block w-full pl-9 pr-3 py-2.5 bg-[#f8f9fc] border ${validationError ? 'border-red-500' : 'border-[#e5e7eb]'} rounded-[6px] text-[14px] text-gray-900 placeholder-gray-400 focus:ring-1 focus:ring-[#EA580C] focus:border-[#EA580C] focus:bg-white transition-colors`}
                   />
                 </div>
-                {error && <p className="mt-1 text-[12px] text-red-500 font-medium">{error}</p>}
+                {validationError && <p className="mt-1 text-[12px] text-red-500 font-medium">{validationError}</p>}
               </div>
 
               {/* Submit Button */}
@@ -107,10 +114,10 @@ const ForgotPassword = () => {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Check your email</h3>
               <p className="text-sm text-gray-500 mb-6">
-                We have sent a password reset link to <strong>{email}</strong>.
+                {successMessage || `We have sent a password reset link to `} <strong>{email}</strong>.
               </p>
               <button
-                onClick={() => setIsSent(false)}
+                onClick={() => window.location.reload()}
                 className="text-sm font-medium text-[#EA580C] hover:text-[#d04e0a]"
               >
                 Try another email address
