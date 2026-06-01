@@ -7,10 +7,11 @@ export const injectStore = (_store) => {
   store = _store;
 };
 
-const API_BASE_URL = 'http://192.168.10.104:5296';
+const API_BASE_URL = '/api';
+const AUTH_API_BASE_URL = '/auth-api';
 
 const createApiInstance = (baseURL) => {
-  const api = axios.create({
+  const apiInstance = axios.create({
     baseURL,
     headers: {
       'Content-Type': 'application/json',
@@ -18,7 +19,7 @@ const createApiInstance = (baseURL) => {
   });
 
   // Request Interceptor: Attach JWT token if available
-  api.interceptors.request.use(
+  apiInstance.interceptors.request.use(
     (config) => {
       // Get token from Redux store
       const state = store.getState();
@@ -35,7 +36,7 @@ const createApiInstance = (baseURL) => {
   );
 
   // Response Interceptor: Handle global errors like 401 Unauthorized
-  api.interceptors.response.use(
+  apiInstance.interceptors.response.use(
     (response) => response,
     (error) => {
       if (error.response && error.response.status === 401) {
@@ -47,8 +48,9 @@ const createApiInstance = (baseURL) => {
     }
   );
 
-  return api;
+  return apiInstance;
 };
 
 const api = createApiInstance(API_BASE_URL);
+export const authApi = createApiInstance(AUTH_API_BASE_URL);
 export default api;
