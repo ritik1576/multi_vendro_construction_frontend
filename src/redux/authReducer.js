@@ -2,6 +2,7 @@ import {
   LOGIN_REQUEST,
   LOGIN_SUCCESS,
   LOGIN_FAILURE,
+  LOGOUT,
   REGISTER_REQUEST,
   REGISTER_SUCCESS,
   REGISTER_FAILURE,
@@ -12,11 +13,11 @@ import {
   RESET_PASSWORD_SUCCESS,
   RESET_PASSWORD_FAILURE
 } from './authActions';
-import { getToken } from '../utils/token';
 
 const initialState = {
   user: null,
-  isAuthenticated: !!getToken(), // Determine auth state based on stored token
+  token: null,
+  isAuthenticated: false,
   isLoading: false,
   error: null,
   successMessage: null,
@@ -48,7 +49,18 @@ const authReducer = (state = initialState, action) => {
         ...state,
         isLoading: false,
         isAuthenticated: true,
-        user: action.payload,
+        user: action.payload.user,
+        token: action.payload.token,
+        error: null,
+        successMessage: null,
+      };
+    case LOGOUT:
+      return {
+        ...state,
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
         error: null,
         successMessage: null,
       };
@@ -67,6 +79,7 @@ const authReducer = (state = initialState, action) => {
         isLoading: false,
         isAuthenticated: false,
         user: null,
+        token: null,
         error: action.payload,
         successMessage: null,
       };
