@@ -14,19 +14,15 @@ import {
   resetPasswordFailure
 } from '../redux/authActions';
 import authService from '../services/authService';
-import { setToken } from '../utils/token';
 
 function* handleRegister(action) {
   try {
     const responseData = yield call(authService.register, action.payload);
     
-    if (responseData.token) {
-      setToken(responseData.token);
-    }
-    
     const userDetails = responseData.user || responseData;
+    const token = responseData.token || null;
     
-    yield put(registerSuccess(userDetails));
+    yield put(registerSuccess({ user: userDetails, token }));
     alert('Account created successfully!');
   } catch (error) {
     const errorMessage = 
@@ -43,13 +39,10 @@ function* handleLogin(action) {
   try {
     const responseData = yield call(authService.login, action.payload);
     
-    if (responseData.token) {
-      setToken(responseData.token);
-    }
-    
     const userDetails = responseData.user || responseData;
+    const token = responseData.token || null;
     
-    yield put(loginSuccess(userDetails));
+    yield put(loginSuccess({ user: userDetails, token }));
     alert('Logged in successfully!');
   } catch (error) {
     const errorMessage = 
