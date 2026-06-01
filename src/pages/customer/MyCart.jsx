@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
 import { useCart } from '../../context/useCart';
@@ -61,7 +61,15 @@ function MyCart() {
           <span className="text-slate-900">My Cart</span>
         </nav>
 
-        <div className="mt-6 flex flex-col gap-2">
+        <Link
+          className="mt-5 inline-flex min-h-10 w-fit items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] shadow-sm transition hover:bg-slate-50"
+          to="/products"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Products
+        </Link>
+
+        <div className="mt-5 flex flex-col gap-2">
           <p className="text-xs font-extrabold uppercase tracking-widest text-[#F97316]">InfraMart Cart</p>
           <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">My Cart</h1>
           <p className="text-sm text-slate-600">Review materials, update quantities, and confirm your order summary.</p>

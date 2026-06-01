@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
+import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import { useCart } from '../../context/useCart';
 import { fallbackImage, products } from './productData';
@@ -180,7 +180,7 @@ function Filters({
 
 function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems, decreaseQuantity, increaseQuantity } = useCart();
   const productName = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
   const vendor = product.vendor || 'Vendor not available';
@@ -189,11 +189,25 @@ function ProductCard({ product }) {
   const shortDescription = product.shortDescription || 'No short description available';
   const status = product.status || 'Status not available';
   const unit = product.unit || 'Unit not available';
+  const cartItem = cartItems.find((item) => item.id === product.id);
+  const quantity = cartItem?.quantity || 1;
 
   const openProduct = () => navigate(`/product/${product.id}`);
   const handleAddToCart = (event) => {
     event.stopPropagation();
     addToCart(product);
+  };
+  const handleDecreaseQuantity = (event) => {
+    event.stopPropagation();
+    decreaseQuantity(product.id);
+  };
+  const handleIncreaseQuantity = (event) => {
+    event.stopPropagation();
+    increaseQuantity(product.id);
+  };
+  const handleGoToCart = (event) => {
+    event.stopPropagation();
+    navigate('/cart');
   };
 
   return (
@@ -245,13 +259,48 @@ function ProductCard({ product }) {
         </div>
 
         <div className="mt-auto grid grid-cols-2 gap-2 pt-5">
-          <button className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition hover:bg-[#172554]" onClick={handleAddToCart} type="button">
-            <ShoppingCart className="h-4 w-4" />
-            Add to Cart
-          </button>
-          <button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-extrabold text-[#1E3A8A] transition hover:bg-slate-50" onClick={openProduct} type="button">
-            View Details
-          </button>
+          {cartItem ? (
+            <>
+              <div className="flex min-h-10 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <button
+                  aria-label={`Decrease quantity of ${productName}`}
+                  className="grid h-10 w-10 place-items-center text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                  disabled={quantity <= 1}
+                  onClick={handleDecreaseQuantity}
+                  type="button"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="min-w-8 text-center text-sm font-extrabold text-[#0F172A]">{quantity}</span>
+                <button
+                  aria-label={`Increase quantity of ${productName}`}
+                  className="grid h-10 w-10 place-items-center text-slate-700 transition hover:bg-slate-50"
+                  onClick={handleIncreaseQuantity}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <button
+                className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition hover:bg-[#172554]"
+                onClick={handleGoToCart}
+                type="button"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Go to Cart
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition hover:bg-[#172554]" onClick={handleAddToCart} type="button">
+                <ShoppingCart className="h-4 w-4" />
+                Add to Cart
+              </button>
+              <button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-extrabold text-[#1E3A8A] transition hover:bg-slate-50" onClick={openProduct} type="button">
+                View Details
+              </button>
+            </>
+          )}
         </div>
       </div>
     </article>
