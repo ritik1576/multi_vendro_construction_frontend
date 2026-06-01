@@ -1,44 +1,11 @@
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import {
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  MapPin,
-  PackageCheck,
-  Truck,
-} from 'lucide-react';
+import { ChevronRight, Clock, MapPin } from 'lucide-react';
 
 import Navbar from '../../components/landing/Navbar';
+import OrderStatusProgress from '../../components/customer/OrderStatusProgress';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
 import { useCart } from '../../context/useCart';
-
-const timeline = [
-  {
-    label: 'Order placed',
-    detail: 'Your InfraMart order has been created.',
-    icon: CheckCircle2,
-    status: 'done',
-  },
-  {
-    label: 'Vendor confirmation',
-    detail: 'Vendors are confirming product availability.',
-    icon: PackageCheck,
-    status: 'active',
-  },
-  {
-    label: 'Dispatch scheduled',
-    detail: 'Delivery vehicle and slot will be assigned.',
-    icon: Truck,
-    status: 'pending',
-  },
-  {
-    label: 'Delivered',
-    detail: 'Materials delivered to site address.',
-    icon: Clock,
-    status: 'pending',
-  },
-];
 
 function DetailBlock({ title, children }) {
   return (
@@ -52,8 +19,12 @@ function DetailBlock({ title, children }) {
 }
 
 function OrderDetail() {
-  const { orderId = 'INFR-LOCAL-001' } = useParams();
-  const { cartItems, deliveryCharge, grandTotal, subtotal } = useCart();
+  const { id: orderId = 'ORD-1001' } = useParams();
+  const cartContext = useCart();
+  const cartItems = cartContext?.cartItems || [];
+  const deliveryCharge = cartContext?.deliveryCharge ?? 99;
+  const subtotal = cartContext?.subtotal ?? cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
+  const grandTotal = cartContext?.grandTotal ?? subtotal + deliveryCharge;
 
   const vendors = useMemo(
     () => Array.from(new Set(cartItems.map((item) => item.vendor).filter(Boolean))),
@@ -225,39 +196,7 @@ function OrderDetail() {
               </div>
             </DetailBlock>
 
-            <DetailBlock title="Order Timeline">
-              <ol className="grid gap-4">
-                {timeline.map((step) => {
-                  const Icon = step.icon;
-
-                  const activeClass =
-                    step.status === 'done'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : step.status === 'active'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-slate-100 text-slate-500';
-
-                  return (
-                    <li className="flex gap-3" key={step.label}>
-                      <span
-                        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${activeClass}`}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </span>
-
-                      <span>
-                        <span className="block font-extrabold text-[#0F172A]">
-                          {step.label}
-                        </span>
-                        <span className="block text-sm text-slate-500">
-                          {step.detail}
-                        </span>
-                      </span>
-                    </li>
-                  );
-                })}
-              </ol>
-            </DetailBlock>
+            <OrderStatusProgress currentStep={2} />
           </aside>
         </div>
       </main>
