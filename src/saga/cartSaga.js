@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, takeLatest, select } from 'redux-saga/effects';
 import { cartService } from '../services/cartService';
 import {
   GET_CART_REQUEST, getCartSuccess, getCartFailure,
@@ -20,7 +20,12 @@ function* handleGetCart() {
 
 function* handleAddToCart(action) {
   try {
-    const response = yield call(cartService.addToCart, action.payload);
+    const user = yield select((state) => state.auth.user);
+    const payloadWithUser = {
+      ...action.payload,
+      UserId: user?.id || user?.userId || user?._id || ''
+    };
+    const response = yield call(cartService.addToCart, payloadWithUser);
     const cart = response.data || response;
     yield put(addToCartSuccess(cart));
   } catch (error) {

@@ -5,8 +5,8 @@ import { ShieldCheck, FileText, Mail, Loader2, ArrowRight } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import InputField from '../../components/auth/InputField';
 import PasswordField from '../../components/auth/PasswordField';
-import { loginRequest } from '../../redux/authActions';
-import { isValidAuthSession } from '../../utils/authSession';
+import { loginRequest, clearAuthError } from '../../redux/authActions';
+
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -22,7 +22,11 @@ const Login = () => {
   const { isLoading, isAuthenticated, error: authError } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (loginSubmitted && isAuthenticated && isValidAuthSession()) {
+    dispatch(clearAuthError());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (loginSubmitted && isAuthenticated) {
       navigate('/products', { replace: true });
     }
   }, [isAuthenticated, loginSubmitted, navigate]);

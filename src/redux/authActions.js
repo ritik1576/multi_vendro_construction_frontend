@@ -3,6 +3,7 @@ export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGIN_FAILURE = 'LOGIN_FAILURE';
 
 export const LOGOUT = 'LOGOUT';
+export const CLEAR_AUTH_ERROR = 'CLEAR_AUTH_ERROR';
 
 export const REGISTER_REQUEST = 'REGISTER_REQUEST';
 export const REGISTER_SUCCESS = 'REGISTER_SUCCESS';
@@ -21,6 +22,7 @@ export const loginSuccess = (payload) => ({ type: LOGIN_SUCCESS, payload });
 export const loginFailure = (error) => ({ type: LOGIN_FAILURE, payload: error });
 
 export const logout = () => ({ type: LOGOUT });
+export const clearAuthError = () => ({ type: CLEAR_AUTH_ERROR });
 
 export const registerRequest = (payload) => ({ type: REGISTER_REQUEST, payload });
 export const registerSuccess = (payload) => ({ type: REGISTER_SUCCESS, payload });

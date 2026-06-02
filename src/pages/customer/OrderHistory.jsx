@@ -1,30 +1,8 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getOrdersRequest } from '../../redux/orderActions';
 import Navbar from '../../components/landing/Navbar';
-
-const mockOrders = [
-  {
-    id: 'ORD-1001',
-    date: '2026-05-28',
-    status: 'Packed',
-    total: 2697,
-    items: 6,
-  },
-  {
-    id: 'ORD-1002',
-    date: '2026-05-22',
-    status: 'Delivered',
-    total: 1499,
-    items: 3,
-  },
-  {
-    id: 'ORD-1003',
-    date: '2026-05-19',
-    status: 'Out for Delivery',
-    total: 2175,
-    items: 5,
-  },
-];
 
 const badgeClass = (status) => {
   switch (status) {
@@ -40,13 +18,18 @@ const badgeClass = (status) => {
 };
 
 const OrderHistory = () => {
+  const dispatch = useDispatch();
+  const { orders = [], loading, error } = useSelector((state) => state.order);
+
   useEffect(() => {
+    dispatch(getOrdersRequest());
+    
     const authActions = document.querySelector('nav .border-l');
     if (authActions) authActions.style.display = 'none';
     return () => {
       if (authActions) authActions.style.display = '';
     };
-  }, []);
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] px-4 pb-10 pt-6 sm:px-6 lg:px-8">
@@ -74,31 +57,45 @@ const OrderHistory = () => {
         </div>
 
         <div className="space-y-6">
-          {mockOrders.map((order) => (
-            <div key={order.id} className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
+          {loading && <p className="text-center text-slate-500">Loading orders...</p>}
+          {error && <p className="text-center text-red-500">Error loading orders.</p>}
+          {!loading && !error && orders.length === 0 && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+              <h2 className="text-xl font-extrabold text-[#0F172A]">No orders found</h2>
+              <p className="mt-2 text-sm text-slate-600">You haven't placed any orders yet.</p>
+            </div>
+          )}
+          {!loading && !error && orders.map((order) => {
+            const orderId = order.id || order._id;
+            const orderDate = order.date || (order.createdAt && new Date(order.createdAt).toLocaleDateString()) || 'Unknown date';
+            const orderTotal = order.totalAmount || order.total || 0;
+            const itemsCount = (order.items && Array.isArray(order.items)) ? order.items.length : (order.items || 0);
+            
+            return (
+            <div key={orderId} className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
               <div className="grid gap-6 p-6 md:grid-cols-[1.5fr_1fr_0.9fr] lg:grid-cols-[1.8fr_0.9fr_0.9fr] xl:grid-cols-[2fr_0.9fr_0.9fr]">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
                     <span>Order ID</span>
                     <span className="text-slate-300">•</span>
-                    <span>{order.date}</span>
+                    <span>{orderDate}</span>
                   </div>
-                  <p className="text-xl font-semibold text-[#0F172A]">{order.id}</p>
-                  <p className="text-sm text-slate-500">Order created on {order.date}</p>
+                  <p className="text-xl font-semibold text-[#0F172A]">{orderId}</p>
+                  <p className="text-sm text-slate-500">Order created on {orderDate}</p>
                 </div>
 
                 <div className="space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Amount</p>
-                  <p className="text-2xl font-semibold text-[#1E3A8A]">₹{order.total}</p>
-                  <p className="text-sm text-slate-500">{order.items} items</p>
+                  <p className="text-2xl font-semibold text-[#1E3A8A]">₹{orderTotal}</p>
+                  <p className="text-sm text-slate-500">{itemsCount} items</p>
                 </div>
 
                 <div className="flex flex-col items-start justify-between gap-4 text-right md:items-end">
-                  <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${badgeClass(order.status)}`}>
-                    {order.status}
+                  <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${badgeClass(order.status || 'Processing')}`}>
+                    {order.status || 'Processing'}
                   </span>
                   <Link
-                    to={`/orders/${order.id}`}
+                    to={`/orders/${orderId}`}
                     className="inline-flex h-12 items-center justify-center rounded-full bg-[#1E3A8A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#152e63]"
                   >
                     View Details
@@ -106,7 +103,7 @@ const OrderHistory = () => {
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       </div>
     </div>

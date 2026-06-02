@@ -1,18 +1,42 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { placeOrderRequest } from '../../redux/orderActions';
+import { getCartItemPrice } from '../../context/cartUtils';
 import Navbar from '../../components/landing/Navbar';
 
-const mockCart = [
-  { id: 1, name: 'Premium Cement Bag', qty: 2, price: 450 },
-  { id: 2, name: 'Industrial Paint Set', qty: 1, price: 1199 },
-  { id: 3, name: 'Safety Helmet', qty: 3, price: 299 },
-];
-
 const Checkout = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('cod');
-  const subTotal = mockCart.reduce((sum, item) => sum + item.qty * item.price, 0);
-  const shipping = 99;
-  const total = subTotal + shipping;
+  
+  const cart = useSelector((state) => state.cart.cart);
+  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
+  
+  const subTotal = cart?.subtotal || cartItems.reduce((sum, item) => sum + (item.quantity || 1) * getCartItemPrice(item), 0);
+  const shipping = cart?.deliveryCharge || 99;
+  const total = cart?.grandTotal || subTotal + shipping;
+
+  const handlePlaceOrder = () => {
+    const orderData = {
+      items: cartItems,
+      shippingAddress: {
+        name: 'Ravi Kumar',
+        line1: 'Plot 22, Metro City Towers',
+        line2: 'Industrial Area, Sector 8',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        pincode: '560038',
+        phone: '+91 98765 43210'
+      },
+      paymentMethod,
+      subtotal: subTotal,
+      shippingCharge: shipping,
+      totalAmount: total,
+    };
+    dispatch(placeOrderRequest(orderData));
+    navigate('/orders');
+  };
 
   useEffect(() => {
     const authActions = document.querySelector('nav .border-l');
@@ -113,19 +137,22 @@ const Checkout = () => {
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Order summary</p>
                   <h2 className="mt-2 text-2xl font-semibold text-[#0F172A]">Your cart</h2>
                 </div>
-                <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">{mockCart.length} items</span>
+                <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">{cartItems.length} items</span>
               </div>
 
               <div className="mt-6 space-y-4">
-                {mockCart.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
-                    <div>
-                      <p className="font-semibold text-slate-900">{item.name}</p>
-                      <p className="text-sm text-slate-500">Qty {item.qty}</p>
+                {cartItems.map((item) => {
+                  const price = getCartItemPrice(item);
+                  return (
+                    <div key={item.id} className="flex items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+                      <div>
+                        <p className="font-semibold text-slate-900">{item.name}</p>
+                        <p className="text-sm text-slate-500">Qty {item.quantity}</p>
+                      </div>
+                      <p className="font-semibold text-slate-900">₹{item.quantity * price}</p>
                     </div>
-                    <p className="font-semibold text-slate-900">₹{item.qty * item.price}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-6 space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
@@ -150,7 +177,10 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <button className="mt-6 w-full rounded-[1.5rem] bg-[#0F172A] px-5 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#152e63]">
+              <button 
+                onClick={handlePlaceOrder}
+                className="mt-6 w-full rounded-[1.5rem] bg-[#0F172A] px-5 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#152e63]"
+              >
                 Place Order
               </button>
             </section>

@@ -8,6 +8,8 @@ import PartnerSection from '../components/landing/PartnerSection';
 import BrandsSection from '../components/landing/BrandsSection';
 import Footer from '../components/landing/Footer';
 
+import { Link } from 'react-router-dom';
+
 const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-customBackground-default">

@@ -1,11 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getOrderDetailsRequest } from '../../redux/orderActions';
 import { ChevronRight, Clock, MapPin } from 'lucide-react';
 
 import Navbar from '../../components/landing/Navbar';
 import OrderStatusProgress from '../../components/customer/OrderStatusProgress';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
-import { useCart } from '../../context/useCart';
 
 function DetailBlock({ title, children }) {
   return (
@@ -20,11 +21,19 @@ function DetailBlock({ title, children }) {
 
 function OrderDetail() {
   const { id: orderId = 'ORD-1001' } = useParams();
-  const cartContext = useCart();
-  const cartItems = cartContext?.cartItems || [];
-  const deliveryCharge = cartContext?.deliveryCharge ?? 99;
-  const subtotal = cartContext?.subtotal ?? cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
-  const grandTotal = cartContext?.grandTotal ?? subtotal + deliveryCharge;
+  const dispatch = useDispatch();
+  const { currentOrder, loading, error } = useSelector((state) => state.order);
+
+  useEffect(() => {
+    if (orderId) {
+      dispatch(getOrderDetailsRequest(orderId));
+    }
+  }, [dispatch, orderId]);
+
+  const cartItems = currentOrder?.items || [];
+  const deliveryCharge = currentOrder?.shippingCharge ?? 99;
+  const subtotal = currentOrder?.subtotal ?? cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
+  const grandTotal = currentOrder?.totalAmount ?? subtotal + deliveryCharge;
 
   const vendors = useMemo(
     () => Array.from(new Set(cartItems.map((item) => item.vendor).filter(Boolean))),
@@ -71,6 +80,10 @@ function OrderDetail() {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <section className="grid gap-6">
+            {loading && <p className="text-center text-slate-500">Loading order details...</p>}
+            {error && <p className="text-center text-red-500">Error loading order details.</p>}
+            {!loading && !error && (
+              <>
             <DetailBlock title="Ordered Items">
               {cartItems.length === 0 ? (
                 <div className="rounded-xl bg-slate-50 p-5 text-center">
@@ -164,6 +177,8 @@ function OrderDetail() {
                 </div>
               )}
             </DetailBlock>
+            </>
+            )}
           </section>
 
           <aside className="grid h-fit gap-6 lg:sticky lg:top-24">

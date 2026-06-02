@@ -5,8 +5,8 @@ import { Users, TrendingUp, ClipboardList, User, Mail, Phone, Loader2, ArrowRigh
 import Navbar from '../../components/landing/Navbar';
 import InputField from '../../components/auth/InputField';
 import PasswordField from '../../components/auth/PasswordField';
-import { registerRequest } from '../../redux/authActions';
-import { isValidAuthSession } from '../../utils/authSession';
+import { registerRequest, clearAuthError } from '../../redux/authActions';
+
 
 const Register = () => {
   const [role, setRole] = useState('Customer');
@@ -30,7 +30,11 @@ const Register = () => {
   const { isLoading, registrationSuccess, error: authError } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (registrationSuccess && isValidAuthSession()) {
+    dispatch(clearAuthError());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (registrationSuccess && isAuthenticated) {
       navigate('/products', { replace: true });
     }
   }, [registrationSuccess, navigate]);
