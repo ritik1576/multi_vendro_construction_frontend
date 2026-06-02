@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getProductDetailsRequest } from '../../redux/productActions';
 import { ChevronRight, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import { getCartItemPrice } from '../../context/cartUtils';
-import { useCart } from '../../context/useCart';
-import { fallbackImage, getProductById } from './productData';
+import { addToCartRequest } from '../../redux/cartActions';
+import { fallbackImage } from './productData';
 
 const statusStyles = {
   'In Stock': 'bg-emerald-100 text-emerald-700 ring-emerald-200',
@@ -76,14 +78,22 @@ function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
-  const { addToCart, cartItems } = useCart();
-  const product = useMemo(() => getProductById(id), [id]);
+  const dispatch = useDispatch();
+  const { productDetails: product, loading: isLoading, error } = useSelector((state) => state.product);
+  const cart = useSelector((state) => state.cart.cart);
+  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
 
-  if (!id) {
+  useEffect(() => {
+    if (id) {
+      dispatch(getProductDetailsRequest(id));
+    }
+  }, [dispatch, id]);
+
+  if (isLoading || !id) {
     return <ProductSkeleton />;
   }
 
-  if (!product) {
+  if (error || !product) {
     return <ProductError />;
   }
 
@@ -108,12 +118,12 @@ function ProductDetail() {
       return;
     }
 
-    addToCart(product, quantity);
+    dispatch(addToCartRequest({ ProductName: product.name, quantity }));
   };
 
   const handleBuyNow = () => {
     if (!isProductInCart) {
-      addToCart(product, quantity);
+      dispatch(addToCartRequest({ ProductName: product.name, quantity }));
     }
 
     navigate('/cart');

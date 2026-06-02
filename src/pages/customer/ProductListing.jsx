@@ -2,9 +2,9 @@ import { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductsRequest } from '../../redux/productActions';
+import { addToCartRequest, updateCartItemRequest } from '../../redux/cartActions';
 import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
-import { useCart } from '../../context/useCart';
 import { fallbackImage } from './productData';
 
 const availability = ['In Stock', 'Limited Stock', 'Out of Stock'];
@@ -182,7 +182,10 @@ function Filters({
 
 function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { addToCart, cartItems, decreaseQuantity, increaseQuantity } = useCart();
+  const dispatch = useDispatch();
+  const cart = useSelector((state) => state.cart.cart);
+  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
+  
   const productName = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
   const vendor = product.vendor || 'Vendor not available';
@@ -191,22 +194,36 @@ function ProductCard({ product }) {
   const shortDescription = product.shortDescription || 'No short description available';
   const status = product.status || 'Status not available';
   const unit = product.unit || 'Unit not available';
+  
   const cartItem = cartItems.find((item) => item.id === product.id);
   const quantity = cartItem?.quantity || 1;
 
-  const openProduct = () => navigate(`/product/${product.id}`);
+  const openProduct = (event) => {
+    if (event && event.stopPropagation) {
+      event.stopPropagation();
+    }
+    navigate(`/product/${product.id}`);
+  };
+  
   const handleAddToCart = (event) => {
     event.stopPropagation();
-    addToCart(product);
+    dispatch(addToCartRequest({ ProductName: product.name, quantity: 1 }));
   };
+  
   const handleDecreaseQuantity = (event) => {
     event.stopPropagation();
-    decreaseQuantity(product.id);
+    if (cartItem && cartItem.id) {
+       dispatch(updateCartItemRequest({ id: cartItem.id, updateData: { quantity: quantity - 1 } }));
+    }
   };
+  
   const handleIncreaseQuantity = (event) => {
     event.stopPropagation();
-    increaseQuantity(product.id);
+    if (cartItem && cartItem.id) {
+       dispatch(updateCartItemRequest({ id: cartItem.id, updateData: { quantity: quantity + 1 } }));
+    }
   };
+  
   const handleGoToCart = (event) => {
     event.stopPropagation();
     navigate('/cart');

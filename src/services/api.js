@@ -8,7 +8,6 @@ export const injectStore = (_store) => {
 };
 
 const API_BASE_URL = '/api';
-const AUTH_API_BASE_URL = '/auth-api';
 
 const createApiInstance = (baseURL) => {
   const apiInstance = axios.create({
@@ -52,5 +51,4 @@ const createApiInstance = (baseURL) => {
 };
 
 const api = createApiInstance(API_BASE_URL);
-export const authApi = createApiInstance(AUTH_API_BASE_URL);
 export default api;

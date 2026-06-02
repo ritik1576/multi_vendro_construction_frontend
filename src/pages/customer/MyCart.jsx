@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
+import { useDispatch, useSelector } from 'react-redux';
+import { getCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
-import { useCart } from '../../context/useCart';
 import { fallbackImage } from './productData';
 
 function CartImage({ alt, src }) {
@@ -40,16 +41,36 @@ function EmptyCart() {
 }
 
 function MyCart() {
-  const {
-    cartItems,
-    decreaseQuantity,
-    deliveryCharge,
-    discount,
-    grandTotal,
-    increaseQuantity,
-    removeFromCart,
-    subtotal,
-  } = useCart();
+  const dispatch = useDispatch();
+  const cart = useSelector((state) => state.cart.cart);
+
+  useEffect(() => {
+    dispatch(getCartRequest());
+  }, [dispatch]);
+
+  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
+  const subtotal = cart?.subtotal || cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
+  const discount = cart?.discount || 0;
+  const deliveryCharge = cart?.deliveryCharge || 99;
+  const grandTotal = cart?.grandTotal || subtotal - discount + deliveryCharge;
+
+  const decreaseQuantity = (id) => {
+    const item = cartItems.find(i => i.id === id);
+    if (item && item.quantity > 1) {
+      dispatch(updateCartItemRequest({ id, updateData: { quantity: item.quantity - 1 } }));
+    }
+  };
+
+  const increaseQuantity = (id) => {
+    const item = cartItems.find(i => i.id === id);
+    if (item) {
+      dispatch(updateCartItemRequest({ id, updateData: { quantity: item.quantity + 1 } }));
+    }
+  };
+
+  const removeFromCart = (id) => {
+    dispatch(removeCartItemRequest(id));
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">

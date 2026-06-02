@@ -11,7 +11,8 @@ import {
   FORGOT_PASSWORD_FAILURE,
   RESET_PASSWORD_REQUEST,
   RESET_PASSWORD_SUCCESS,
-  RESET_PASSWORD_FAILURE
+  RESET_PASSWORD_FAILURE,
+  CLEAR_AUTH_ERROR
 } from './authActions';
 
 const initialState = {
@@ -89,6 +90,12 @@ const authReducer = (state = initialState, action) => {
         ...state,
         isLoading: false,
         error: action.payload,
+        successMessage: null,
+      };
+    case CLEAR_AUTH_ERROR:
+      return {
+        ...state,
+        error: null,
         successMessage: null,
       };
     default:
