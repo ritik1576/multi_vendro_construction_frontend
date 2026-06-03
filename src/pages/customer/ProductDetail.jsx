@@ -7,7 +7,7 @@ import { ChevronRight, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import { getCartItemPrice, formatCurrency } from '../../context/cartUtils';
 import { addToCartRequest } from '../../redux/cartActions';
-import { fallbackImage } from './productData';
+import { getLocalProductImage, fallbackImage } from '../../utils/productImages';
 
 
 
@@ -138,11 +138,7 @@ function ProductDetail() {
   };
 
   const resolveImageUrl = (product) => {
-    if (product?.thumbnail) {
-      if (product.thumbnail.startsWith('http')) return product.thumbnail;
-      return `${BACKEND_URL}${product.thumbnail.startsWith('/') ? '' : '/'}${product.thumbnail}`;
-    }
-    return product?.imageUrl || null;
+    return getLocalProductImage(product);
   };
 
   return (
