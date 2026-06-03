@@ -26,10 +26,10 @@ const Login = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (loginSubmitted && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/products', { replace: true });
     }
-  }, [isAuthenticated, loginSubmitted, navigate]);
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     // We handle the error directly in the UI now, no more alerts

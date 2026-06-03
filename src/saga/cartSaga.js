@@ -9,7 +9,9 @@ import {
 
 function* handleGetCart() {
   try {
-    const response = yield call(cartService.getCart);
+    const user = yield select((state) => state.auth.user);
+    const userId = user?.id || user?.userId || user?._id || '';
+    const response = yield call(cartService.getCart, userId);
     const cart = response.data || response;
     yield put(getCartSuccess(cart));
   } catch (error) {

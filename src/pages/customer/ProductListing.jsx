@@ -1,8 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
+import { BACKEND_URL } from '../../services/apiConstants';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductsRequest } from '../../redux/productActions';
 import { addToCartRequest, updateCartItemRequest } from '../../redux/cartActions';
+import { formatCurrency } from '../../context/cartUtils';
 import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import { fallbackImage } from './productData';
@@ -66,7 +68,7 @@ const getUniqueOptions = (items, field) =>
 
 const isProductDiscounted = (product) =>
   Number(product?.discountPercent || 0) > 0 ||
-  (Boolean(product?.oldPrice) && getNumericPrice(product?.discountedPrice) < getNumericPrice(product?.oldPrice));
+  (Boolean(product?.discountPrice) && getNumericPrice(product?.discountPrice) < getNumericPrice(product?.price));
 
 function Filters({
   categoryOptions,
@@ -188,11 +190,15 @@ function ProductCard({ product }) {
   
   const productName = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
-  const vendor = product.vendor || 'Vendor not available';
-  const price = product.price || 'Price unavailable';
-  const discountedPrice = product.discountedPrice || 'Discount not available';
+  const vendor = product.vendor || 'InfraMart Direct';
+  const numPrice = Number(product.price || 0);
+  const numDiscountPrice = Number(product.discountPrice || 0);
+  const hasValidDiscount = numDiscountPrice > 0 && numDiscountPrice < numPrice;
+
+  const price = formatCurrency(numPrice);
+  const discountedPrice = formatCurrency(hasValidDiscount ? numDiscountPrice : numPrice);
   const shortDescription = product.shortDescription || 'No short description available';
-  const status = product.status || 'Status not available';
+  const status = product.status || 'In Stock';
   const unit = product.unit || 'Unit not available';
   
   const cartItem = cartItems.find((item) => item.id === product.id);
@@ -202,7 +208,8 @@ function ProductCard({ product }) {
     if (event && event.stopPropagation) {
       event.stopPropagation();
     }
-    navigate(`/product/${product.id}`);
+    const nameToUse = product.ProductName || product.name;
+    navigate(`/product/${encodeURIComponent(nameToUse)}`);
   };
   
   const handleAddToCart = (event) => {
@@ -229,9 +236,17 @@ function ProductCard({ product }) {
     navigate('/cart');
   };
 
+  const resolveImageUrl = (product) => {
+    if (product.thumbnail) {
+      if (product.thumbnail.startsWith('http')) return product.thumbnail;
+      return `${BACKEND_URL}${product.thumbnail.startsWith('/') ? '' : '/'}${product.thumbnail}`;
+    }
+    return product.imageUrl || null;
+  };
+
   return (
     <article
-      className="group flex min-h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/80"
+      className="group flex min-h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-200 hover:shadow-[0_12px_24px_-8px_rgba(30,58,138,0.15)]"
       onClick={openProduct}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -242,42 +257,53 @@ function ProductCard({ product }) {
       role="button"
       tabIndex={0}
     >
-      <div className="relative flex aspect-[4/3] items-center justify-center bg-slate-50 p-5">
-        <ProductImage alt={productName} src={product.imageUrl} />
-        {product.discountPercent && (
-          <span className="absolute left-4 top-4 rounded-md bg-[#F97316] px-2 py-1 text-[11px] font-extrabold text-white">
-            {product.discountPercent}% OFF
-          </span>
-        )}
+      <div className="relative flex aspect-[16/11] items-center justify-center bg-gradient-to-b from-slate-50 to-white p-4 transition-colors duration-500 group-hover:from-blue-50/50">
+        <ProductImage alt={productName} src={resolveImageUrl(product)} />
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-extrabold text-[#F97316]">{category}</span>
-          <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[status] || 'bg-slate-100 text-slate-700'}`}>
-            {status}
-          </span>
-        </div>
-
-        <h3 className="mt-4 min-h-14 text-lg font-extrabold leading-snug text-[#0F172A]">{productName}</h3>
-        <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-slate-600">{shortDescription}</p>
-        <p className="mt-3 text-xs font-bold uppercase tracking-wide text-slate-500">Vendor: {vendor}</p>
-
-        <div className="mt-4 flex items-center gap-2">
-          <Star className="h-4 w-4 fill-[#F97316] text-[#F97316]" />
-          <span className="text-sm font-bold text-slate-800">{Number(product.rating || 0).toFixed(1)}</span>
-          <span className="text-xs font-semibold text-slate-400">({product.reviews || 0})</span>
-        </div>
-
-        <div className="mt-4">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-[#1E3A8A]">{discountedPrice}</span>
-            {product.oldPrice && <span className="text-sm font-bold text-slate-400 line-through">{price}</span>}
+          <div className="flex items-center gap-1.5">
+            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-600 transition-colors group-hover:bg-[#1E3A8A]/10 group-hover:text-[#1E3A8A]">
+              {category}
+            </span>
+            <span className="rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-green-600 ring-1 ring-inset ring-green-500/20">
+              {status}
+            </span>
           </div>
-          <p className="mt-1 text-xs font-bold text-slate-500">per {unit}</p>
+          <div className="flex items-center gap-0.5 text-xs font-extrabold text-amber-500">
+            <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+            <span>{Number(product.rating || 0).toFixed(1)}</span>
+            <span className="font-semibold text-slate-300">({product.reviews || 0})</span>
+          </div>
         </div>
 
-        <div className="mt-auto grid grid-cols-2 gap-2 pt-5">
+        <h3 className="mt-3 line-clamp-2 min-h-[2.5rem] text-base font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#1E3A8A]">
+          {productName}
+        </h3>
+        
+        <p className="mt-1 line-clamp-2 min-h-[2rem] text-xs font-medium leading-relaxed text-slate-500">{shortDescription}</p>
+        
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <span className="h-1 w-1 rounded-full bg-green-500"></span>
+          {vendor}
+        </p>
+
+        <div className="mt-3 mb-1">
+          <div className="flex flex-wrap items-baseline gap-2">
+            {hasValidDiscount && price !== discountedPrice ? (
+              <>
+                <span className="text-xl font-black tracking-tight text-[#0F172A]">{discountedPrice}</span>
+                <span className="text-xs font-bold text-slate-400 line-through decoration-slate-300">{price}</span>
+              </>
+            ) : (
+              <span className="text-xl font-black tracking-tight text-[#0F172A]">{price}</span>
+            )}
+          </div>
+          <p className="text-[10px] font-bold text-slate-400">per {unit}</p>
+        </div>
+
+        <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
           {cartItem ? (
             <>
               <div className="flex min-h-10 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -301,7 +327,7 @@ function ProductCard({ product }) {
                 </button>
               </div>
               <button
-                className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition hover:bg-[#172554]"
+                className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95 active:bg-[#1e3a8a] active:shadow-inner"
                 onClick={handleGoToCart}
                 type="button"
               >
@@ -311,11 +337,11 @@ function ProductCard({ product }) {
             </>
           ) : (
             <>
-              <button className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition hover:bg-[#172554]" onClick={handleAddToCart} type="button">
+              <button className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95 active:bg-[#1e3a8a] active:shadow-inner" onClick={handleAddToCart} type="button">
                 <ShoppingCart className="h-4 w-4" />
                 Add to Cart
               </button>
-              <button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-extrabold text-[#1E3A8A] transition hover:bg-slate-50" onClick={openProduct} type="button">
+              <button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-extrabold text-[#1E3A8A] transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-95 active:shadow-inner" onClick={openProduct} type="button">
                 View Details
               </button>
             </>
@@ -339,6 +365,7 @@ function ListingSkeleton() {
 function ProductListing() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState(defaultFilters);
+  const [sortBy, setSortBy] = useState('relevance');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dispatch = useDispatch();
   const { products = [], loading: isLoading, error } = useSelector((state) => state.product);
@@ -374,11 +401,7 @@ function ProductListing() {
       maxPrice !== null ||
       filters.discountedOnly;
 
-    if (!hasActiveFilters) {
-      return products;
-    }
-
-    return products.filter((product) => {
+    const filteredList = !hasActiveFilters ? [...products] : products.filter((product) => {
       const searchableText = [
         product?.name,
         product?.category,
@@ -389,11 +412,14 @@ function ProductListing() {
         .map(getTextValue)
         .join(' ');
 
-      const productPrice = getNumericPrice(product?.discountedPrice || product?.price);
+      const productPrice = getNumericPrice(product?.discountPrice || product?.price);
+      const actualStatus = product?.status || 'In Stock';
+      const actualVendor = product?.vendor || 'InfraMart Direct';
+      
       const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
       const matchesCategory = filters.category === 'All' || product?.category === filters.category;
-      const matchesVendor = !filters.vendor || product?.vendor === filters.vendor;
-      const matchesStatus = !filters.status || product?.status === filters.status;
+      const matchesVendor = !filters.vendor || actualVendor === filters.vendor;
+      const matchesStatus = !filters.status || actualStatus === filters.status;
       const matchesMinPrice = minPrice === null || productPrice >= minPrice;
       const matchesMaxPrice = maxPrice === null || productPrice <= maxPrice;
       const matchesDiscount = !filters.discountedOnly || isProductDiscounted(product);
@@ -408,7 +434,19 @@ function ProductListing() {
         matchesDiscount
       );
     });
-  }, [filters, searchTerm]);
+
+    if (sortBy === 'price_asc') {
+      return filteredList.sort((a, b) => getNumericPrice(a?.discountPrice || a?.price) - getNumericPrice(b?.discountPrice || b?.price));
+    }
+    if (sortBy === 'price_desc') {
+      return filteredList.sort((a, b) => getNumericPrice(b?.discountPrice || b?.price) - getNumericPrice(a?.discountPrice || a?.price));
+    }
+    if (sortBy === 'rating_desc') {
+      return filteredList.sort((a, b) => Number(b?.rating || 0) - Number(a?.rating || 0));
+    }
+    
+    return filteredList;
+  }, [filters, searchTerm, sortBy, products]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
@@ -502,11 +540,15 @@ function ProductListing() {
                 Showing <span className="font-extrabold text-[#0F172A]">{filteredProducts.length}</span>{' '}
                 {filters.category === 'All' ? 'products' : `${filters.category} products`}
               </p>
-              <select className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-[#1E3A8A]">
-                <option>Sort by relevance</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
-                <option>Top Rated</option>
+              <select
+                className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-[#1E3A8A]"
+                onChange={(e) => setSortBy(e.target.value)}
+                value={sortBy}
+              >
+                <option value="relevance">Sort by relevance</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="rating_desc">Top Rated</option>
               </select>
             </div>
 

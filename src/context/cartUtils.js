@@ -1,5 +1,5 @@
 export const getCartItemPrice = (item) => {
-  const rawPrice = item?.discountedPrice ?? item?.price ?? 0;
+  const rawPrice = item?.discountPrice ?? item?.discountedPrice ?? item?.price ?? 0;
 
   console.log("CART ITEM:", item);
   console.log("RAW PRICE:", rawPrice);

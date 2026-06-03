@@ -1,12 +1,15 @@
 import { useMemo, useState, useEffect } from 'react';
+import { BACKEND_URL } from '../../services/apiConstants';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductDetailsRequest } from '../../redux/productActions';
 import { ChevronRight, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
-import { getCartItemPrice } from '../../context/cartUtils';
+import { getCartItemPrice, formatCurrency } from '../../context/cartUtils';
 import { addToCartRequest } from '../../redux/cartActions';
 import { fallbackImage } from './productData';
+
+
 
 const statusStyles = {
   'In Stock': 'bg-emerald-100 text-emerald-700 ring-emerald-200',
@@ -75,7 +78,7 @@ function ProductError() {
 }
 
 function ProductDetail() {
-  const { id } = useParams();
+  const { name: routeName } = useParams();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const dispatch = useDispatch();
@@ -84,12 +87,12 @@ function ProductDetail() {
   const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
 
   useEffect(() => {
-    if (id) {
-      dispatch(getProductDetailsRequest(id));
+    if (routeName) {
+      dispatch(getProductDetailsRequest(routeName));
     }
-  }, [dispatch, id]);
+  }, [dispatch, routeName]);
 
-  if (isLoading || !id) {
+  if (isLoading || !routeName) {
     return <ProductSkeleton />;
   }
 
@@ -100,8 +103,13 @@ function ProductDetail() {
   const name = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
   const vendor = product.vendor || 'Vendor not available';
-  const price = product.price || 'Price unavailable';
-  const discountedPrice = product.discountedPrice || 'Discount not available';
+  
+  const numPrice = Number(product.price || 0);
+  const numDiscountPrice = Number(product.discountPrice || 0);
+  const hasValidDiscount = numDiscountPrice > 0 && numDiscountPrice < numPrice;
+
+  const price = formatCurrency(numPrice);
+  const discountedPrice = formatCurrency(hasValidDiscount ? numDiscountPrice : numPrice);
   const shortDescription = product.shortDescription || 'No short description available';
   const description = product.description || 'No description available';
   const status = product.status || 'Status not available';
@@ -129,6 +137,14 @@ function ProductDetail() {
     navigate('/cart');
   };
 
+  const resolveImageUrl = (product) => {
+    if (product?.thumbnail) {
+      if (product.thumbnail.startsWith('http')) return product.thumbnail;
+      return `${BACKEND_URL}${product.thumbnail.startsWith('/') ? '' : '/'}${product.thumbnail}`;
+    }
+    return product?.imageUrl || null;
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
       <Navbar />
@@ -149,7 +165,7 @@ function ProductDetail() {
 
         <section className="mb-10 mt-6 grid auto-rows-auto gap-8 rounded-2xl border border-slate-200 bg-white p-5 pb-7 shadow-xl shadow-slate-200/70 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] lg:p-8 lg:pb-10">
           <div className="flex aspect-[4/3] min-h-0 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-50 p-6 shadow-inner">
-            <ProductDetailImage alt={name} src={product.imageUrl} />
+            <ProductDetailImage alt={name} src={resolveImageUrl(product)} />
           </div>
 
           <div className="flex min-w-0 flex-col">
@@ -170,12 +186,17 @@ function ProductDetail() {
             <div className="mt-7 rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <div className="flex flex-wrap items-end gap-3">
                 <span className="text-3xl font-extrabold text-[#1E3A8A] sm:text-4xl">{discountedPrice}</span>
-                {price !== discountedPrice && <span className="pb-1 text-base font-bold text-slate-400 line-through">{price}</span>}
-                {product.discountPercent && (
-                  <span className="mb-1 rounded-md bg-orange-100 px-2 py-1 text-xs font-extrabold text-[#F97316]">
-                    {product.discountPercent}% OFF
-                  </span>
-                )}
+                {hasValidDiscount && price !== discountedPrice && <span className="pb-1 text-base font-bold text-slate-400 line-through">{price}</span>}
+                {(() => {
+                  const discountVal = hasValidDiscount
+                    ? Math.round(((numPrice - numDiscountPrice) / numPrice) * 100)
+                    : product.discountPercent;
+                  return discountVal ? (
+                    <span className="mb-1 rounded-md bg-orange-100 px-2 py-1 text-xs font-extrabold text-[#F97316]">
+                      {discountVal}% OFF
+                    </span>
+                  ) : null;
+                })()}
               </div>
               <p className="mt-2 text-sm font-bold text-slate-500">per {unit}</p>
             </div>
@@ -240,7 +261,12 @@ function ProductDetail() {
           <InfoCard title="Vendor Information">{vendor}</InfoCard>
           <InfoCard title="Price Details">
             {discountedPrice} {unit !== 'Unit not available' ? `/ ${unit}` : ''}
-            {product.discountPercent ? ` with ${product.discountPercent}% discount` : ''}
+            {(() => {
+              const discountVal = hasValidDiscount
+                ? Math.round(((numPrice - numDiscountPrice) / numPrice) * 100)
+                : product.discountPercent;
+              return discountVal ? ` with ${discountVal}% discount` : '';
+            })()}
           </InfoCard>
           <InfoCard title="Availability Status">{status}</InfoCard>
           <InfoCard title="Delivery Information">{product.delivery || 'Delivery information not available'}</InfoCard>
