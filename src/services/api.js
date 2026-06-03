@@ -39,9 +39,8 @@ const createApiInstance = (baseURL) => {
     (response) => response,
     (error) => {
       if (error.response && error.response.status === 401) {
-        // Clear token and redirect to login if unauthorized
+        // Clear token and let ProtectedRoute naturally redirect to login if unauthorized
         store.dispatch(logout());
-        window.location.href = '/login'; 
       }
       return Promise.reject(error);
     }

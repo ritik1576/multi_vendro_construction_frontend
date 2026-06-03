@@ -1,6 +1,8 @@
 import { Search, ShoppingCart, Bell, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/useCart';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../../redux/authActions';
 
 const Navbar = () => {
   const location = useLocation();
@@ -16,6 +18,13 @@ const Navbar = () => {
   const isCustomerProductPage = isProductsPage || isProductDetailPage || isCartPage || isOrderPage;
   const isAuthPage = isRegisterPage || isLoginPage || isForgotPasswordPage;
   const hideSearchAndIcons = isLandingPage || isAuthPage;
+
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+  };
 
   return (
     <nav className="bg-white border-b border-customBorder-light sticky top-0 z-50">
@@ -34,15 +43,7 @@ const Navbar = () => {
           </div>
 
           {/* Search Bar */}
-          {!hideSearchAndIcons && (
-            <button className="hidden lg:flex items-center gap-2 rounded-md border border-customBorder-light bg-gray-50 px-3 py-2 text-left hover:bg-orange-50 transition-colors" type="button">
-              <MapPin className="h-4 w-4 text-secondary-main" />
-              <span className="flex flex-col leading-none">
-                <span className="text-[10px] font-bold uppercase text-customText-disabled">Deliver to</span>
-                <span className="mt-1 text-xs font-bold text-customText-primary">Mumbai GPO</span>
-              </span>
-            </button>
-          )}
+
 
           {!hideSearchAndIcons && !isProductsPage && (
             <div className="hidden md:flex flex-1 max-w-md mx-5 relative">
@@ -82,25 +83,50 @@ const Navbar = () => {
               </>
             )}
             
-            {!isCustomerProductPage && (
-              <div className="hidden md:flex items-center space-x-2 ml-2 pl-4 border-l border-customBorder-light">
-              {isAuthPage && (
-                <Link to="/" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
-                  Home
-                </Link>
+            <div className="hidden md:flex items-center space-x-2 ml-2 pl-4 border-l border-customBorder-light">
+              {isLandingPage ? (
+                <>
+                  <Link to="/login" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
+                    Sign In
+                  </Link>
+                  <Link to="/register" className="px-4 py-2 rounded-md text-sm font-bold text-primary-main bg-orange-50 hover:bg-orange-100 transition-colors">
+                    Register
+                  </Link>
+                </>
+              ) : isAuthenticated ? (
+                <>
+                  {!isProductsPage && (
+                    <span className="text-sm font-medium text-slate-700 mr-2">
+                      Hi, {user?.name || user?.firstName || 'User'}
+                    </span>
+                  )}
+                  <button 
+                    onClick={handleLogout}
+                    className="px-4 py-2 rounded-md text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  {isAuthPage && (
+                    <Link to="/" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
+                      Home
+                    </Link>
+                  )}
+                  {(!isLoginPage || isForgotPasswordPage) && (
+                    <Link to="/login" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
+                      Sign In
+                    </Link>
+                  )}
+                  {(!isRegisterPage || isForgotPasswordPage) && (
+                    <Link to="/register" className="px-4 py-2 rounded-md text-sm font-bold text-primary-main bg-orange-50 hover:bg-orange-100 transition-colors">
+                      Register
+                    </Link>
+                  )}
+                </>
               )}
-              {(!isLoginPage || isForgotPasswordPage) && (
-                <Link to="/login" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
-                  Sign In
-                </Link>
-              )}
-              {(!isRegisterPage || isForgotPasswordPage) && (
-                <Link to="/register" className="px-4 py-2 rounded-md text-sm font-bold text-primary-main bg-orange-50 hover:bg-orange-100 transition-colors">
-                  Register
-                </Link>
-              )}
-              </div>
-            )}
+            </div>
           </div>
           
         </div>

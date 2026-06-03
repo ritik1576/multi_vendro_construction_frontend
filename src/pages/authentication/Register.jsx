@@ -27,17 +27,19 @@ const Register = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isLoading, registrationSuccess, error: authError } = useSelector((state) => state.auth);
+  const { isLoading, isAuthenticated, registrationSuccess, error: authError } = useSelector((state) => state.auth);
+
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
     dispatch(clearAuthError());
   }, [dispatch]);
 
   useEffect(() => {
-    if (registrationSuccess && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/products', { replace: true });
     }
-  }, [registrationSuccess, navigate]);
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     // We handle the error directly in the UI now, no more alerts
@@ -111,6 +113,7 @@ const Register = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
+      setHasSubmitted(true);
       dispatch(registerRequest({ ...formData, role }));
     }
   };

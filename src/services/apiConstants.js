@@ -31,3 +31,5 @@ export const API_ENDPOINTS = {
     TRACK_ORDER: '/orders/{id}/tracking',
   },
 };
+
+export const BACKEND_URL = 'http://192.168.10.104:5296';

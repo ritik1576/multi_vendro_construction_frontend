@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronRight, Minus, Plus, ShoppingCart, Trash2 } from 'luci
 import Navbar from '../../components/landing/Navbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
+import { BACKEND_URL } from '../../services/apiConstants';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
 import { fallbackImage } from './productData';
 
@@ -106,11 +107,18 @@ function MyCart() {
               {cartItems.map((item) => {
                 const itemPrice = getCartItemPrice(item);
                 const itemSubtotal = itemPrice * item.quantity;
+                const resolveImageUrl = (item) => {
+                  if (item?.thumbnail) {
+                    if (item.thumbnail.startsWith('http')) return item.thumbnail;
+                    return `${BACKEND_URL}${item.thumbnail.startsWith('/') ? '' : '/'}${item.thumbnail}`;
+                  }
+                  return item?.imageUrl || null;
+                };
 
                 return (
                   <article className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[130px_1fr] sm:p-5" key={item.id}>
                     <div className="flex aspect-square items-center justify-center rounded-xl bg-slate-50 p-4">
-                      <CartImage alt={item.name} src={item.imageUrl} />
+                      <CartImage alt={item.name} src={resolveImageUrl(item)} />
                     </div>
 
                     <div className="min-w-0">
