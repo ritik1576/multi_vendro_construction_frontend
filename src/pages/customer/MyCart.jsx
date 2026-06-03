@@ -195,7 +195,11 @@ function MyCart() {
                 <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50" to="/products">
                   Continue Shopping
                 </Link>
-                <Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#F97316] px-4 text-sm font-extrabold text-white hover:bg-orange-600" to="/orders/INFR-LOCAL-001">
+                <Link 
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#F97316] px-4 text-sm font-extrabold text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  to={cartItems.length > 0 ? "/checkout" : "#"}
+                  onClick={(e) => cartItems.length === 0 && e.preventDefault()}
+                >
                   Proceed to Checkout
                 </Link>
               </div>

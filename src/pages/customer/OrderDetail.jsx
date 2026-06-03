@@ -2,7 +2,7 @@ import { useMemo, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrderDetailsRequest } from '../../redux/orderActions';
-import { ChevronRight, Clock, MapPin } from 'lucide-react';
+import { ChevronRight, Clock, MapPin, CreditCard, ArrowLeft, Package } from 'lucide-react';
 
 import Navbar from '../../components/landing/Navbar';
 import OrderStatusProgress from '../../components/customer/OrderStatusProgress';
@@ -30,15 +30,48 @@ function OrderDetail() {
     }
   }, [dispatch, orderId]);
 
-  const cartItems = currentOrder?.items || [];
-  const deliveryCharge = currentOrder?.shippingCharge ?? 99;
-  const subtotal = currentOrder?.subtotal ?? cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
-  const grandTotal = currentOrder?.totalAmount ?? subtotal + deliveryCharge;
+  useEffect(() => {
+    // Hide specific nav links on order detail page
+    const hideLinksByText = (text) => {
+      const allLinks = document.querySelectorAll('nav a');
+      const linkElements = [];
+      allLinks.forEach((link) => {
+        if (link.textContent.trim() === text) {
+          link.style.display = 'none';
+          linkElements.push(link);
+        }
+      });
+      return linkElements;
+    };
+    
+    const hiddenLinks = [
+      ...hideLinksByText('Categories'),
+      ...hideLinksByText('Bulk Orders'),
+      ...hideLinksByText('Verified Sellers'),
+    ];
+    
+    return () => {
+      hiddenLinks.forEach((link) => {
+        link.style.display = '';
+      });
+    };
+  }, []);
+
+  // Use real order data from API
+  const displayOrder = currentOrder;
+  
+  const cartItems = displayOrder?.items || [];
+  const deliveryCharge = (cartItems.length > 0) ? (displayOrder?.shippingCharge ?? 99) : 0;
+  const subtotal = displayOrder?.subtotal ?? cartItems.reduce((sum, item) => sum + (item.price || getCartItemPrice(item)) * (item.quantity || 1), 0);
+  const grandTotal = displayOrder?.totalAmount ?? (subtotal + deliveryCharge);
+  const orderStatus = displayOrder?.status || 'Processing';
 
   const vendors = useMemo(
     () => Array.from(new Set(cartItems.map((item) => item.vendor).filter(Boolean))),
     [cartItems]
   );
+
+  const displayVendorName = displayOrder?.vendorName || vendors[0] || 'Order';
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
@@ -64,7 +97,7 @@ function OrderDetail() {
                 Order Detail
               </p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">
-                {orderId}
+                {displayVendorName}
               </h1>
               <p className="mt-2 text-sm text-slate-600">
                 Review order items, delivery information, payment status, and vendor progress.
@@ -73,7 +106,7 @@ function OrderDetail() {
 
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-yellow-100 px-4 py-2 text-sm font-extrabold text-yellow-800">
               <Clock className="h-4 w-4" />
-              Vendor Confirmation Pending
+              {orderStatus}
             </div>
           </div>
         </section>
@@ -81,14 +114,25 @@ function OrderDetail() {
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <section className="grid gap-6">
             {loading && <p className="text-center text-slate-500">Loading order details...</p>}
-            {error && <p className="text-center text-red-500">Error loading order details.</p>}
-            {!loading && !error && (
+            {error && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+                <p className="text-lg font-semibold text-[#0F172A]">Unable to load order details</p>
+                <p className="mt-2 text-sm text-slate-600">Please check the order ID or try again later.</p>
+              </div>
+            )}
+            {!loading && !error && !displayOrder && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+                <p className="text-lg font-semibold text-[#0F172A]">Order not found</p>
+                <p className="mt-2 text-sm text-slate-600">This order is not available.</p>
+              </div>
+            )}
+            {!loading && displayOrder && (
               <>
             <DetailBlock title="Ordered Items">
               {cartItems.length === 0 ? (
                 <div className="rounded-xl bg-slate-50 p-5 text-center">
                   <p className="font-bold text-slate-700">
-                    No cart items found for this local order preview.
+                    No items in this order.
                   </p>
                   <Link
                     className="mt-4 inline-flex rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-extrabold text-white"
@@ -100,7 +144,7 @@ function OrderDetail() {
               ) : (
                 <div className="grid gap-4">
                   {cartItems.map((item) => {
-                    const itemPrice = getCartItemPrice(item);
+                    const itemPrice = item.price || getCartItemPrice(item);
 
                     return (
                       <div
@@ -141,22 +185,35 @@ function OrderDetail() {
                   <MapPin className="mt-1 h-5 w-5 shrink-0 text-[#F97316]" />
                   <div>
                     <p className="font-extrabold text-[#0F172A]">
-                      Site Address Placeholder
+                      {displayOrder?.deliveryAddress?.name || 'Delivery Address'}
                     </p>
                     <p className="mt-1">
-                      Mumbai GPO, Fort, Mumbai, Maharashtra 400001
+                      {displayOrder?.deliveryAddress?.address || 'Address not available'}
                     </p>
-                    <p className="mt-1">Contact: Site procurement manager</p>
+                    <p className="mt-1">
+                      {displayOrder?.deliveryAddress?.city}, {displayOrder?.deliveryAddress?.state} {displayOrder?.deliveryAddress?.pincode}
+                    </p>
+                    {displayOrder?.deliveryAddress?.phone && (
+                      <p className="mt-1">Contact: {displayOrder.deliveryAddress.phone}</p>
+                    )}
                   </div>
                 </div>
               </DetailBlock>
 
               <DetailBlock title="Payment Method">
                 <p className="font-extrabold text-[#0F172A]">
-                  Payment Placeholder
+                  {displayOrder?.paymentMethod || 'Payment Method'}
                 </p>
                 <p className="mt-1">
-                  Pay on delivery or credit account settlement after vendor confirmation.
+                  {displayOrder?.paymentMethod === 'COD' 
+                    ? 'Pay on delivery' 
+                    : displayOrder?.paymentMethod === 'UPI'
+                    ? 'Pay via UPI'
+                    : displayOrder?.paymentMethod === 'Card'
+                    ? 'Pay via Credit/Debit Card'
+                    : displayOrder?.paymentMethod === 'Net Banking'
+                    ? 'Pay via Net Banking'
+                    : 'Payment settlement after vendor confirmation.'}
                 </p>
               </DetailBlock>
             </div>
@@ -182,6 +239,8 @@ function OrderDetail() {
           </section>
 
           <aside className="grid h-fit gap-6 lg:sticky lg:top-24">
+            {displayOrder && (
+              <>
             <DetailBlock title="Total Amount">
               <div className="grid gap-3">
                 <div className="flex justify-between gap-4">
@@ -212,6 +271,25 @@ function OrderDetail() {
             </DetailBlock>
 
             <OrderStatusProgress currentStep={2} />
+            </>
+            )}
+
+            <div className="grid gap-3">
+              <Link
+                to="/orders"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Orders
+              </Link>
+              <Link
+                to="/products"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50"
+              >
+                <Package className="h-4 w-4" />
+                Browse Products
+              </Link>
+            </div>
           </aside>
         </div>
       </main>
