@@ -58,12 +58,7 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-2 text-sm font-medium text-customText-secondary ml-8">
-            <Link to="#" className="px-3 py-2 rounded-md hover:text-primary-main hover:bg-orange-50 transition-colors">Categories</Link>
-            <Link to="#" className="px-3 py-2 rounded-md hover:text-primary-main hover:bg-orange-50 transition-colors">Bulk Orders</Link>
-            <Link to="#" className="px-3 py-2 rounded-md hover:text-primary-main hover:bg-orange-50 transition-colors">Verified Sellers</Link>
-          </div>
+
 
           {/* Actions */}
           <div className="flex items-center space-x-4 md:space-x-4 ml-auto">

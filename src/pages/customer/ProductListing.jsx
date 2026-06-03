@@ -7,7 +7,7 @@ import { addToCartRequest, updateCartItemRequest } from '../../redux/cartActions
 import { formatCurrency } from '../../context/cartUtils';
 import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
-import { fallbackImage } from './productData';
+import { getLocalProductImage, fallbackImage } from '../../utils/productImages';
 
 const availability = ['In Stock', 'Limited Stock', 'Out of Stock'];
 
@@ -237,16 +237,12 @@ function ProductCard({ product }) {
   };
 
   const resolveImageUrl = (product) => {
-    if (product.thumbnail) {
-      if (product.thumbnail.startsWith('http')) return product.thumbnail;
-      return `${BACKEND_URL}${product.thumbnail.startsWith('/') ? '' : '/'}${product.thumbnail}`;
-    }
-    return product.imageUrl || null;
+    return getLocalProductImage(product);
   };
 
   return (
     <article
-      className="group flex min-h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-200 hover:shadow-[0_12px_24px_-8px_rgba(30,58,138,0.15)]"
+      className="group flex min-h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1E3A8A]/30 hover:shadow-lg"
       onClick={openProduct}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -257,95 +253,115 @@ function ProductCard({ product }) {
       role="button"
       tabIndex={0}
     >
-      <div className="relative flex aspect-[16/11] items-center justify-center bg-gradient-to-b from-slate-50 to-white p-4 transition-colors duration-500 group-hover:from-blue-50/50">
+      {/* Uniform Square Image Container */}
+      <div className="relative flex aspect-square w-full items-center justify-center bg-white p-6 transition-colors duration-500 group-hover:bg-slate-50 border-b border-slate-100">
         <ProductImage alt={productName} src={resolveImageUrl(product)} />
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-1.5">
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-600 transition-colors group-hover:bg-[#1E3A8A]/10 group-hover:text-[#1E3A8A]">
+            <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600 transition-colors group-hover:bg-[#1E3A8A]/10 group-hover:text-[#1E3A8A]">
               {category}
             </span>
-            <span className="rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-green-600 ring-1 ring-inset ring-green-500/20">
+            <span className={`rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-widest ${
+              status === 'In Stock' ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 
+              status === 'Limited Stock' ? 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20' : 
+              'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+            }`}>
               {status}
             </span>
           </div>
-          <div className="flex items-center gap-0.5 text-xs font-extrabold text-amber-500">
-            <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+          <div className="flex items-center gap-1 text-xs font-extrabold text-amber-500">
+            <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
             <span>{Number(product.rating || 0).toFixed(1)}</span>
-            <span className="font-semibold text-slate-300">({product.reviews || 0})</span>
+            <span className="font-semibold text-slate-400">({product.reviews || 0})</span>
           </div>
         </div>
 
-        <h3 className="mt-3 line-clamp-2 min-h-[2.5rem] text-base font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#1E3A8A]">
+        {/* Fixed heights for title and description to align all cards uniformly */}
+        <h3 className="line-clamp-2 h-[2.75rem] text-base font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#1E3A8A]">
           {productName}
         </h3>
         
-        <p className="mt-1 line-clamp-2 min-h-[2rem] text-xs font-medium leading-relaxed text-slate-500">{shortDescription}</p>
+        <p className="mt-2 line-clamp-2 h-[2.5rem] text-xs font-medium leading-relaxed text-slate-500">
+          {shortDescription}
+        </p>
         
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-          <span className="h-1 w-1 rounded-full bg-green-500"></span>
+        <p className="mt-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-sm"></span>
           {vendor}
         </p>
 
-        <div className="mt-3 mb-1">
-          <div className="flex flex-wrap items-baseline gap-2">
-            {hasValidDiscount && price !== discountedPrice ? (
+        <div className="mt-auto pt-4">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-baseline gap-2">
+              {hasValidDiscount && price !== discountedPrice ? (
+                <>
+                  <span className="text-xl font-black tracking-tight text-[#0F172A]">{discountedPrice}</span>
+                  <span className="text-xs font-bold text-slate-400 line-through decoration-slate-300">{price}</span>
+                </>
+              ) : (
+                <span className="text-xl font-black tracking-tight text-[#0F172A]">{price}</span>
+              )}
+            </div>
+            <p className="text-[10px] font-bold text-slate-400">per {unit}</p>
+          </div>
+
+          <hr className="my-4 border-slate-100" />
+
+          <div className="grid grid-cols-2 gap-3">
+            {cartItem ? (
               <>
-                <span className="text-xl font-black tracking-tight text-[#0F172A]">{discountedPrice}</span>
-                <span className="text-xs font-bold text-slate-400 line-through decoration-slate-300">{price}</span>
+                <div className="flex h-10 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition-colors focus-within:border-[#1E3A8A] hover:bg-white">
+                  <button
+                    aria-label={`Decrease quantity of ${productName}`}
+                    className="grid h-full w-9 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={quantity <= 1}
+                    onClick={handleDecreaseQuantity}
+                    type="button"
+                  >
+                    <Minus className="h-3.5 w-3.5" strokeWidth={3} />
+                  </button>
+                  <span className="min-w-[1.5rem] text-center text-sm font-extrabold text-[#0F172A]">{quantity}</span>
+                  <button
+                    aria-label={`Increase quantity of ${productName}`}
+                    className="grid h-full w-9 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                    onClick={handleIncreaseQuantity}
+                    type="button"
+                  >
+                    <Plus className="h-3.5 w-3.5" strokeWidth={3} />
+                  </button>
+                </div>
+                <button
+                  className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-2 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95"
+                  onClick={handleGoToCart}
+                  type="button"
+                >
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  View Cart
+                </button>
               </>
             ) : (
-              <span className="text-xl font-black tracking-tight text-[#0F172A]">{price}</span>
+              <>
+                <button 
+                  className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-2 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95" 
+                  onClick={handleAddToCart} 
+                  type="button"
+                >
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  Add to Cart
+                </button>
+                <button 
+                  className="flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-xs font-extrabold text-[#1E3A8A] transition-all duration-200 hover:border-[#1E3A8A] hover:bg-slate-50 hover:shadow-sm active:scale-95" 
+                  onClick={openProduct} 
+                  type="button"
+                >
+                  Details
+                </button>
+              </>
             )}
           </div>
-          <p className="text-[10px] font-bold text-slate-400">per {unit}</p>
-        </div>
-
-        <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
-          {cartItem ? (
-            <>
-              <div className="flex min-h-10 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <button
-                  aria-label={`Decrease quantity of ${productName}`}
-                  className="grid h-10 w-10 place-items-center text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
-                  disabled={quantity <= 1}
-                  onClick={handleDecreaseQuantity}
-                  type="button"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="min-w-8 text-center text-sm font-extrabold text-[#0F172A]">{quantity}</span>
-                <button
-                  aria-label={`Increase quantity of ${productName}`}
-                  className="grid h-10 w-10 place-items-center text-slate-700 transition hover:bg-slate-50"
-                  onClick={handleIncreaseQuantity}
-                  type="button"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-              <button
-                className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95 active:bg-[#1e3a8a] active:shadow-inner"
-                onClick={handleGoToCart}
-                type="button"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Go to Cart
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-3 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95 active:bg-[#1e3a8a] active:shadow-inner" onClick={handleAddToCart} type="button">
-                <ShoppingCart className="h-4 w-4" />
-                Add to Cart
-              </button>
-              <button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-extrabold text-[#1E3A8A] transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-95 active:shadow-inner" onClick={openProduct} type="button">
-                View Details
-              </button>
-            </>
-          )}
         </div>
       </div>
     </article>
