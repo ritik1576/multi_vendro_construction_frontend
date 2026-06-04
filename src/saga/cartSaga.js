@@ -25,10 +25,11 @@ function* handleAddToCart(action) {
     const user = yield select((state) => state.auth.user);
     const payloadWithUser = {
       ...action.payload,
-      UserId: user?.id || user?.userId || user?._id || ''
+      UserID: user?.id || user?.userId || user?._id || ''
     };
-    const response = yield call(cartService.addToCart, payloadWithUser);
-    const cart = response.data || response;
+    yield call(cartService.addToCart, payloadWithUser);
+    yield put({ type: 'GET_CART_REQUEST' });
+    const cart = yield select((state) => state.cart.cart);
     yield put(addToCartSuccess(cart));
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to add item to cart';
@@ -38,9 +39,17 @@ function* handleAddToCart(action) {
 
 function* handleUpdateCartItem(action) {
   try {
-    const { id, updateData } = action.payload;
-    const response = yield call(cartService.updateCartItem, id, updateData);
-    const cart = response.data || response;
+    const user = yield select((state) => state.auth.user);
+    const userId = user?.id || user?.userId || user?._id || '';
+
+    const payloadWithUser = {
+      ...action.payload,
+      UserID: userId
+    };
+
+    yield call(cartService.updateCartItem, payloadWithUser);
+    yield put({ type: 'GET_CART_REQUEST' });
+    const cart = yield select((state) => state.cart.cart);
     yield put(updateCartItemSuccess(cart));
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update cart item';
@@ -50,9 +59,24 @@ function* handleUpdateCartItem(action) {
 
 function* handleRemoveCartItem(action) {
   try {
-    const response = yield call(cartService.removeCartItem, action.payload);
-    const cart = response.data || response;
-    yield put(removeCartItemSuccess(cart));
+    yield call(cartService.removeCartItem, action.payload);
+    
+    // Optimistic update
+    const currentCart = yield select((state) => state.cart.cart);
+    let optimisticCart = null;
+    if (currentCart) {
+      if (Array.isArray(currentCart)) {
+        optimisticCart = currentCart.filter(item => (item.id || item.cartItemId) !== action.payload);
+      } else if (currentCart.items) {
+        optimisticCart = {
+          ...currentCart,
+          items: currentCart.items.filter(item => (item.id || item.cartItemId) !== action.payload)
+        };
+      }
+    }
+    
+    yield put(removeCartItemSuccess(optimisticCart || currentCart));
+    yield put({ type: 'GET_CART_REQUEST' });
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to remove cart item';
     yield put(removeCartItemFailure(message));

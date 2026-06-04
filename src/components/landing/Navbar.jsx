@@ -1,12 +1,13 @@
 import { Search, ShoppingCart, Bell, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { useCart } from '../../context/useCart';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/authActions';
 
 const Navbar = () => {
   const location = useLocation();
-  const { cartCount } = useCart();
+  const cartState = useSelector((state) => state.cart.cart);
+  const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
+  const cartCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
   const isLandingPage = location.pathname === '/';
   const isRegisterPage = location.pathname.includes('/register');
   const isLoginPage = location.pathname.includes('/login');

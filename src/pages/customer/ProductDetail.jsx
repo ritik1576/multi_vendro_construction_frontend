@@ -6,7 +6,7 @@ import { getProductDetailsRequest } from '../../redux/productActions';
 import { ChevronRight, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import { getCartItemPrice, formatCurrency } from '../../context/cartUtils';
-import { addToCartRequest } from '../../redux/cartActions';
+import { addToCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
 import { getLocalProductImage, fallbackImage } from '../../utils/productImages';
 
 
@@ -102,7 +102,7 @@ function ProductDetail() {
 
   const name = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
-  const vendor = product.vendor || 'Vendor not available';
+  const vendor = product.vendorName || product.vendor || 'Vendor not available';
   
   const numPrice = Number(product.price || 0);
   const numDiscountPrice = Number(product.discountPrice || 0);
@@ -111,13 +111,24 @@ function ProductDetail() {
   const price = formatCurrency(numPrice);
   const discountedPrice = formatCurrency(hasValidDiscount ? numDiscountPrice : numPrice);
   const shortDescription = product.shortDescription || 'No short description available';
-  const description = product.description || 'No description available';
-  const status = product.status || 'Status not available';
+  const description = product.longDescription || product.description || 'No description available';
+  const status = product.status || (product.inStock === false ? 'Out of Stock' : 'In Stock');
   const unit = product.unit || 'Unit not available';
   const statusClass = statusStyles[status] || 'bg-slate-100 text-slate-700 ring-slate-200';
-  const specifications = product.specifications || {};
-  const isProductInCart = cartItems.some((item) => item.id === product.id);
-  const productTotal = getCartItemPrice(product) * quantity;
+  const specifications = product.specifications || {
+    'SKU': product.sku || 'N/A',
+    'Stock Available': product.quantity ? `${product.quantity} units` : 'Check availability'
+  };
+  
+  const cartItem = cartItems.find((item) => {
+    const cartName = (item.productName || item.productname || item.name || '').toLowerCase();
+    const prodName = (product.ProductName || product.name || '').toLowerCase();
+    return cartName === prodName && prodName !== '';
+  });
+  const isProductInCart = !!cartItem;
+  const displayQuantity = isProductInCart ? (cartItem.quantity || 1) : quantity;
+
+  const productTotal = getCartItemPrice(product) * displayQuantity;
   const buyNowLabel = `Buy Now ₹${productTotal.toLocaleString('en-IN')}`;
 
   const handleCartAction = () => {
@@ -126,12 +137,42 @@ function ProductDetail() {
       return;
     }
 
-    dispatch(addToCartRequest({ ProductName: product.name, quantity }));
+    dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity }));
+  };
+
+  const handleDecreaseQuantity = () => {
+    if (isProductInCart) {
+      if (cartItem && (cartItem.quantity || 1) > 1) {
+        dispatch(updateCartItemRequest({
+          cartitemID: cartItem.id || cartItem.cartItemId,
+          productname: product.ProductName || product.name,
+          quantity: (cartItem.quantity || 1) - 1
+        }));
+      } else if (cartItem) {
+        dispatch(removeCartItemRequest(cartItem.id || cartItem.cartItemId));
+      }
+    } else {
+      setQuantity((value) => Math.max(1, value - 1));
+    }
+  };
+
+  const handleIncreaseQuantity = () => {
+    if (isProductInCart) {
+      if (cartItem) {
+        dispatch(updateCartItemRequest({
+          cartitemID: cartItem.id || cartItem.cartItemId,
+          productname: product.ProductName || product.name,
+          quantity: (cartItem.quantity || 1) + 1
+        }));
+      }
+    } else {
+      setQuantity((value) => value + 1);
+    }
   };
 
   const handleBuyNow = () => {
     if (!isProductInCart) {
-      dispatch(addToCartRequest({ ProductName: product.name, quantity }));
+      dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity }));
     }
 
     navigate('/cart');
@@ -215,28 +256,31 @@ function ProductDetail() {
               </div>
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <div className="flex h-11 items-center rounded-lg border border-slate-200 bg-white">
-                <button className="grid h-11 w-11 place-items-center text-slate-700 hover:bg-slate-50" onClick={() => setQuantity((value) => Math.max(1, value - 1))} type="button">
-                  <Minus className="h-4 w-4" />
+            <div className={`mt-6 grid gap-3 ${isProductInCart ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+              {isProductInCart ? (
+                <>
+                  <div className="flex h-12 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition-colors focus-within:border-[#1E3A8A] hover:bg-white">
+                    <button className="grid h-full w-12 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" onClick={handleDecreaseQuantity} type="button">
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="min-w-12 text-center text-base font-extrabold">{displayQuantity}</span>
+                    <button className="grid h-full w-12 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" onClick={handleIncreaseQuantity} type="button">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-4 text-sm font-extrabold text-white hover:bg-[#172554]" onClick={() => navigate('/cart')} type="button">
+                    <ShoppingCart className="h-4 w-4" />
+                    Go to Cart
+                  </button>
+                </>
+              ) : (
+                <button className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-4 text-sm font-extrabold text-white hover:bg-[#172554]" onClick={handleCartAction} type="button">
+                  <ShoppingCart className="h-4 w-4" />
+                  Add to Cart
                 </button>
-                <span className="min-w-12 text-center text-sm font-extrabold">{quantity}</span>
-                <button className="grid h-11 w-11 place-items-center text-slate-700 hover:bg-slate-50" onClick={() => setQuantity((value) => value + 1)} type="button">
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <button className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-4 text-sm font-extrabold text-white hover:bg-[#172554]" onClick={handleCartAction} type="button">
-                <ShoppingCart className="h-4 w-4" />
-                {isProductInCart ? 'Go to Cart' : 'Add to Cart'}
-              </button>
+              )}
               <button className="min-h-12 rounded-lg bg-[#F97316] px-4 text-sm font-extrabold text-white hover:bg-orange-600" onClick={handleBuyNow} type="button">
                 {buyNowLabel}
-              </button>
-              <button className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50" type="button">
-                Request Quote
               </button>
             </div>
           </div>
