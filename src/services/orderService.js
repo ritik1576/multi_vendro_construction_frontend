@@ -2,8 +2,9 @@ import api from './api';
 import { API_ENDPOINTS } from './apiConstants';
 
 export const orderService = {
-  getOrders: async () => {
-    const response = await api.get(API_ENDPOINTS.ORDERS.GET_ALL);
+  getOrders: async (userId) => {
+    const url = userId ? `${API_ENDPOINTS.ORDERS.GET_ALL}?userId=${userId}` : API_ENDPOINTS.ORDERS.GET_ALL;
+    const response = await api.get(url);
     return response.data;
   },
   

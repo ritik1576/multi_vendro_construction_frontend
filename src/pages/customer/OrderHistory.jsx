@@ -20,9 +20,11 @@ const badgeClass = (status) => {
 const OrderHistory = () => {
   const dispatch = useDispatch();
   const { orders = [], loading, error } = useSelector((state) => state.order);
+  const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(getOrdersRequest());
+    const userId = user?.id || user?._id;
+    dispatch(getOrdersRequest(userId));
     
     const authActions = document.querySelector('nav .border-l');
     if (authActions) authActions.style.display = 'none';

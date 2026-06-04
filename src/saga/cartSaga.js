@@ -10,7 +10,8 @@ import {
 function* handleGetCart() {
   try {
     const user = yield select((state) => state.auth.user);
-    const userId = user?.id || user?.userId || user?._id || '';
+    const cartState = yield select((state) => state.cart.cart);
+    const userId = user?.id || user?.userId || user?._id || cartState?.data?.userId || cartState?.userId || '';
     const response = yield call(cartService.getCart, userId);
     const cart = response.data || response;
     yield put(getCartSuccess(cart));
@@ -23,13 +24,17 @@ function* handleGetCart() {
 function* handleAddToCart(action) {
   try {
     const user = yield select((state) => state.auth.user);
+    const cartState = yield select((state) => state.cart.cart);
+    const userId = user?.id || user?.userId || user?._id || cartState?.data?.userId || cartState?.userId || '';
+    
     const payloadWithUser = {
-      ...action.payload,
-      UserId: user?.id || user?.userId || user?._id || ''
+      ProductName: action.payload.productName || action.payload.productname || action.payload.name,
+      Quantity: action.payload.quantity,
+      userId: userId
     };
-    const response = yield call(cartService.addToCart, payloadWithUser);
-    const cart = response.data || response;
-    yield put(addToCartSuccess(cart));
+    yield call(cartService.addToCart, payloadWithUser);
+    yield put(addToCartSuccess(cartState));
+    yield put({ type: GET_CART_REQUEST });
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to add item to cart';
     yield put(addToCartFailure(message));
@@ -38,10 +43,21 @@ function* handleAddToCart(action) {
 
 function* handleUpdateCartItem(action) {
   try {
-    const { id, updateData } = action.payload;
-    const response = yield call(cartService.updateCartItem, id, updateData);
-    const cart = response.data || response;
-    yield put(updateCartItemSuccess(cart));
+    const user = yield select((state) => state.auth.user);
+    const cartState = yield select((state) => state.cart.cart);
+    const userId = user?.id || user?.userId || user?._id || cartState?.data?.userId || cartState?.userId || '';
+    
+    const { item, quantity } = action.payload;
+    const updateData = {
+      ProductName: item.productName || item.name || item.ProductName,
+      Quantity: quantity,
+      userId: userId,
+      CartId: item.cartItemId || item.id
+    };
+    
+    yield call(cartService.updateCartItem, updateData);
+    yield put(updateCartItemSuccess(cartState));
+    yield put({ type: GET_CART_REQUEST });
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update cart item';
     yield put(updateCartItemFailure(message));
@@ -50,9 +66,10 @@ function* handleUpdateCartItem(action) {
 
 function* handleRemoveCartItem(action) {
   try {
-    const response = yield call(cartService.removeCartItem, action.payload);
-    const cart = response.data || response;
-    yield put(removeCartItemSuccess(cart));
+    const cartState = yield select((state) => state.cart.cart);
+    yield call(cartService.removeCartItem, action.payload);
+    yield put(removeCartItemSuccess(cartState));
+    yield put({ type: GET_CART_REQUEST });
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to remove cart item';
     yield put(removeCartItemFailure(message));

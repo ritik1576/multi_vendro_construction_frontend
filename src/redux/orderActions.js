@@ -18,7 +18,7 @@ export const TRACK_ORDER_REQUEST = 'TRACK_ORDER_REQUEST';
 export const TRACK_ORDER_SUCCESS = 'TRACK_ORDER_SUCCESS';
 export const TRACK_ORDER_FAILURE = 'TRACK_ORDER_FAILURE';
 
-export const getOrdersRequest = () => ({ type: GET_ORDERS_REQUEST });
+export const getOrdersRequest = (userId) => ({ type: GET_ORDERS_REQUEST, payload: userId });
 export const getOrdersSuccess = (orders) => ({ type: GET_ORDERS_SUCCESS, payload: orders });
 export const getOrdersFailure = (error) => ({ type: GET_ORDERS_FAILURE, payload: error });
 

@@ -3,8 +3,8 @@ import { API_ENDPOINTS } from './apiConstants';
 
 export const cartService = {
   getCart: async (userId) => {
-    const config = userId ? { params: { UserId: userId } } : {};
-    const response = await api.get(API_ENDPOINTS.CART.GET, config);
+    const endpoint = userId ? API_ENDPOINTS.CART.GET.replace('{userId}', userId) : '/cart';
+    const response = await api.get(endpoint);
     return response.data;
   },
 
@@ -13,9 +13,9 @@ export const cartService = {
     return response.data;
   },
 
-  updateCartItem: async (id, updateData) => {
+  updateCartItem: async (updateData) => {
     const response = await api.put(
-      API_ENDPOINTS.CART.UPDATE_ITEM.replace('{id}', id),
+      API_ENDPOINTS.CART.UPDATE_ITEM,
       updateData
     );
     return response.data;

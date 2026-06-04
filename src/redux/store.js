@@ -15,21 +15,27 @@ const customStorage = {
   removeItem: (key) => Promise.resolve(localStorage.removeItem(key)),
 };
 
-const persistConfig = {
-  key: 'root',
+const authPersistConfig = {
+  key: 'auth',
   storage: customStorage,
-  whitelist: ['auth'], // Only persist the auth slice
+  whitelist: ['user', 'token', 'isAuthenticated'], // Never persist isLoading or errors
 };
 
 const rootReducer = combineReducers({
-  auth: authReducer,
+  auth: persistReducer(authPersistConfig, authReducer),
   product: productReducer,
   category: categoryReducer,
   cart: cartReducer,
   order: orderReducer,
 });
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const rootPersistConfig = {
+  key: 'root',
+  storage: customStorage,
+  whitelist: [], // Auth is handled individually above
+};
+
+const persistedReducer = persistReducer(rootPersistConfig, rootReducer);
 
 const sagaMiddleware = createSagaMiddleware();
 
