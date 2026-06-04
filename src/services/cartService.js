@@ -3,8 +3,8 @@ import { API_ENDPOINTS } from './apiConstants';
 
 export const cartService = {
   getCart: async (userId) => {
-    const endpoint = userId ? API_ENDPOINTS.CART.GET.replace('{userId}', userId) : '/cart';
-    const response = await api.get(endpoint);
+    if (!userId) return { data: null };
+    const response = await api.get(API_ENDPOINTS.CART.GET.replace('{userId}', userId));
     return response.data;
   },
 

@@ -3,7 +3,7 @@ import { BACKEND_URL } from '../../services/apiConstants';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductsRequest } from '../../redux/productActions';
-import { getCartRequest, addToCartRequest, updateCartItemRequest } from '../../redux/cartActions';
+import { addToCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
 import { formatCurrency } from '../../context/cartUtils';
 import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
@@ -190,7 +190,7 @@ function ProductCard({ product }) {
   
   const productName = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
-  const vendor = product.vendor || 'InfraMart Direct';
+  const vendor = product.vendorName || product.vendor || 'InfraMart Direct';
   const numPrice = Number(product.price || 0);
   const numDiscountPrice = Number(product.discountPrice || 0);
   const hasValidDiscount = numDiscountPrice > 0 && numDiscountPrice < numPrice;
@@ -201,15 +201,11 @@ function ProductCard({ product }) {
   const status = product.status || 'In Stock';
   const unit = product.unit || 'Unit not available';
   
-  const getCartItemForProduct = (productName) => {
-    if (!productName) return null;
-    const searchName = productName.toLowerCase();
-    return cartItems.find(item => {
-      const itemName = (item.productName || item.name || item.ProductName || '').toLowerCase();
-      return itemName === searchName;
-    });
-  };
-  const cartItem = getCartItemForProduct(product.name);
+  const cartItem = cartItems.find((item) => {
+    const cartName = (item.productName || item.productname || item.name || '').toLowerCase();
+    const prodName = (product.ProductName || product.name || '').toLowerCase();
+    return cartName === prodName && prodName !== '';
+  });
   const quantity = cartItem?.quantity || 1;
 
   const openProduct = (event) => {
@@ -222,20 +218,32 @@ function ProductCard({ product }) {
   
   const handleAddToCart = (event) => {
     event.stopPropagation();
-    dispatch(addToCartRequest({ productName: product.name, quantity: 1 }));
+    dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity: 1 }));
   };
   
   const handleDecreaseQuantity = (event) => {
     event.stopPropagation();
-    if (cartItem && (cartItem.cartItemId || cartItem.id)) {
-       dispatch(updateCartItemRequest({ item: cartItem, quantity: quantity - 1 }));
+    if (cartItem && (cartItem.id || cartItem.cartItemId)) {
+       if (quantity > 1) {
+         dispatch(updateCartItemRequest({ 
+           cartitemID: cartItem.id || cartItem.cartItemId,
+           productname: product.ProductName || product.name,
+           quantity: quantity - 1 
+         }));
+       } else {
+         dispatch(removeCartItemRequest(cartItem.id || cartItem.cartItemId));
+       }
     }
   };
   
   const handleIncreaseQuantity = (event) => {
     event.stopPropagation();
-    if (cartItem && (cartItem.cartItemId || cartItem.id)) {
-       dispatch(updateCartItemRequest({ item: cartItem, quantity: quantity + 1 }));
+    if (cartItem && (cartItem.id || cartItem.cartItemId)) {
+       dispatch(updateCartItemRequest({ 
+         cartitemID: cartItem.id || cartItem.cartItemId,
+         productname: product.ProductName || product.name,
+         quantity: quantity + 1 
+       }));
     }
   };
   
@@ -309,38 +317,27 @@ function ProductCard({ product }) {
 
           <hr className="my-4 border-slate-100" />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${cartItem ? 'grid-cols-1' : 'grid-cols-2'}`}>
             {cartItem ? (
-              <>
-                <div className="flex h-10 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition-colors focus-within:border-[#1E3A8A] hover:bg-white">
-                  <button
-                    aria-label={`Decrease quantity of ${productName}`}
-                    className="grid h-full w-9 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={quantity <= 1}
-                    onClick={handleDecreaseQuantity}
-                    type="button"
-                  >
-                    <Minus className="h-3.5 w-3.5" strokeWidth={3} />
-                  </button>
-                  <span className="min-w-[1.5rem] text-center text-sm font-extrabold text-[#0F172A]">{quantity}</span>
-                  <button
-                    aria-label={`Increase quantity of ${productName}`}
-                    className="grid h-full w-9 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-                    onClick={handleIncreaseQuantity}
-                    type="button"
-                  >
-                    <Plus className="h-3.5 w-3.5" strokeWidth={3} />
-                  </button>
-                </div>
+              <div className="flex h-10 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition-colors focus-within:border-[#1E3A8A] hover:bg-white">
                 <button
-                  className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-2 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95"
-                  onClick={handleGoToCart}
+                  aria-label={`Decrease quantity of ${productName}`}
+                  className="grid h-full w-12 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                  onClick={handleDecreaseQuantity}
                   type="button"
                 >
-                  <ShoppingCart className="h-3.5 w-3.5" />
-                  View Cart
+                  <Minus className="h-4 w-4" strokeWidth={3} />
                 </button>
-              </>
+                <span className="min-w-[1.5rem] text-center text-sm font-extrabold text-[#0F172A]">{quantity}</span>
+                <button
+                  aria-label={`Increase quantity of ${productName}`}
+                  className="grid h-full w-12 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                  onClick={handleIncreaseQuantity}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" strokeWidth={3} />
+                </button>
+              </div>
             ) : (
               <>
                 <button 

@@ -20,8 +20,8 @@ export const API_ENDPOINTS = {
   CART: {
     GET: '/cart/{userId}',
     ADD_ITEM: '/cart/items',
-    UPDATE_ITEM: '/cart/items',
-    REMOVE_ITEM: '/cart/items/{id}',
+    UPDATE_ITEM: '/cart/update/items',
+    REMOVE_ITEM: '/cart/delete/{id}',
   },
   ORDERS: {
     GET_ALL: '/orders',
