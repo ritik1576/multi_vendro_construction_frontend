@@ -3,7 +3,7 @@ import { BACKEND_URL } from '../../services/apiConstants';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductsRequest } from '../../redux/productActions';
-import { addToCartRequest, updateCartItemRequest } from '../../redux/cartActions';
+import { getCartRequest, addToCartRequest, updateCartItemRequest } from '../../redux/cartActions';
 import { formatCurrency } from '../../context/cartUtils';
 import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
@@ -186,7 +186,7 @@ function ProductCard({ product }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.cart.cart);
-  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
+  const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
   
   const productName = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
@@ -201,7 +201,15 @@ function ProductCard({ product }) {
   const status = product.status || 'In Stock';
   const unit = product.unit || 'Unit not available';
   
-  const cartItem = cartItems.find((item) => item.id === product.id);
+  const getCartItemForProduct = (productName) => {
+    if (!productName) return null;
+    const searchName = productName.toLowerCase();
+    return cartItems.find(item => {
+      const itemName = (item.productName || item.name || item.ProductName || '').toLowerCase();
+      return itemName === searchName;
+    });
+  };
+  const cartItem = getCartItemForProduct(product.name);
   const quantity = cartItem?.quantity || 1;
 
   const openProduct = (event) => {
@@ -214,20 +222,20 @@ function ProductCard({ product }) {
   
   const handleAddToCart = (event) => {
     event.stopPropagation();
-    dispatch(addToCartRequest({ ProductName: product.name, quantity: 1 }));
+    dispatch(addToCartRequest({ productName: product.name, quantity: 1 }));
   };
   
   const handleDecreaseQuantity = (event) => {
     event.stopPropagation();
-    if (cartItem && cartItem.id) {
-       dispatch(updateCartItemRequest({ id: cartItem.id, updateData: { quantity: quantity - 1 } }));
+    if (cartItem && (cartItem.cartItemId || cartItem.id)) {
+       dispatch(updateCartItemRequest({ item: cartItem, quantity: quantity - 1 }));
     }
   };
   
   const handleIncreaseQuantity = (event) => {
     event.stopPropagation();
-    if (cartItem && cartItem.id) {
-       dispatch(updateCartItemRequest({ id: cartItem.id, updateData: { quantity: quantity + 1 } }));
+    if (cartItem && (cartItem.cartItemId || cartItem.id)) {
+       dispatch(updateCartItemRequest({ item: cartItem, quantity: quantity + 1 }));
     }
   };
   
@@ -242,16 +250,7 @@ function ProductCard({ product }) {
 
   return (
     <article
-      className="group flex min-h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1E3A8A]/30 hover:shadow-lg"
-      onClick={openProduct}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          openProduct();
-        }
-      }}
-      role="button"
-      tabIndex={0}
+      className="group flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1E3A8A]/30 hover:shadow-lg"
     >
       {/* Uniform Square Image Container */}
       <div className="relative flex aspect-square w-full items-center justify-center bg-white p-6 transition-colors duration-500 group-hover:bg-slate-50 border-b border-slate-100">
@@ -388,6 +387,7 @@ function ProductListing() {
 
   useEffect(() => {
     dispatch(getProductsRequest());
+    dispatch(getCartRequest());
   }, [dispatch]);
 
   const categoryOptions = useMemo(() => ['All', ...getUniqueOptions(products, 'category')], [products]);

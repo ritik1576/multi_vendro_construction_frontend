@@ -12,6 +12,7 @@ const API_BASE_URL = '/api';
 const createApiInstance = (baseURL) => {
   const apiInstance = axios.create({
     baseURL,
+    timeout: 5000, // 5 seconds timeout
     headers: {
       'Content-Type': 'application/json',
     },
@@ -20,7 +21,7 @@ const createApiInstance = (baseURL) => {
   // Request Interceptor: Attach JWT token if available
   apiInstance.interceptors.request.use(
     (config) => {
-      // Get token from Redux store
+      console.log('➡️ [API Request]', config.method.toUpperCase(), config.url, config.data);
       const state = store.getState();
       const token = state.auth.token;
       
@@ -34,10 +35,13 @@ const createApiInstance = (baseURL) => {
     }
   );
 
-  // Response Interceptor: Handle global errors like 401 Unauthorized
   apiInstance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      console.log('✅ [API Response Success]', response.config.url, response.data);
+      return response;
+    },
     (error) => {
+      console.error('❌ [API Response Error]', error.config?.url, error.message, error.response?.data);
       if (error.response && error.response.status === 401) {
         // Clear token and let ProtectedRoute naturally redirect to login if unauthorized
         store.dispatch(logout());
