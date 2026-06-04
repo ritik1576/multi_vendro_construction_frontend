@@ -3,7 +3,12 @@ import { BACKEND_URL } from '../../services/apiConstants';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductsRequest } from '../../redux/productActions';
-import { addToCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
+import {
+  getCartRequest,
+  addToCartRequest,
+  updateCartItemRequest,
+  removeCartItemRequest,
+} from '../../redux/cartActions';
 import { formatCurrency } from '../../context/cartUtils';
 import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
@@ -99,9 +104,8 @@ function Filters({
         <div className="grid gap-1">
           {categoryOptions.map((category) => (
             <button
-              className={`rounded-lg px-3 py-2 text-left text-sm font-bold transition ${
-                filters.category === category ? 'bg-orange-50 text-[#F97316]' : 'text-slate-700 hover:bg-slate-50'
-              }`}
+              className={`rounded-lg px-3 py-2 text-left text-sm font-bold transition ${filters.category === category ? 'bg-orange-50 text-[#F97316]' : 'text-slate-700 hover:bg-slate-50'
+                }`}
               key={category}
               onClick={() => onCategoryChange(category)}
               type="button"
@@ -187,7 +191,7 @@ function ProductCard({ product }) {
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.cart.cart);
   const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
-  
+
   const productName = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
   const vendor = product.vendorName || product.vendor || 'InfraMart Direct';
@@ -200,7 +204,7 @@ function ProductCard({ product }) {
   const shortDescription = product.shortDescription || 'No short description available';
   const status = product.status || 'In Stock';
   const unit = product.unit || 'Unit not available';
-  
+
   const cartItem = cartItems.find((item) => {
     const cartName = (item.productName || item.productname || item.name || '').toLowerCase();
     const prodName = (product.ProductName || product.name || '').toLowerCase();
@@ -215,38 +219,38 @@ function ProductCard({ product }) {
     const nameToUse = product.ProductName || product.name;
     navigate(`/product/${encodeURIComponent(nameToUse)}`);
   };
-  
+
   const handleAddToCart = (event) => {
     event.stopPropagation();
     dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity: 1 }));
   };
-  
+
   const handleDecreaseQuantity = (event) => {
     event.stopPropagation();
     if (cartItem && (cartItem.id || cartItem.cartItemId)) {
-       if (quantity > 1) {
-         dispatch(updateCartItemRequest({ 
-           cartitemID: cartItem.id || cartItem.cartItemId,
-           productname: product.ProductName || product.name,
-           quantity: quantity - 1 
-         }));
-       } else {
-         dispatch(removeCartItemRequest(cartItem.id || cartItem.cartItemId));
-       }
+      if (quantity > 1) {
+        dispatch(updateCartItemRequest({
+          cartitemID: cartItem.id || cartItem.cartItemId,
+          productname: product.ProductName || product.name,
+          quantity: quantity - 1
+        }));
+      } else {
+        dispatch(removeCartItemRequest(cartItem.id || cartItem.cartItemId));
+      }
     }
   };
-  
+
   const handleIncreaseQuantity = (event) => {
     event.stopPropagation();
     if (cartItem && (cartItem.id || cartItem.cartItemId)) {
-       dispatch(updateCartItemRequest({ 
-         cartitemID: cartItem.id || cartItem.cartItemId,
-         productname: product.ProductName || product.name,
-         quantity: quantity + 1 
-       }));
+      dispatch(updateCartItemRequest({
+        cartitemID: cartItem.id || cartItem.cartItemId,
+        productname: product.ProductName || product.name,
+        quantity: quantity + 1
+      }));
     }
   };
-  
+
   const handleGoToCart = (event) => {
     event.stopPropagation();
     navigate('/cart');
@@ -271,11 +275,10 @@ function ProductCard({ product }) {
             <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600 transition-colors group-hover:bg-[#1E3A8A]/10 group-hover:text-[#1E3A8A]">
               {category}
             </span>
-            <span className={`rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-widest ${
-              status === 'In Stock' ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 
-              status === 'Limited Stock' ? 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20' : 
-              'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
-            }`}>
+            <span className={`rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-widest ${status === 'In Stock' ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' :
+              status === 'Limited Stock' ? 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20' :
+                'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+              }`}>
               {status}
             </span>
           </div>
@@ -290,11 +293,11 @@ function ProductCard({ product }) {
         <h3 className="line-clamp-2 h-[2.75rem] text-base font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#1E3A8A]">
           {productName}
         </h3>
-        
+
         <p className="mt-2 line-clamp-2 h-[2.5rem] text-xs font-medium leading-relaxed text-slate-500">
           {shortDescription}
         </p>
-        
+
         <p className="mt-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-sm"></span>
           {vendor}
@@ -340,17 +343,17 @@ function ProductCard({ product }) {
               </div>
             ) : (
               <>
-                <button 
-                  className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-2 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95" 
-                  onClick={handleAddToCart} 
+                <button
+                  className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-2 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95"
+                  onClick={handleAddToCart}
                   type="button"
                 >
                   <ShoppingCart className="h-3.5 w-3.5" />
                   Add to Cart
                 </button>
-                <button 
-                  className="flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-xs font-extrabold text-[#1E3A8A] transition-all duration-200 hover:border-[#1E3A8A] hover:bg-slate-50 hover:shadow-sm active:scale-95" 
-                  onClick={openProduct} 
+                <button
+                  className="flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-xs font-extrabold text-[#1E3A8A] transition-all duration-200 hover:border-[#1E3A8A] hover:bg-slate-50 hover:shadow-sm active:scale-95"
+                  onClick={openProduct}
                   type="button"
                 >
                   Details
@@ -428,7 +431,7 @@ function ProductListing() {
       const productPrice = getNumericPrice(product?.discountPrice || product?.price);
       const actualStatus = product?.status || 'In Stock';
       const actualVendor = product?.vendor || 'InfraMart Direct';
-      
+
       const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
       const matchesCategory = filters.category === 'All' || product?.category === filters.category;
       const matchesVendor = !filters.vendor || actualVendor === filters.vendor;
@@ -457,7 +460,7 @@ function ProductListing() {
     if (sortBy === 'rating_desc') {
       return filteredList.sort((a, b) => Number(b?.rating || 0) - Number(a?.rating || 0));
     }
-    
+
     return filteredList;
   }, [filters, searchTerm, sortBy, products]);
 
@@ -518,9 +521,8 @@ function ProductListing() {
           <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
             {categoryOptions.map((category) => (
               <button
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-extrabold transition ${
-                  filters.category === category ? 'bg-[#1E3A8A] text-white' : 'bg-slate-100 text-slate-700 hover:bg-orange-50 hover:text-[#F97316]'
-                }`}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-extrabold transition ${filters.category === category ? 'bg-[#1E3A8A] text-white' : 'bg-slate-100 text-slate-700 hover:bg-orange-50 hover:text-[#F97316]'
+                  }`}
                 key={category}
                 onClick={() => setFilterValue('category', category)}
                 type="button"

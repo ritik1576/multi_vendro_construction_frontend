@@ -39,9 +39,9 @@ useEffect(() => {
   const showError = !loading && Boolean(error);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <Navbar />
-      <div className="mx-auto max-w-7xl pt-6">
+      <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
         <div className="mb-6 overflow-hidden rounded-[1.75rem] bg-[#0F172A] px-6 py-8 text-white shadow-sm sm:px-8 sm:py-10">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
