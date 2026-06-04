@@ -8,9 +8,9 @@ import {
   TRACK_ORDER_REQUEST, trackOrderSuccess, trackOrderFailure
 } from '../redux/orderActions';
 
-function* handleGetOrders() {
+function* handleGetOrders(action) {
   try {
-    const response = yield call(orderService.getOrders);
+    const response = yield call(orderService.getOrders, action.payload);
     const orders = Array.isArray(response) ? response : (response.data || []);
     yield put(getOrdersSuccess(orders));
   } catch (error) {

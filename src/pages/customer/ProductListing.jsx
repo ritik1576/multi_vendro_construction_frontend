@@ -186,7 +186,7 @@ function ProductCard({ product }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.cart.cart);
-  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
+  const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
   
   const productName = product.name || 'Product name not available';
   const category = product.category || 'Category not available';
@@ -258,16 +258,7 @@ function ProductCard({ product }) {
 
   return (
     <article
-      className="group flex min-h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1E3A8A]/30 hover:shadow-lg"
-      onClick={openProduct}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          openProduct();
-        }
-      }}
-      role="button"
-      tabIndex={0}
+      className="group flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1E3A8A]/30 hover:shadow-lg"
     >
       {/* Uniform Square Image Container */}
       <div className="relative flex aspect-square w-full items-center justify-center bg-white p-6 transition-colors duration-500 group-hover:bg-slate-50 border-b border-slate-100">
@@ -393,6 +384,7 @@ function ProductListing() {
 
   useEffect(() => {
     dispatch(getProductsRequest());
+    dispatch(getCartRequest());
   }, [dispatch]);
 
   const categoryOptions = useMemo(() => ['All', ...getUniqueOptions(products, 'category')], [products]);

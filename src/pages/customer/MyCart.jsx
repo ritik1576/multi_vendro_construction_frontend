@@ -52,11 +52,11 @@ function MyCart() {
     dispatch(getProductsRequest());
   }, [dispatch]);
 
-  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
-  const subtotal = cart?.subtotal || cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
-  const discount = cart?.discount || 0;
-  const deliveryCharge = cart?.deliveryCharge || 99;
-  const grandTotal = cart?.grandTotal || subtotal - discount + deliveryCharge;
+  const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
+  const subtotal = cart?.data?.totalPrice || cart?.totalPrice || cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
+  const discount = cart?.data?.discount || cart?.discount || 0;
+  const deliveryCharge = cart?.data?.deliveryCharge || cart?.deliveryCharge || 0;
+  const grandTotal = cart?.data?.grandTotal || cart?.grandTotal || subtotal - discount + deliveryCharge;
 
   const decreaseQuantity = (id) => {
     const item = cartItems.find(i => (i.id || i.cartItemId) === id);

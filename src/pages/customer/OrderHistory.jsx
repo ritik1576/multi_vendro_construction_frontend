@@ -24,37 +24,15 @@ const badgeClass = (status) => {
 const OrderHistory = () => {
   const dispatch = useDispatch();
   const { orders = [], loading, error } = useSelector((state) => state.order);
+  const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    dispatch(getOrdersRequest());
-  }, [dispatch]);
+useEffect(() => {
+  const userId = user?.id || user?._id;
 
-  useEffect(() => {
-    // Hide specific nav links on order history page
-    const hideLinksByText = (text) => {
-      const allLinks = document.querySelectorAll('nav a');
-      const linkElements = [];
-      allLinks.forEach((link) => {
-        if (link.textContent.trim() === text) {
-          link.style.display = 'none';
-          linkElements.push(link);
-        }
-      });
-      return linkElements;
-    };
-    
-    const hiddenLinks = [
-      ...hideLinksByText('Categories'),
-      ...hideLinksByText('Bulk Orders'),
-      ...hideLinksByText('Verified Sellers'),
-    ];
-    
-    return () => {
-      hiddenLinks.forEach((link) => {
-        link.style.display = '';
-      });
-    };
-  }, []);
+  if (userId) {
+    dispatch(getOrdersRequest(userId));
+  }
+}, [dispatch, user]);
 
   const hasOrders = !loading && !error && orders.length > 0;
   const showEmpty = !loading && !error && orders.length === 0;

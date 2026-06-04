@@ -10,7 +10,8 @@ import {
 function* handleGetCart() {
   try {
     const user = yield select((state) => state.auth.user);
-    const userId = user?.id || user?.userId || user?._id || '';
+    const cartState = yield select((state) => state.cart.cart);
+    const userId = user?.id || user?.userId || user?._id || cartState?.data?.userId || cartState?.userId || '';
     const response = yield call(cartService.getCart, userId);
     const cart = response.data || response;
     yield put(getCartSuccess(cart));
@@ -23,6 +24,9 @@ function* handleGetCart() {
 function* handleAddToCart(action) {
   try {
     const user = yield select((state) => state.auth.user);
+    const cartState = yield select((state) => state.cart.cart);
+    const userId = user?.id || user?.userId || user?._id || cartState?.data?.userId || cartState?.userId || '';
+    
     const payloadWithUser = {
       ...action.payload,
       UserID: user?.id || user?.userId || user?._id || ''
