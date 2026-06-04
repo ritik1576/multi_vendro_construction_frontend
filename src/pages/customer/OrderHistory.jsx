@@ -88,6 +88,12 @@ useEffect(() => {
             <div className="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
               <h2 className="text-xl font-extrabold text-[#0F172A]">No orders yet</h2>
               <p className="mt-2 text-sm text-slate-600">Start by browsing and adding items to your cart.</p>
+              <Link
+                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1E3A8A] px-5 text-sm font-extrabold text-white hover:bg-[#172554]"
+                to="/products"
+              >
+                Continue Shopping
+              </Link>
             </div>
           )}
 
