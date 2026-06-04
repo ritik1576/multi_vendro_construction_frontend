@@ -222,6 +222,18 @@ function MyCart() {
                 >
                   Proceed to Checkout
                 </Link>
+                {cartItems.length > 0 && (
+                  <div 
+                    className="text-sm font-semibold text-red-500 hover:text-red-700 hover:underline mt-4 block text-center cursor-pointer"
+                    onClick={() => {
+                      cartItems.forEach((item) => {
+                        dispatch(removeCartItemRequest(item.id || item.cartItemId));
+                      });
+                    }}
+                  >
+                    Clear Entire Cart
+                  </div>
+                )}
               </div>
             </aside>
           </div>
