@@ -74,6 +74,10 @@ function MyCart() {
     dispatch(removeCartItemRequest(id));
   };
 
+  const clearCart = () => {
+    dispatch(clearCartRequest());
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
       <Navbar />
@@ -120,7 +124,7 @@ function MyCart() {
                 };
 
                 const displayCategory = item.category || mappedProduct.category || 'Material';
-                const displayVendor = item.vendor || mappedProduct.vendor || 'InfraMart Direct';
+                const displayVendor = mappedProduct.vendor || 'Verified Distributor';
                 const displayUnit = item.unit || mappedProduct.unit || 'Unit';
 
                 return (
@@ -140,11 +144,11 @@ function MyCart() {
 
                         <button
                           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 text-xs font-extrabold text-red-700 transition hover:bg-red-100"
-                          onClick={() => removeFromCart(item.cartItemId || item.id)}
+                          onClick={clearCart}
                           type="button"
                         >
                           <Trash2 className="h-4 w-4" />
-                          Remove
+                          Clear Cart
                         </button>
                       </div>
 
@@ -190,14 +194,16 @@ function MyCart() {
                   <span className="font-extrabold text-emerald-700">-{formatCurrency(discount)}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="font-semibold text-slate-500">Delivery charge</span>
-                  <span className="font-extrabold text-slate-900">{deliveryCharge ? formatCurrency(deliveryCharge) : 'Free'}</span>
+                  <span className="font-semibold text-slate-500">Logistics charges</span>
+                  <span className="font-extrabold text-slate-900">Logistics charges calculated based on delivery location</span>
                 </div>
                 <div className="mt-2 flex justify-between gap-4 border-t border-slate-200 pt-4">
                   <span className="text-base font-extrabold text-slate-900">Grand total</span>
                   <span className="text-2xl font-extrabold text-[#1E3A8A]">{formatCurrency(grandTotal)}</span>
                 </div>
               </div>
+
+              <p className="mt-2 text-sm font-bold text-slate-600">Prices are inclusive of GST</p>
 
               <div className="mt-6 grid gap-3">
                 <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50" to="/products">
