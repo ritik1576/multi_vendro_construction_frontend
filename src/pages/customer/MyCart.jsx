@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
 import { BACKEND_URL } from '../../services/apiConstants';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
+import { getProductsRequest } from '../../redux/productActions';
 import { getLocalProductImage, fallbackImage } from '../../utils/productImages';
 
 function CartImage({ alt, src }) {
@@ -44,10 +45,11 @@ function EmptyCart() {
 function MyCart() {
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.cart.cart);
-  const products = useSelector((state) => state.product.products || []);
+  const { products = [] } = useSelector((state) => state.product);
 
   useEffect(() => {
     dispatch(getCartRequest());
+    dispatch(getProductsRequest());
   }, [dispatch]);
 
   const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
@@ -57,25 +59,33 @@ function MyCart() {
   const grandTotal = cart?.data?.grandTotal || cart?.grandTotal || subtotal - discount + deliveryCharge;
 
   const decreaseQuantity = (id) => {
-    const item = cartItems.find(i => (i.cartItemId || i.id) === id);
-    if (item && item.quantity > 1) {
-      dispatch(updateCartItemRequest({ item: item, quantity: item.quantity - 1 }));
+    const item = cartItems.find(i => (i.id || i.cartItemId) === id);
+    if (item) {
+      if (item.quantity > 1) {
+        dispatch(updateCartItemRequest({ 
+          cartitemID: id,
+          productname: item.name || item.productName,
+          quantity: item.quantity - 1 
+        }));
+      } else {
+        dispatch(removeCartItemRequest(id));
+      }
     }
   };
 
   const increaseQuantity = (id) => {
-    const item = cartItems.find(i => (i.cartItemId || i.id) === id);
+    const item = cartItems.find(i => (i.id || i.cartItemId) === id);
     if (item) {
-      dispatch(updateCartItemRequest({ item: item, quantity: item.quantity + 1 }));
+      dispatch(updateCartItemRequest({ 
+        cartitemID: id,
+        productname: item.name || item.productName,
+        quantity: item.quantity + 1 
+      }));
     }
   };
 
   const removeFromCart = (id) => {
     dispatch(removeCartItemRequest(id));
-  };
-
-  const clearCart = () => {
-    dispatch(clearCartRequest());
   };
 
   return (
@@ -110,45 +120,43 @@ function MyCart() {
           <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <section className="grid gap-4">
               {cartItems.map((item) => {
-                const itemPrice = item.price || getCartItemPrice(item);
-                const itemSubtotal = item.totalPrice || itemPrice * item.quantity;
-                const itemNameLower = (item.productName || item.name || item.ProductName || '').toLowerCase();
-                const mappedProduct = products.find(p => {
-                  const pName = (p.name || p.ProductName || '').toLowerCase();
-                  return pName === itemNameLower;
-                }) || {};
-                
-                const identifier = item.productName || item.name;
-                const resolveImageUrl = () => {
-                  return getLocalProductImage({ name: identifier });
+                const itemPrice = getCartItemPrice(item);
+                const itemSubtotal = itemPrice * item.quantity;
+                const matchedProduct = products.find(p => (p.ProductName || p.name || '').toLowerCase() === (item.productName || item.name || '').toLowerCase()) || {};
+
+                const displayCategory = matchedProduct.category || item.category || 'Material';
+                const displayName = matchedProduct.ProductName || matchedProduct.name || item.productName || item.name || 'Product name not available';
+                const displayVendor = matchedProduct.vendor || item.vendor || 'InfraMart Direct';
+                const displayUnit = matchedProduct.unit || item.unit || 'Unit not available';
+
+                const resolveImageUrl = (item, product) => {
+                  return getLocalProductImage(product || item);
                 };
 
-                const displayCategory = item.category || mappedProduct.category || 'Material';
-                const displayVendor = mappedProduct.vendor || 'Verified Distributor';
-                const displayUnit = item.unit || mappedProduct.unit || 'Unit';
+                const itemId = item.id || item.cartItemId;
 
                 return (
-                  <article className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[130px_1fr] sm:p-5" key={item.cartItemId || item.id}>
+                  <article className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[130px_1fr] sm:p-5" key={itemId}>
                     <div className="flex aspect-square items-center justify-center rounded-xl bg-slate-50 p-4">
-                      <CartImage alt={identifier} src={resolveImageUrl()} />
+                      <CartImage alt={displayName} src={resolveImageUrl(item, matchedProduct)} />
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <div className="min-w-0">
                           <p className="text-xs font-extrabold uppercase tracking-widest text-[#F97316]">{displayCategory}</p>
-                          <h2 className="mt-1 text-lg font-extrabold text-[#0F172A]">{identifier}</h2>
+                          <h2 className="mt-1 text-lg font-extrabold text-[#0F172A]">{displayName}</h2>
                           <p className="mt-2 text-sm font-semibold text-slate-500">Vendor: {displayVendor}</p>
                           <p className="mt-1 text-sm text-slate-500">Unit: {displayUnit}</p>
                         </div>
 
                         <button
                           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 text-xs font-extrabold text-red-700 transition hover:bg-red-100"
-                          onClick={clearCart}
+                          onClick={() => removeFromCart(itemId)}
                           type="button"
                         >
                           <Trash2 className="h-4 w-4" />
-                          Clear Cart
+                          Remove
                         </button>
                       </div>
 
@@ -161,11 +169,11 @@ function MyCart() {
                         <div>
                           <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Quantity</p>
                           <div className="mt-1 inline-flex h-10 items-center rounded-lg border border-slate-200 bg-white">
-                            <button className="grid h-10 w-10 place-items-center text-slate-700 hover:bg-slate-50" onClick={() => decreaseQuantity(item.cartItemId || item.id)} type="button">
+                            <button className="grid h-10 w-10 place-items-center text-slate-700 hover:bg-slate-50" onClick={() => decreaseQuantity(itemId)} type="button">
                               <Minus className="h-4 w-4" />
                             </button>
                             <span className="min-w-10 text-center text-sm font-extrabold">{item.quantity}</span>
-                            <button className="grid h-10 w-10 place-items-center text-slate-700 hover:bg-slate-50" onClick={() => increaseQuantity(item.cartItemId || item.id)} type="button">
+                            <button className="grid h-10 w-10 place-items-center text-slate-700 hover:bg-slate-50" onClick={() => increaseQuantity(itemId)} type="button">
                               <Plus className="h-4 w-4" />
                             </button>
                           </div>
@@ -194,16 +202,14 @@ function MyCart() {
                   <span className="font-extrabold text-emerald-700">-{formatCurrency(discount)}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="font-semibold text-slate-500">Logistics charges</span>
-                  <span className="font-extrabold text-slate-900">Logistics charges calculated based on delivery location</span>
+                  <span className="font-semibold text-slate-500">Delivery charge</span>
+                  <span className="font-extrabold text-slate-900">{deliveryCharge ? formatCurrency(deliveryCharge) : 'Free'}</span>
                 </div>
                 <div className="mt-2 flex justify-between gap-4 border-t border-slate-200 pt-4">
                   <span className="text-base font-extrabold text-slate-900">Grand total</span>
                   <span className="text-2xl font-extrabold text-[#1E3A8A]">{formatCurrency(grandTotal)}</span>
                 </div>
               </div>
-
-              <p className="mt-2 text-sm font-bold text-slate-600">Prices are inclusive of GST</p>
 
               <div className="mt-6 grid gap-3">
                 <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50" to="/products">
