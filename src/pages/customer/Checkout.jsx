@@ -205,7 +205,7 @@ const Checkout = () => {
       return;
     }
 
-    const orderData = {
+    const orderPayload = {
       userId: authUser?.id || authUser?.userId || authUser?._id || 21,
       addressId: address.id,
       items: cartItems.map(item => ({
@@ -215,8 +215,23 @@ const Checkout = () => {
       }))
     };
 
-    dispatch(placeOrderRequest(orderData));
-    navigate('/order-confirmation', { state: { orderData } });
+    dispatch(placeOrderRequest(orderPayload));
+    
+    const confirmationData = {
+      totalAmount: total,
+      paymentMethod: paymentMethod,
+      shippingAddress: {
+        name: address.name,
+        line1: address.line1,
+        line2: address.line2,
+        city: address.city,
+        state: address.state,
+        pincode: address.pincode,
+        country: address.country,
+        phone: address.phone
+      }
+    };
+    navigate('/order-confirmation', { state: { orderData: confirmationData } });
   };
 
   useEffect(() => {
