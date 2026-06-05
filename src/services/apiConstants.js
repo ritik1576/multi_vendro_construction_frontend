@@ -7,8 +7,12 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
   },
-  // Add other resource endpoints here as the app grows
-  // USERS: { ... },
+  ADDRESSES: {
+    GET_USER_ADDRESSES: '/addresses/user/{userId}',
+    CREATE_ADDRESS: '/addresses',
+    UPDATE_ADDRESS: '/addresses/{id}',
+    DELETE_ADDRESS: '/addresses/{id}',
+  },
   PRODUCTS: {
     GET_ALL: '/products',
     GET_BY_NAME: '/products/{name}',

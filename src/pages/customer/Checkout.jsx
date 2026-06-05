@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { placeOrderRequest } from '../../redux/orderActions';
-import { getCartItemPrice } from '../../context/cartUtils';
+import { getCartRequest } from '../../redux/cartActions';
+import { getCartItemPrice, formatCurrency } from '../../context/cartUtils';
+import { addressService } from '../../services/addressService';
 import Navbar from '../../components/landing/Navbar';
 
 const requiredFields = ['name', 'phone', 'line1', 'city', 'state', 'pincode'];
@@ -16,7 +18,7 @@ const initialAddress = {
   state: 'Karnataka',
   pincode: '560038',
   country: 'India',
-  addressType: 'Site',
+  addressType: 'Home',
 };
 
 const validateAddress = (address) => {
@@ -32,28 +34,71 @@ const validateAddress = (address) => {
 const Checkout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const authUser = useSelector((state) => state.auth.user);
+  
   const [paymentMethod, setPaymentMethod] = useState('cod');
-  const [address, setAddress] = useState(initialAddress);
+  const [addresses, setAddresses] = useState([]);
+  const [address, setAddress] = useState(null);
   const [draftAddress, setDraftAddress] = useState(initialAddress);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [addressErrors, setAddressErrors] = useState({});
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      setIsLoadingAddresses(true);
+      try {
+        const userId = authUser?.id || authUser?.userId || authUser?._id || 21;
+        const response = await addressService.getUserAddresses(userId);
+        const fetchedAddresses = Array.isArray(response) ? response : (response.data || []);
+        
+        const mappedAddresses = fetchedAddresses.map(addr => ({
+          id: addr.id,
+          name: addr.fullName,
+          phone: addr.phone,
+          line1: addr.addressLine1,
+          line2: addr.addressLine2 || '',
+          city: addr.city,
+          state: addr.state,
+          pincode: addr.postalCode,
+          country: addr.country || 'India',
+          addressType: addr.addressType || 'Home',
+          isDefault: addr.isDefault
+        }));
+
+        setAddresses(mappedAddresses);
+        
+        if (mappedAddresses.length > 0) {
+          const defaultAddr = mappedAddresses.find(a => a.isDefault) || mappedAddresses[0];
+          setAddress(defaultAddr);
+        }
+      } catch (err) {
+        console.error("Failed to fetch addresses:", err);
+      } finally {
+        setIsLoadingAddresses(false);
+      }
+    };
+
+    if (authUser) {
+      fetchAddresses();
+    }
+  }, [authUser]);
 
   const cart = useSelector((state) => state.cart.cart);
-  const cartItems = Array.isArray(cart)
-    ? cart
-    : Array.isArray(cart?.items)
-    ? cart.items
-    : [];
+  
+  useEffect(() => {
+    dispatch(getCartRequest());
+  }, [dispatch]);
 
-  const subTotal = useMemo(
-    () => cartItems.reduce((sum, item) => sum + (item.quantity || 1) * getCartItemPrice(item), 0),
-    [cartItems]
-  );
-  const shipping = cartItems.length > 0 ? 99 : 0;
-  const total = subTotal + shipping;
+  const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
+  const subTotal = cart?.data?.totalPrice || cart?.totalPrice || cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
+  const discount = cart?.data?.discount || cart?.discount || 0;
+  const deliveryCharge = cart?.data?.deliveryCharge || cart?.deliveryCharge || (cartItems.length > 0 ? 99 : 0);
+  const total = cart?.data?.grandTotal || cart?.grandTotal || (subTotal - discount + deliveryCharge);
 
-  const isAddressValid = Object.keys(validateAddress(address)).length === 0;
-  const canPlaceOrder = cartItems.length > 0 && isAddressValid && !isEditingAddress;
+  const isAddressValid = address !== null && Object.keys(validateAddress(address)).length === 0;
+  const canPlaceOrder = cartItems.length > 0 && isAddressValid && !isEditingAddress && !isLoadingAddresses;
 
   const handleFieldChange = (field, value) => {
     setDraftAddress((prev) => ({ ...prev, [field]: value }));
@@ -67,9 +112,27 @@ const Checkout = () => {
   };
 
   const handleBeginEdit = () => {
-    setDraftAddress(address);
+    setDraftAddress(initialAddress);
     setAddressErrors({});
     setIsEditingAddress(true);
+  };
+
+  const handleEditAddress = (addr) => {
+    setDraftAddress(addr);
+    setAddressErrors({});
+    setIsEditingAddress(true);
+  };
+
+  const handleDeleteAddress = async (id) => {
+    try {
+      await addressService.deleteAddress(id);
+      setAddresses(prev => prev.filter(a => a.id !== id));
+      if (address?.id === id) {
+        setAddress(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete address:", err);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -78,29 +141,78 @@ const Checkout = () => {
     setIsEditingAddress(false);
   };
 
-  const handleSaveAddress = () => {
+  const handleSaveAddress = async () => {
     const errors = validateAddress(draftAddress);
     if (Object.keys(errors).length > 0) {
       setAddressErrors(errors);
       return;
     }
-    setAddress(draftAddress);
-    setIsEditingAddress(false);
-    setAddressErrors({});
+    
+    try {
+      const payload = {
+        userID: authUser?.id || authUser?.userId || authUser?._id || 21,
+        fullName: draftAddress.name,
+        phone: draftAddress.phone,
+        addressLine1: draftAddress.line1,
+        addressLine2: draftAddress.line2 || "",
+        isDefault: true,
+        addressType: draftAddress.addressType.toLowerCase(),
+        postalCode: draftAddress.pincode,
+        country: draftAddress.country,
+        state: draftAddress.state,
+        city: draftAddress.city
+      };
+      
+      let responseData;
+      if (draftAddress.id) {
+        const response = await addressService.updateAddress(draftAddress.id, payload);
+        responseData = response.data || response;
+      } else {
+        const response = await addressService.createAddress(payload);
+        responseData = response.data || response;
+      }
+      
+      const savedAddress = {
+        id: responseData.id || draftAddress.id,
+        name: responseData.fullName,
+        phone: responseData.phone,
+        line1: responseData.addressLine1,
+        line2: responseData.addressLine2 || '',
+        city: responseData.city,
+        state: responseData.state,
+        pincode: responseData.postalCode,
+        country: responseData.country || 'India',
+        addressType: responseData.addressType || 'Home',
+        isDefault: responseData.isDefault
+      };
+      
+      setAddresses(prev => {
+        if (draftAddress.id) {
+          return prev.map(a => a.id === draftAddress.id ? savedAddress : a);
+        }
+        return [...prev, savedAddress];
+      });
+      setAddress(savedAddress);
+      setIsEditingAddress(false);
+      setAddressErrors({});
+    } catch (err) {
+      console.error("Failed to save address:", err);
+    }
   };
 
   const handlePlaceOrder = () => {
-    if (!canPlaceOrder) {
+    if (!canPlaceOrder || !address) {
       return;
     }
 
     const orderData = {
-      items: cartItems,
-      shippingAddress: address,
-      paymentMethod,
-      subtotal: subTotal,
-      shippingCharge: shipping,
-      totalAmount: total,
+      userId: authUser?.id || authUser?.userId || authUser?._id || 21,
+      addressId: address.id,
+      items: cartItems.map(item => ({
+        cartItemId: item.cartItemId || item.id,
+        productId: item.productId || item.productID || item.id,
+        quantity: item.quantity || 1
+      }))
     };
 
     dispatch(placeOrderRequest(orderData));
@@ -172,7 +284,7 @@ const Checkout = () => {
                   onClick={handleBeginEdit}
                   className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] transition hover:border-slate-400"
                 >
-                  Edit Address
+                  Add Address
                 </button>
               </div>
 
@@ -261,8 +373,6 @@ const Checkout = () => {
                         >
                           <option value="Home">Home</option>
                           <option value="Office">Office</option>
-                          <option value="Site">Site</option>
-                          <option value="Warehouse">Warehouse</option>
                         </select>
                       </label>
                     </div>
@@ -285,22 +395,90 @@ const Checkout = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-lg font-semibold text-[#0F172A]">{address.name}</p>
-                      <p className="text-sm text-slate-600">{address.line1}</p>
-                      <p className="text-sm text-slate-600">{address.line2}</p>
-                      <p className="text-sm text-slate-600">{address.city}, {address.state} {address.pincode}</p>
-                      <p className="text-sm text-slate-600">{address.country}</p>
-                      <p className="text-sm text-slate-600">{address.phone}</p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{address.addressType}</span>
+                  <div className="space-y-4">
+                    {isLoadingAddresses ? (
+                      <div className="animate-pulse space-y-3">
+                        <div className="h-4 w-1/3 rounded bg-slate-200"></div>
+                        <div className="h-4 w-2/3 rounded bg-slate-200"></div>
+                        <div className="h-4 w-1/2 rounded bg-slate-200"></div>
                       </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                      <span className="rounded-full bg-white px-3 py-2 shadow-sm">Procurement delivery</span>
-                      <span className="rounded-full bg-white px-3 py-2 shadow-sm">Business address</span>
-                    </div>
+                    ) : addresses.length === 0 ? (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-slate-500">No addresses found.</p>
+                        <button type="button" onClick={handleBeginEdit} className="mt-3 text-sm font-semibold text-[#1E3A8A] hover:underline">
+                          + Add a new address
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <button 
+                            type="button"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="inline-flex w-full items-center justify-between rounded-full bg-[#0F172A] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#152e63]"
+                          >
+                            Select Address
+                            <svg className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          
+                          {isDropdownOpen && (
+                            <div className="absolute z-10 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                              <div className="max-h-60 overflow-y-auto">
+                                {addresses.map(addr => (
+                                  <button
+                                    key={addr.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setAddress(addr);
+                                      setAddressErrors({});
+                                      setIsDropdownOpen(false);
+                                    }}
+                                    className={`w-full border-b border-slate-100 px-5 py-3 text-left text-sm transition last:border-0 hover:bg-slate-50 ${address?.id === addr.id ? 'bg-slate-50 font-semibold text-[#0F172A]' : 'text-slate-600'}`}
+                                  >
+                                    <div className="flex justify-between">
+                                      <span>{addr.name}</span>
+                                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{addr.addressType}</span>
+                                    </div>
+                                    <p className="mt-1 text-xs text-slate-500">{addr.line1}, {addr.city}</p>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {address && (
+                          <div className="rounded-xl border border-[#0F172A] bg-slate-50 p-4 shadow-sm">
+                            <p className="text-base font-semibold text-[#0F172A]">{address.name}</p>
+                            <p className="mt-1 text-sm text-slate-600">{address.line1}</p>
+                            {address.line2 && <p className="text-sm text-slate-600">{address.line2}</p>}
+                            <p className="text-sm text-slate-600">{address.city}, {address.state} {address.pincode}</p>
+                            <p className="text-sm text-slate-600">{address.country}</p>
+                            <p className="mt-1 text-sm font-medium text-slate-700">{address.phone}</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">{address.addressType}</span>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-3">
+                              <button
+                                type="button"
+                                onClick={() => handleEditAddress(address)}
+                                className="text-sm font-semibold text-[#1E3A8A] transition hover:text-[#0F172A] hover:underline"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAddress(address.id)}
+                                className="text-sm font-semibold text-red-500 transition hover:text-red-700 hover:underline"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -367,14 +545,14 @@ const Checkout = () => {
                     {cartItems.map((item) => {
                       const unitPrice = getCartItemPrice(item);
                       return (
-                        <div key={item.id || item._id} className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 sm:grid-cols-[1fr_auto]">
+                        <div key={item.cartItemId || item.id || item._id} className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 sm:grid-cols-[1fr_auto]">
                           <div>
-                            <p className="font-semibold text-slate-900">{item.name || item.title}</p>
-                            <p className="mt-1 text-sm text-slate-500">Qty {item.quantity || 1} × ₹{unitPrice}</p>
+                            <p className="font-semibold text-slate-900">{item.productName || item.name || item.title}</p>
+                            <p className="mt-1 text-sm text-slate-500">Qty {item.quantity || 1} × {formatCurrency(unitPrice)}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-slate-500">Item subtotal</p>
-                            <p className="mt-1 text-lg font-semibold text-[#0F172A]">₹{(item.quantity || 1) * unitPrice}</p>
+                            <p className="mt-1 text-lg font-semibold text-[#0F172A]">{formatCurrency((item.quantity || 1) * unitPrice)}</p>
                           </div>
                         </div>
                       );
@@ -387,23 +565,29 @@ const Checkout = () => {
                 <div className="mt-6 space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>₹{subTotal}</span>
+                    <span className="font-semibold text-slate-900">{formatCurrency(subTotal)}</span>
                   </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between">
+                      <span>Discount</span>
+                      <span className="font-semibold text-emerald-700">-{formatCurrency(discount)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>₹{shipping}</span>
+                    <span>Delivery charge</span>
+                    <span className="font-semibold text-slate-900">{deliveryCharge ? formatCurrency(deliveryCharge) : 'Free'}</span>
                   </div>
                 </div>
               )}
 
               <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-white px-5 py-6 shadow-sm">
                 <div className="flex items-center justify-between text-sm uppercase tracking-[0.18em] text-slate-500">
-                  <span>Total</span>
+                  <span>Grand Total</span>
                   <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">InfraMart</span>
                 </div>
                 <div className="mt-4 flex items-end justify-between gap-4">
                   <span className="text-sm font-medium text-slate-600">Order amount</span>
-                  <span className="text-3xl font-semibold text-[#0F172A]">₹{total}</span>
+                  <span className="text-3xl font-semibold text-[#0F172A]">{formatCurrency(total)}</span>
                 </div>
               </div>
 

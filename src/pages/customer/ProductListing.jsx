@@ -250,11 +250,8 @@ function ProductCard({ product }) {
       }));
     }
   };
+  
 
-  const handleGoToCart = (event) => {
-    event.stopPropagation();
-    navigate('/cart');
-  };
 
   const resolveImageUrl = (product) => {
     return getLocalProductImage(product);
