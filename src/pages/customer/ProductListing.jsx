@@ -265,7 +265,7 @@ function ProductCard({ product }) {
       className="group flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1E3A8A]/30 hover:shadow-lg"
     >
       {/* Uniform Square Image Container */}
-      <div className="relative flex aspect-square w-full items-center justify-center bg-white p-6 transition-colors duration-500 group-hover:bg-slate-50 border-b border-slate-100">
+      <div className="relative flex aspect-square w-full items-center justify-center p-6 bg-slate-50/50 hover:bg-white transition-all duration-300 border-b border-slate-100">
         <ProductImage alt={productName} src={resolveImageUrl(product)} />
       </div>
 
@@ -304,7 +304,7 @@ function ProductCard({ product }) {
         </p>
 
         <div className="mt-auto pt-4">
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 items-start">
             <div className="flex items-baseline gap-2">
               {hasValidDiscount && price !== discountedPrice ? (
                 <>
@@ -315,7 +315,8 @@ function ProductCard({ product }) {
                 <span className="text-xl font-black tracking-tight text-[#0F172A]">{price}</span>
               )}
             </div>
-            <p className="text-[10px] font-bold text-slate-400">per {unit}</p>
+            <p className="text-[10px] font-bold text-slate-400 w-full">per {unit}</p>
+            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium mt-1 inline-block">MOQ: 50 Units</span>
           </div>
 
           <hr className="my-4 border-slate-100" />
