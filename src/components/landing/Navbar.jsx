@@ -96,6 +96,12 @@ const Navbar = () => {
                       Hi, {user?.name || user?.firstName || 'User'}
                     </span>
                   )}
+                  <Link 
+                    to="/orders"
+                    className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors"
+                  >
+                    MYorders
+                  </Link>
                   <button 
                     onClick={handleLogout}
                     className="px-4 py-2 rounded-md text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
