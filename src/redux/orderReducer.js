@@ -13,7 +13,8 @@ const initialState = {
   loading: false,
   actionLoading: false,
   error: null,
-  actionError: null
+  actionError: null,
+  lastPlacedOrder: null
 };
 
 const orderReducer = (state = initialState, action) => {
@@ -40,6 +41,7 @@ const orderReducer = (state = initialState, action) => {
       return { ...state, actionLoading: true, actionError: null };
       
     case PLACE_ORDER_SUCCESS:
+      return { ...state, actionLoading: false, lastPlacedOrder: action.payload };
     case CANCEL_ORDER_SUCCESS:
       return { ...state, actionLoading: false };
       
