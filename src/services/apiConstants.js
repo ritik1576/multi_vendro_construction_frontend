@@ -28,7 +28,7 @@ export const API_ENDPOINTS = {
     REMOVE_ITEM: '/cart/delete/{id}',
   },
   ORDERS: {
-    GET_ALL: '/orders',
+    GET_ALL: '/orders/all/{userId}',
     GET_BY_ID: '/orders/{id}',
     PLACE_ORDER: '/orders',
     CANCEL_ORDER: '/orders/{id}/cancel',

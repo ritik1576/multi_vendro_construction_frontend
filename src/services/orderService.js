@@ -3,7 +3,8 @@ import { API_ENDPOINTS } from './apiConstants';
 
 export const orderService = {
   getOrders: async (userId) => {
-    const url = userId ? `${API_ENDPOINTS.ORDERS.GET_ALL}?userId=${userId}` : API_ENDPOINTS.ORDERS.GET_ALL;
+    if (!userId) throw new Error("User ID is required to fetch orders");
+    const url = API_ENDPOINTS.ORDERS.GET_ALL.replace('{userId}', userId);
     const response = await api.get(url);
     return response.data;
   },
