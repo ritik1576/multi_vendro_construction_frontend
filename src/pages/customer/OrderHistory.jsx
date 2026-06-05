@@ -40,9 +40,9 @@ useEffect(() => {
   const showError = !loading && Boolean(error);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <Navbar />
-      <div className="mx-auto max-w-7xl pt-6">
+      <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
         <div className="mb-6 overflow-hidden rounded-[1.75rem] bg-[#0F172A] px-6 py-8 text-white shadow-sm sm:px-8 sm:py-10">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -89,6 +89,12 @@ useEffect(() => {
             <div className="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
               <h2 className="text-xl font-extrabold text-[#0F172A]">No orders yet</h2>
               <p className="mt-2 text-sm text-slate-600">Start by browsing and adding items to your cart.</p>
+              <Link
+                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1E3A8A] px-5 text-sm font-extrabold text-white hover:bg-[#172554]"
+                to="/products"
+              >
+                Continue Shopping
+              </Link>
             </div>
           )}
 

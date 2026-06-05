@@ -238,23 +238,14 @@ function ProductDetail() {
               <p className="mt-2 text-sm font-bold text-slate-500">per {unit}</p>
             </div>
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="mt-5">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <p className="text-xs font-extrabold uppercase tracking-widest text-slate-500">Vendor</p>
                 <p className="mt-1 text-base font-bold text-[#0F172A]">{vendor}</p>
               </div>
-              <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4">
-                <p className="text-xs font-extrabold uppercase tracking-widest text-[#F97316]">Bulk Orders</p>
-                <p className="mt-1 text-sm font-bold text-[#0F172A]">Request project pricing for higher quantities.</p>
-              </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                <Truck className="h-4 w-4 text-[#F97316]" />
-                {product.delivery || 'Delivery information not available'}
-              </div>
-            </div>
+
 
             <div className={`mt-6 grid gap-3 ${isProductInCart ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
               {isProductInCart ? (
@@ -288,16 +279,7 @@ function ProductDetail() {
 
         <section className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           <InfoCard title="Description">{description}</InfoCard>
-          <InfoCard title="Product Specifications">
-            <dl className="grid gap-2">
-              {Object.entries(specifications).map(([label, value]) => (
-                <div className="flex justify-between gap-4 border-b border-slate-100 pb-2 last:border-b-0 last:pb-0" key={label}>
-                  <dt className="font-bold text-slate-500">{label}</dt>
-                  <dd className="text-right font-semibold text-slate-800">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </InfoCard>
+
           <InfoCard title="Vendor Information">{vendor}</InfoCard>
           <InfoCard title="Price Details">
             {discountedPrice} {unit !== 'Unit not available' ? `/ ${unit}` : ''}
@@ -309,7 +291,7 @@ function ProductDetail() {
             })()}
           </InfoCard>
           <InfoCard title="Availability Status">{status}</InfoCard>
-          <InfoCard title="Delivery Information">{product.delivery || 'Delivery information not available'}</InfoCard>
+
         </section>
       </main>
     </div>
