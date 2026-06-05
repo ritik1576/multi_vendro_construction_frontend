@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrdersRequest } from '../../redux/orderActions';
 import Navbar from '../../components/landing/Navbar';
+import { formatCurrency } from '../../context/cartUtils';
 
 const badgeClass = (status) => {
   switch (status) {
@@ -27,7 +28,7 @@ const OrderHistory = () => {
   const { user } = useSelector((state) => state.auth);
 
 useEffect(() => {
-  const userId = user?.id || user?._id;
+  const userId = user?.id || user?.userId || user?._id || 21;
 
   if (userId) {
     dispatch(getOrdersRequest(userId));
@@ -103,8 +104,9 @@ useEffect(() => {
               ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
               : 'Unknown date');
             const orderTotal = order.totalAmount || order.total || 0;
-            const itemsCount = order.itemsCount || (Array.isArray(order.items) ? order.items.length : Number(order.items || 0));
+            const itemsCount = order.itemCount || order.itemsCount || (Array.isArray(order.items) ? order.items.length : Number(order.items || 0));
             const vendorName = order.vendorName || order.vendor || 'Vendor';
+            const orderStatus = order.displayStatus || order.orderStatus || order.status || 'Processing';
 
             return (
               <div key={orderId} className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
@@ -119,13 +121,13 @@ useEffect(() => {
 
                   <div className="space-y-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Total</p>
-                    <p className="text-2xl font-semibold text-[#1E3A8A]">₹{orderTotal}</p>
+                    <p className="text-2xl font-semibold text-[#1E3A8A]">{formatCurrency(orderTotal)}</p>
                     <p className="text-sm text-slate-500">{itemsCount} items</p>
                   </div>
 
                   <div className="flex flex-col items-start justify-between gap-4 text-right md:items-end">
-                    <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${badgeClass(order.status || 'Processing')}`}>
-                      {order.status || 'Processing'}
+                    <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${badgeClass(orderStatus)}`}>
+                      {orderStatus}
                     </span>
                     <Link
                       to={`/orders/${orderId}`}

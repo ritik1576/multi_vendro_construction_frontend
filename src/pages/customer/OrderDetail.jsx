@@ -20,9 +20,9 @@ function DetailBlock({ title, children }) {
 }
 
 function OrderDetail() {
-  const { id: orderId = 'ORD-1001' } = useParams();
+  const { orderId } = useParams();
   const dispatch = useDispatch();
-  const { currentOrder, loading, error } = useSelector((state) => state.order);
+  const { orderDetails: currentOrder, loading, error } = useSelector((state) => state.order);
 
   useEffect(() => {
     if (orderId) {
@@ -61,13 +61,13 @@ function OrderDetail() {
   const displayOrder = currentOrder;
   
   const cartItems = displayOrder?.items || [];
-  const deliveryCharge = (cartItems.length > 0) ? (displayOrder?.shippingCharge ?? 99) : 0;
-  const subtotal = displayOrder?.subtotal ?? cartItems.reduce((sum, item) => sum + (item.price || getCartItemPrice(item)) * (item.quantity || 1), 0);
-  const grandTotal = displayOrder?.totalAmount ?? (subtotal + deliveryCharge);
-  const orderStatus = displayOrder?.status || 'Processing';
+  const deliveryCharge = displayOrder?.amount?.delivery ?? ((cartItems.length > 0) ? (displayOrder?.shippingCharge ?? 99) : 0);
+  const subtotal = displayOrder?.amount?.itemsSubtotal ?? displayOrder?.subtotal ?? cartItems.reduce((sum, item) => sum + (item.price || getCartItemPrice(item)) * (item.quantity || 1), 0);
+  const grandTotal = displayOrder?.amount?.totalAmount ?? displayOrder?.totalAmount ?? (subtotal + deliveryCharge);
+  const orderStatus = displayOrder?.displayStatus || displayOrder?.orderStatus || displayOrder?.status || 'Processing';
 
   const vendors = useMemo(
-    () => Array.from(new Set(cartItems.map((item) => item.vendor).filter(Boolean))),
+    () => Array.from(new Set(cartItems.map((item) => item.vendorName || item.vendor).filter(Boolean))),
     [cartItems]
   );
 
@@ -153,14 +153,14 @@ function OrderDetail() {
                       >
                         <div>
                           <h3 className="text-base font-extrabold text-[#0F172A]">
-                            {item.name || 'Product name not available'}
+                            {item.productName || item.name || 'Product name not available'}
                           </h3>
                           <p className="mt-1 text-sm font-semibold text-slate-500">
-                            Vendor: {item.vendor || 'Vendor not available'}
+                            Vendor: {item.vendorName || item.vendor || 'Vendor not available'}
                           </p>
                           <p className="mt-1 text-sm text-slate-500">
                             Qty {item.quantity} x {formatCurrency(itemPrice)} /{' '}
-                            {item.unit || 'unit'}
+                            {item.unitLabel || item.unit || 'unit'}
                           </p>
                         </div>
 
@@ -185,16 +185,20 @@ function OrderDetail() {
                   <MapPin className="mt-1 h-5 w-5 shrink-0 text-[#F97316]" />
                   <div>
                     <p className="font-extrabold text-[#0F172A]">
-                      {displayOrder?.deliveryAddress?.name || 'Delivery Address'}
+                      {displayOrder?.deliveryAddress?.contactName || displayOrder?.deliveryAddress?.name || 'Delivery Address'}
                     </p>
                     <p className="mt-1">
-                      {displayOrder?.deliveryAddress?.address || 'Address not available'}
+                      {displayOrder?.deliveryAddress?.addressLine || displayOrder?.deliveryAddress?.address || 'Address not available'}
                     </p>
-                    <p className="mt-1">
-                      {displayOrder?.deliveryAddress?.city}, {displayOrder?.deliveryAddress?.state} {displayOrder?.deliveryAddress?.pincode}
-                    </p>
-                    {displayOrder?.deliveryAddress?.phone && (
-                      <p className="mt-1">Contact: {displayOrder.deliveryAddress.phone}</p>
+                    {displayOrder?.deliveryAddress?.cityStatePincode ? (
+                      <p className="mt-1">{displayOrder.deliveryAddress.cityStatePincode}</p>
+                    ) : (
+                      <p className="mt-1">
+                        {displayOrder?.deliveryAddress?.city}, {displayOrder?.deliveryAddress?.state} {displayOrder?.deliveryAddress?.pincode}
+                      </p>
+                    )}
+                    {(displayOrder?.deliveryAddress?.contactPhone || displayOrder?.deliveryAddress?.phone) && (
+                      <p className="mt-1">Contact: {displayOrder.deliveryAddress.contactPhone || displayOrder.deliveryAddress.phone}</p>
                     )}
                   </div>
                 </div>
@@ -202,10 +206,10 @@ function OrderDetail() {
 
               <DetailBlock title="Payment Method">
                 <p className="font-extrabold text-[#0F172A]">
-                  {displayOrder?.paymentMethod || 'Payment Method'}
+                  {displayOrder?.paymentMethod?.method || displayOrder?.paymentMethod || 'Payment Method'}
                 </p>
                 <p className="mt-1">
-                  {displayOrder?.paymentMethod === 'COD' 
+                  {displayOrder?.paymentMethod?.description || (displayOrder?.paymentMethod === 'COD' 
                     ? 'Pay on delivery' 
                     : displayOrder?.paymentMethod === 'UPI'
                     ? 'Pay via UPI'
@@ -213,7 +217,7 @@ function OrderDetail() {
                     ? 'Pay via Credit/Debit Card'
                     : displayOrder?.paymentMethod === 'Net Banking'
                     ? 'Pay via Net Banking'
-                    : 'Payment settlement after vendor confirmation.'}
+                    : 'Payment settlement after vendor confirmation.')}
                 </p>
               </DetailBlock>
             </div>
