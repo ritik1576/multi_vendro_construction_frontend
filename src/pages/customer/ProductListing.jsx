@@ -3,7 +3,7 @@ import { BACKEND_URL } from '../../services/apiConstants';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductsRequest } from '../../redux/productActions';
-import { addToCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
+import { addToCartRequest, updateCartItemRequest, removeCartItemRequest, getCartRequest } from '../../redux/cartActions';
 import { formatCurrency } from '../../context/cartUtils';
 import { ChevronRight, Minus, Plus, Search, SlidersHorizontal, ShoppingCart, Star, X } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
@@ -247,10 +247,7 @@ function ProductCard({ product }) {
     }
   };
   
-  const handleGoToCart = (event) => {
-    event.stopPropagation();
-    navigate('/cart');
-  };
+
 
   const resolveImageUrl = (product) => {
     return getLocalProductImage(product);
