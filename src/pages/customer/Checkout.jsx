@@ -216,7 +216,7 @@ const Checkout = () => {
     };
 
     dispatch(placeOrderRequest(orderData));
-    navigate('/orders');
+    navigate('/order-confirmation', { state: { orderData } });
   };
 
   useEffect(() => {
@@ -495,9 +495,7 @@ const Checkout = () => {
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
                   { value: 'cod', label: 'Cash on Delivery' },
-                  { value: 'upi', label: 'UPI' },
-                  { value: 'card', label: 'Card' },
-                  { value: 'netbanking', label: 'Net Banking' },
+                  { value: 'online', label: 'Pay Online' },
                 ].map((option) => (
                   <label
                     key={option.value}

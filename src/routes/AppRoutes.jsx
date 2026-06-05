@@ -10,6 +10,7 @@ import ProductListing from '../pages/customer/ProductListing';
 import ProductDetail from '../pages/customer/ProductDetail';
 import MyCart from '../pages/customer/MyCart';
 import Checkout from '../pages/customer/Checkout';
+import ConfirmOrder from '../pages/customer/ConfirmOrder';
 import OrderHistory from '../pages/customer/OrderHistory';
 import OrderDetail from '../pages/customer/OrderDetail';
 import ProtectedRoute from './ProtectedRoute';
@@ -28,6 +29,7 @@ const AppRoutes = () => {
         <Route path="/product/:name" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute><MyCart /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+        <Route path="/order-confirmation" element={<ProtectedRoute><ConfirmOrder /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
       </Routes>
