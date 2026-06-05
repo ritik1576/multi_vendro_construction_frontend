@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import Navbar from '../../components/landing/Navbar';
 
 const ConfirmOrder = () => {
   const location = useLocation();
+  const lastPlacedOrder = useSelector(state => state.order.lastPlacedOrder);
   const orderData = location.state?.orderData || {
     totalAmount: 45000,
     paymentMethod: 'cod',
@@ -75,7 +77,7 @@ const ConfirmOrder = () => {
             {/* Actions */}
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
               <Link
-                to={`/orders/${orderData.id || orderData._id || 'INF-99824'}`}
+                to={`/orders/${lastPlacedOrder?.id || lastPlacedOrder?._id || 'INF-99824'}`}
                 className="inline-flex w-full items-center justify-center rounded-full bg-[#0F172A] px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#152e63] sm:w-auto"
               >
                 Track Order
