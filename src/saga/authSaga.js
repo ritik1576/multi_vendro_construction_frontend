@@ -44,7 +44,7 @@ function* handleRegister(action) {
 
 function* handleLogin(action) {
   try {
-    console.log('🔄 [Saga] Starting login request...');
+
     const { responseData, timeout } = yield race({
       responseData: call(authService.login, action.payload),
       timeout: delay(5000)
@@ -55,12 +55,12 @@ function* handleLogin(action) {
       throw new Error('Request timed out. The server is not responding.');
     }
     
-    console.log('✅ [Saga] Login response received:', responseData);
+
     const userDetails = responseData.user || responseData;
     const token = responseData.token || null;
     
     yield put(loginSuccess({ user: userDetails, token }));
-    console.log('🚀 [Saga] loginSuccess dispatched!');
+
     alert('Logged in successfully!');
   } catch (error) {
     console.error('❌ [Saga] Login Error Caught:', error);
