@@ -19,7 +19,7 @@ function* handleRegister(action) {
   try {
     const { responseData, timeout } = yield race({
       responseData: call(authService.register, action.payload),
-      timeout: delay(5000)
+      timeout: delay(60000)
     });
 
     if (timeout) {
@@ -47,11 +47,11 @@ function* handleLogin(action) {
 
     const { responseData, timeout } = yield race({
       responseData: call(authService.login, action.payload),
-      timeout: delay(5000)
+      timeout: delay(60000)
     });
 
     if (timeout) {
-      console.warn('⚠️ [Saga] Login request timed out after 5s');
+      console.warn('⚠️ [Saga] Login request timed out after 60s');
       throw new Error('Request timed out. The server is not responding.');
     }
     
@@ -78,7 +78,7 @@ function* handleForgotPassword(action) {
   try {
     const { responseData, timeout } = yield race({
       responseData: call(authService.forgotPassword, action.payload),
-      timeout: delay(5000)
+      timeout: delay(60000)
     });
 
     if (timeout) {
@@ -101,7 +101,7 @@ function* handleResetPassword(action) {
   try {
     const { responseData, timeout } = yield race({
       responseData: call(authService.resetPassword, action.payload),
-      timeout: delay(5000)
+      timeout: delay(60000)
     });
 
     if (timeout) {
