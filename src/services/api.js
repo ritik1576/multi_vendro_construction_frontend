@@ -7,12 +7,12 @@ export const injectStore = (_store) => {
   store = _store;
 };
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const createApiInstance = (baseURL) => {
   const apiInstance = axios.create({
     baseURL,
-    timeout: 15000, // Increased to 15 seconds to handle slower dev server responses
+    timeout: 60000, // Increased to 60 seconds to handle free-tier backend cold starts
     headers: {
       'Content-Type': 'application/json',
     },
@@ -21,7 +21,7 @@ const createApiInstance = (baseURL) => {
   // Request Interceptor: Attach JWT token if available
   apiInstance.interceptors.request.use(
     (config) => {
-      console.log('➡️ [API Request]', config.method.toUpperCase(), config.url, config.data);
+
       const state = store.getState();
       const token = state.auth.token;
       
@@ -37,7 +37,7 @@ const createApiInstance = (baseURL) => {
 
   apiInstance.interceptors.response.use(
     (response) => {
-      console.log('✅ [API Response Success]', response.config.url, response.data);
+
       return response;
     },
     (error) => {
