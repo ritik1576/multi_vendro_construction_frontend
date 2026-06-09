@@ -39,11 +39,18 @@ const AppRoutes = () => {
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
 
         {/* Vendor Routes */}
+<<<<<<< HEAD
         <Route path="/vendor/dashboard" element={<VendorApprovalStatus />} />
         <Route path="/vendor/orders" element={<VendorOrders />} />
         <Route path="/vendor/products/add" element={<AddProduct />} />
         <Route path="/vendor/products/edit/:productId" element={<EditProduct />} />
         <Route path="/vendor/inventory" element={<Inventory />} />
+=======
+        <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
+        <Route path="/vendor/products/add" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
+        <Route path="/vendor/products/edit/:productId" element={<ProtectedRoute><EditProduct /></ProtectedRoute>} />
+        <Route path="/vendor/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+>>>>>>> 1f9547c1987d530bbf32393e2f53d631d47162c4
       </Routes>
     </Router>
   );

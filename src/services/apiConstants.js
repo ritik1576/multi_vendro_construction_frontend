@@ -6,6 +6,8 @@ export const API_ENDPOINTS = {
     LOGIN: '/auth/login',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
+    VENDOR_LOGIN: '/auth/vendor/login',
+    VENDOR_REGISTER: '/auth/vendor/register',
   },
   ADDRESSES: {
     GET_USER_ADDRESSES: '/addresses/user/{userId}',

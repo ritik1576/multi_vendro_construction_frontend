@@ -1,6 +1,6 @@
 import React from 'react';
 
-const InputField = ({ label, type = "text", name, value, onChange, placeholder, icon: Icon, error }) => {
+const InputField = ({ label, type = "text", name, value, onChange, placeholder, icon: Icon, error, readOnly, className = '' }) => {
   return (
     <div>
       <label className="block text-[12px] font-bold text-[#111827] mb-1">{label}</label>
@@ -16,7 +16,8 @@ const InputField = ({ label, type = "text", name, value, onChange, placeholder, 
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`block w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2 bg-[#f4f6fb] border ${error ? 'border-red-500' : 'border-[#e5e7eb]'} rounded-[6px] text-[13px] text-gray-900 placeholder-gray-400 focus:ring-1 focus:ring-[#EA580C] focus:border-[#EA580C] focus:bg-white transition-colors`}
+          readOnly={readOnly}
+          className={`block w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2 bg-[#f4f6fb] border ${error ? 'border-red-500' : 'border-[#e5e7eb]'} rounded-[6px] text-[13px] text-gray-900 placeholder-gray-400 focus:ring-1 focus:ring-[#EA580C] focus:border-[#EA580C] focus:bg-white transition-colors ${className}`}
         />
       </div>
       {error && <p className="mt-0.5 text-[11px] text-red-500 font-medium">{error}</p>}

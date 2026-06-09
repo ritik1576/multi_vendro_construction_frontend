@@ -14,12 +14,13 @@ const Login = () => {
     password: '',
   });
 
+  const [selectedRole, setSelectedRole] = useState('customer');
   const [errors, setErrors] = useState({});
   const [loginSubmitted, setLoginSubmitted] = useState(false);
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isLoading, isAuthenticated, error: authError } = useSelector((state) => state.auth);
+  const { isLoading, isAuthenticated, error: authError, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(clearAuthError());
@@ -27,9 +28,13 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/products', { replace: true });
+      if (user?.role === 'vendor') {
+        navigate('/vendor/dashboard', { replace: true });
+      } else {
+        navigate('/products', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, user]);
 
   useEffect(() => {
     // We handle the error directly in the UI now, no more alerts
@@ -63,7 +68,7 @@ const Login = () => {
     e.preventDefault();
     if (validate()) {
       setLoginSubmitted(true);
-      dispatch(loginRequest(formData));
+      dispatch(loginRequest({ ...formData, role: selectedRole }));
     }
   };
 
@@ -134,6 +139,32 @@ const Login = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 
+                {/* Role Selection Toggle */}
+                <div className="flex p-1 bg-slate-100 rounded-lg mb-6 border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRole('customer')}
+                    className={`flex-1 py-2 text-[13px] font-bold rounded-md transition-all ${
+                      selectedRole === 'customer'
+                        ? 'bg-white text-[#EA580C] shadow-sm ring-1 ring-slate-200/50'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Customer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRole('vendor')}
+                    className={`flex-1 py-2 text-[13px] font-bold rounded-md transition-all ${
+                      selectedRole === 'vendor'
+                        ? 'bg-white text-[#EA580C] shadow-sm ring-1 ring-slate-200/50'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Vendor
+                  </button>
+                </div>
+
                 <InputField
                   label="Email Address"
                   type="email"
