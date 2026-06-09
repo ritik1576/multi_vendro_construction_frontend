@@ -17,8 +17,11 @@ import authService from '../services/authService';
 
 function* handleRegister(action) {
   try {
+    const { isVendor, ...payloadToSend } = action.payload;
+    const apiCall = isVendor ? authService.vendorRegister : authService.register;
+
     const { responseData, timeout } = yield race({
-      responseData: call(authService.register, action.payload),
+      responseData: call(apiCall, payloadToSend),
       timeout: delay(60000)
     });
 
@@ -26,8 +29,9 @@ function* handleRegister(action) {
       throw new Error('Request timed out. The server is not responding.');
     }
     
-    const userDetails = responseData.user || responseData;
     const token = responseData.token || null;
+    const { token: _, ...restData } = responseData;
+    const userDetails = responseData.user || restData;
     
     yield put(registerSuccess({ user: userDetails, token }));
     alert('Account created successfully!');
@@ -44,9 +48,12 @@ function* handleRegister(action) {
 
 function* handleLogin(action) {
   try {
+    const { role, email, password } = action.payload;
+    const credentials = { email, password };
+    const apiCall = role === 'vendor' ? authService.vendorLogin : authService.login;
 
     const { responseData, timeout } = yield race({
-      responseData: call(authService.login, action.payload),
+      responseData: call(apiCall, credentials),
       timeout: delay(60000)
     });
 
@@ -56,8 +63,10 @@ function* handleLogin(action) {
     }
     
 
-    const userDetails = responseData.user || responseData;
+    // Extract token safely and create a user object with remaining data
     const token = responseData.token || null;
+    const { token: _, ...restData } = responseData;
+    const userDetails = responseData.user || restData;
     
     yield put(loginSuccess({ user: userDetails, token }));
 

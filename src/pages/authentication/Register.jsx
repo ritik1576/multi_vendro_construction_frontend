@@ -16,18 +16,17 @@ const Register = () => {
     phone: '',
     password: '',
     confirmPassword: '',
-    businessName: '',
-    businessEmail: '',
-    businessPhone: '',
-    gstNumber: '',
-    businessAddress: ''
+    shopName: '',
+    shopSlug: '',
+    description: '',
+    gstNumber: ''
   });
 
   const [errors, setErrors] = useState({});
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isLoading, isAuthenticated, registrationSuccess, error: authError } = useSelector((state) => state.auth);
+  const { user, isLoading, isAuthenticated, registrationSuccess, error: authError } = useSelector((state) => state.auth);
 
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
@@ -37,9 +36,13 @@ const Register = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/products', { replace: true });
+      if (user?.role === 'vendor') {
+        navigate('/vendor/dashboard', { replace: true });
+      } else {
+        navigate('/products', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     // We handle the error directly in the UI now, no more alerts
@@ -75,27 +78,27 @@ const Register = () => {
     }
 
     if (role === 'Vendor') {
-      if (!formData.businessName.trim()) newErrors.businessName = 'Business Name is required';
+      if (!formData.shopName.trim()) newErrors.shopName = 'Shop Name is required';
+      if (!formData.shopSlug.trim()) newErrors.shopSlug = 'Shop Slug is required';
+      if (!formData.description.trim()) newErrors.description = 'Shop Description is required';
       
-      if (!formData.businessEmail) {
-        newErrors.businessEmail = 'Business Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.businessEmail)) {
-        newErrors.businessEmail = 'Business Email is invalid';
+      if (!formData.email) {
+        newErrors.email = 'Email Address is required';
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = 'Email Address is invalid';
       }
 
-      if (!formData.businessPhone) {
-        newErrors.businessPhone = 'Business Phone is required';
-      } else if (!/^\d{10}$/.test(formData.businessPhone.replace(/\D/g, ''))) {
-        newErrors.businessPhone = 'Valid 10-digit Phone Number is required';
+      if (!formData.phone) {
+        newErrors.phone = 'Phone Number is required';
+      } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+        newErrors.phone = 'Valid 10-digit Phone Number is required';
       }
 
-      if (!formData.gstNumber.trim()) {
-        newErrors.gstNumber = 'GST Number is required';
-      } else if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(formData.gstNumber.toUpperCase())) {
-        newErrors.gstNumber = 'Invalid GST Format (e.g. 22AAAAA0000A1Z5)';
+      if (formData.gstNumber && formData.gstNumber.trim() !== '') {
+        if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(formData.gstNumber.toUpperCase())) {
+          newErrors.gstNumber = 'Invalid GST Format (e.g. 22AAAAA0000A1Z5)';
+        }
       }
-
-      if (!formData.businessAddress.trim()) newErrors.businessAddress = 'Business Address is required';
     }
 
     setErrors(newErrors);
@@ -104,7 +107,15 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      
+      if (name === 'shopName') {
+        newData.shopSlug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      }
+      
+      return newData;
+    });
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -114,7 +125,26 @@ const Register = () => {
     e.preventDefault();
     if (validate()) {
       setHasSubmitted(true);
-      dispatch(registerRequest({ ...formData, role }));
+      if (role === 'Vendor') {
+        dispatch(registerRequest({
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          shopName: formData.shopName,
+          shopSlug: formData.shopSlug,
+          description: formData.description,
+          gstNumber: formData.gstNumber,
+          isVendor: true
+        }));
+      } else {
+        dispatch(registerRequest({
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          role: 'Customer'
+        }));
+      }
     }
   };
 
@@ -245,40 +275,64 @@ const Register = () => {
                 {role === 'Vendor' && (
                   <>
                     <InputField
-                      label="Business Name"
-                      type="text"
-                      name="businessName"
-                      value={formData.businessName}
-                      onChange={handleChange}
-                      placeholder="Acme Corp"
-                      icon={Building2}
-                      error={errors.businessName}
-                    />
-
-                    <InputField
-                      label="Business Email"
+                      label="Email *"
                       type="email"
-                      name="businessEmail"
-                      value={formData.businessEmail}
+                      name="email"
+                      value={formData.email}
                       onChange={handleChange}
                       placeholder="contact@acme.com"
                       icon={Mail}
-                      error={errors.businessEmail}
+                      error={errors.email}
                     />
 
                     <InputField
-                      label="Business Phone"
+                      label="Phone Number *"
                       type="tel"
-                      name="businessPhone"
-                      value={formData.businessPhone}
+                      name="phone"
+                      value={formData.phone}
                       onChange={handleChange}
                       placeholder="+91 00000 00000"
                       icon={Phone}
-                      error={errors.businessPhone}
+                      error={errors.phone}
                     />
 
                     <InputField
-                      label="GST Number"
+                      label="Shop Name *"
+                      type="text"
+                      name="shopName"
+                      value={formData.shopName}
+                      onChange={handleChange}
+                      placeholder="Acme Building Materials"
+                      icon={Building2}
+                      error={errors.shopName}
+                    />
+
+                    <InputField
+                      label="Shop Slug *"
+                      type="text"
+                      name="shopSlug"
+                      value={formData.shopSlug}
+                      onChange={handleChange}
+                      placeholder="acme-building-materials"
+                      icon={Building2}
+                      error={errors.shopSlug}
+                      readOnly
+                      className="bg-gray-50 cursor-not-allowed"
+                    />
+
+                    <InputField
+                      label="Shop Description *"
+                      type="text"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      placeholder="Supplier of cement, steel..."
+                      icon={ClipboardList}
+                      error={errors.description}
+                    />
+
+                    <InputField
+                      label="GST Number (Optional)"
                       type="text"
                       name="gstNumber"
                       value={formData.gstNumber}
@@ -286,17 +340,6 @@ const Register = () => {
                       placeholder="22AAAAA0000A1Z5"
                       icon={FileDigit}
                       error={errors.gstNumber}
-                    />
-
-                    <InputField
-                      label="Business Address"
-                      type="text"
-                      name="businessAddress"
-                      value={formData.businessAddress}
-                      onChange={handleChange}
-                      placeholder="123 Industrial Area, City"
-                      icon={MapPin}
-                      error={errors.businessAddress}
                     />
                   </>
                 )}
