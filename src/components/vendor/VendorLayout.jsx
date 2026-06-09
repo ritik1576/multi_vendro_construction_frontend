@@ -8,8 +8,6 @@ import {
 
 const sidebarItems = [
   { name: 'Dashboard', path: '/vendor/dashboard', icon: LayoutDashboard },
-  { name: 'Products', path: '/vendor/products', icon: Package },
-  { name: 'Add Product', path: '/vendor/products/add', icon: PlusSquare },
   { name: 'Orders', path: '/vendor/orders', icon: ShoppingCart },
   { name: 'Inventory', path: '/vendor/inventory', icon: Archive },
   { name: 'Returns', path: '/vendor/returns', icon: Undo2 },
