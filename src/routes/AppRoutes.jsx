@@ -18,6 +18,8 @@ import VendorApprovalStatus from '../pages/vendor/VendorApprovalStatus';
 import AddProduct from '../pages/vendor/AddProduct';
 import EditProduct from '../pages/vendor/EditProduct';
 import Inventory from '../pages/vendor/Inventory';
+import VendorOrders from '../pages/vendor/VendorOrders';
+
 const AppRoutes = () => {
   return (
     <Router>
@@ -38,6 +40,7 @@ const AppRoutes = () => {
 
         {/* Vendor Routes */}
         <Route path="/vendor/dashboard" element={<VendorApprovalStatus />} />
+        <Route path="/vendor/orders" element={<VendorOrders />} />
         <Route path="/vendor/products/add" element={<AddProduct />} />
         <Route path="/vendor/products/edit/:productId" element={<EditProduct />} />
         <Route path="/vendor/inventory" element={<Inventory />} />

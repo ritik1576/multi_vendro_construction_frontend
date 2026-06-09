@@ -10,7 +10,6 @@ const sidebarItems = [
   { name: 'Dashboard', path: '/vendor/dashboard', icon: LayoutDashboard },
   { name: 'Orders', path: '/vendor/orders', icon: ShoppingCart },
   { name: 'Inventory', path: '/vendor/inventory', icon: Archive },
-  { name: 'Returns', path: '/vendor/returns', icon: Undo2 },
 ];
 
 const VendorLayout = ({ children }) => {
