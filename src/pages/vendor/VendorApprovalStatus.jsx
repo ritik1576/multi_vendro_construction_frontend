@@ -4,7 +4,7 @@ import VendorLayout from '../../components/vendor/VendorLayout';
 
 const VendorApprovalStatus = () => {
   // Dummy status: 'pending' | 'approved' | 'rejected'
-const vendorStatus = 'pending';
+const vendorStatus = 'approved';
 
   if (vendorStatus === 'pending') {
     return (
