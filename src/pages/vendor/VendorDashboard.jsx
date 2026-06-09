@@ -1,21 +1,48 @@
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Package, TrendingUp, AlertTriangle, Plus, ShoppingBag, Eye, ArrowRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getVendorOrders } from '../../services/vendorApi';
 
 const VendorDashboard = () => {
+  const { user } = useSelector((state) => state.auth);
+  const vendorId = user?.vendorId || user?.id || 2;
+
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await getVendorOrders(vendorId);
+        setOrders(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to fetch vendor orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [vendorId]);
+
+  const activeOrdersCount = orders.filter(o => o.status !== 'Completed' && o.status !== 'Delivered').length;
+  const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.totalAmount || o.total || o.amount) || 0), 0);
+  const formatAmount = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
   const kpis = [
     { title: 'Total Products', value: '124', icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
-    { title: 'Total Revenue', value: '₹12.4L', icon: TrendingUp, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
-    { title: 'Active Orders', value: '38', icon: ShoppingBag, color: 'border-l-[#F59E0B]', textColor: 'text-[#F59E0B]' },
+    { title: 'Total Revenue', value: formatAmount(totalRevenue), icon: TrendingUp, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
+    { title: 'Active Orders', value: activeOrdersCount.toString(), icon: ShoppingBag, color: 'border-l-[#F59E0B]', textColor: 'text-[#F59E0B]' },
     { title: 'Low Stock Alerts', value: '8', icon: AlertTriangle, color: 'border-l-[#EF4444]', textColor: 'text-[#EF4444]' },
   ];
 
-  const recentOrders = [
-    { id: 'ORD-1001', customer: 'L&T Construction', date: '2026-06-09', amount: '₹1,45,000', status: 'Processing' },
-    { id: 'ORD-1002', customer: 'Tata Projects', date: '2026-06-08', amount: '₹85,500', status: 'Shipped' },
-    { id: 'ORD-1003', customer: 'Shapoorji Pallonji', date: '2026-06-08', amount: '₹2,10,000', status: 'Delivered' },
-    { id: 'ORD-1004', customer: 'Afcons Infra', date: '2026-06-07', amount: '₹45,000', status: 'Processing' },
-    { id: 'ORD-1005', customer: 'NCC Limited', date: '2026-06-06', amount: '₹3,20,000', status: 'Delivered' },
-  ];
+  const recentOrders = orders.slice(0, 5).map(o => ({
+    id: o.id || o._id || 'N/A',
+    customer: o.customerName || o.customer || 'Unknown Customer',
+    date: o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'Unknown Date'),
+    amount: o.amount ? o.amount : formatAmount(o.totalAmount || o.total || 0),
+    status: o.status || o.orderStatus || 'Processing'
+  }));
 
   const lowStockCount = 8; // Match the KPI value
 
@@ -68,7 +95,19 @@ const VendorDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {recentOrders.map((order) => (
+                  {loading ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-sm font-medium text-slate-500">
+                        Loading orders...
+                      </td>
+                    </tr>
+                  ) : recentOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-sm font-medium text-slate-500">
+                        No recent orders found.
+                      </td>
+                    </tr>
+                  ) : recentOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-6 py-4 font-mono text-xs font-bold text-slate-700">{order.id}</td>
                       <td className="px-6 py-4">
@@ -77,21 +116,9 @@ const VendorDashboard = () => {
                       </td>
                       <td className="px-6 py-4 text-sm font-extrabold text-slate-700">{order.amount}</td>
                       <td className="px-6 py-4">
-                        {order.status === 'Processing' && (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-amber-100 text-amber-700 uppercase tracking-wider">
-                            Processing
-                          </span>
-                        )}
-                        {order.status === 'Shipped' && (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-blue-100 text-blue-700 uppercase tracking-wider">
-                            Shipped
-                          </span>
-                        )}
-                        {order.status === 'Delivered' && (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase tracking-wider">
-                            Delivered
-                          </span>
-                        )}
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 uppercase tracking-wider">
+                          {order.status}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button className="text-slate-400 hover:text-[#1E3A8A] transition-colors p-1.5 rounded-lg hover:bg-slate-100" title="View Order">

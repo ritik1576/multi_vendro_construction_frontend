@@ -1,66 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import { 
   ShoppingCart, Clock, Package, CheckCircle, 
   Search, Filter, Calendar, ChevronDown, 
-  MapPin, Box, ChevronLeft, ChevronRight, Eye
+  MapPin, Box, ChevronLeft, ChevronRight, Eye, Trash2
 } from 'lucide-react';
+import { getVendorOrders, deleteVendorOrder } from '../../services/vendorApi';
 
 const VendorOrders = () => {
+  const { user } = useSelector((state) => state.auth);
+  const vendorId = user?.vendorId || user?.id || 2;
+
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [dateFilter, setDateFilter] = useState('All Time');
   const [sortBy, setSortBy] = useState('Newest First');
 
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getVendorOrders(vendorId);
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+      setError('Failed to load orders. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [vendorId]);
+
+  const handleDelete = async (orderId) => {
+    if (!window.confirm('Are you sure you want to delete this order?')) return;
+    try {
+      await deleteVendorOrder(vendorId, orderId);
+      fetchOrders();
+    } catch (err) {
+      console.error('Failed to delete order:', err);
+      alert('Failed to delete order. Please try again.');
+    }
+  };
+
+  const pendingCount = orders.filter(o => ['Pending Approval', 'Pending'].includes(o.status || o.orderStatus)).length;
+  const processingCount = orders.filter(o => ['Processing', 'Shipped'].includes(o.status || o.orderStatus)).length;
+  const completedCount = orders.filter(o => ['Completed', 'Delivered'].includes(o.status || o.orderStatus)).length;
+
   const stats = [
-    { title: 'Total Orders', value: '450', helper: '+12% from last month', icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-l-blue-600' },
-    { title: 'Pending Approval', value: '12', helper: 'Needs action', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-l-amber-600' },
-    { title: 'Processing Orders', value: '28', helper: 'In logistics pipeline', icon: Package, color: 'text-indigo-600', bg: 'bg-indigo-100', border: 'border-l-indigo-600' },
-    { title: 'Completed Orders', value: '410', helper: 'Successfully delivered', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-100', border: 'border-l-emerald-600' }
+    { title: 'Total Orders', value: orders.length.toString(), helper: 'All time', icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-l-blue-600' },
+    { title: 'Pending Approval', value: pendingCount.toString(), helper: 'Needs action', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-l-amber-600' },
+    { title: 'Processing Orders', value: processingCount.toString(), helper: 'In logistics pipeline', icon: Package, color: 'text-indigo-600', bg: 'bg-indigo-100', border: 'border-l-indigo-600' },
+    { title: 'Completed Orders', value: completedCount.toString(), helper: 'Successfully delivered', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-100', border: 'border-l-emerald-600' }
   ];
 
-  const dummyOrders = [
-    {
-      id: 'ORD-10045',
-      date: '09 Jun 2026',
-      time: '14:30 PM',
-      customer: 'L&T Construction',
-      location: 'Mumbai, Maharashtra',
-      items: 'UltraTech Cement 50kg (150 Bags), JSW Steel TMT (10 Tons)',
-      total: '₹4,50,000',
-      status: 'Pending Approval'
-    },
-    {
-      id: 'ORD-10044',
-      date: '08 Jun 2026',
-      time: '11:15 AM',
-      customer: 'Tata Projects',
-      location: 'Pune, Maharashtra',
-      items: 'Century Ply 18mm (50 Boards)',
-      total: '₹85,000',
-      status: 'Processing'
-    },
-    {
-      id: 'ORD-10043',
-      date: '07 Jun 2026',
-      time: '09:45 AM',
-      customer: 'Shapoorji Pallonji',
-      location: 'Delhi NCR',
-      items: 'Asian Paints Apex 20L (20 Buckets), Putty (50 Bags)',
-      total: '₹1,20,000',
-      status: 'Completed'
-    },
-    {
-      id: 'ORD-10042',
-      date: '06 Jun 2026',
-      time: '16:20 PM',
-      customer: 'Afcons Infra',
-      location: 'Chennai, Tamil Nadu',
-      items: 'Hydraulic Pump Unit v2 (2 Units)',
-      total: '₹2,84,000',
-      status: 'Pending Approval'
-    }
-  ];
+  const formatAmount = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
+  const displayOrders = orders.map(o => ({
+    id: o.id || o._id || 'N/A',
+    date: o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'Unknown'),
+    time: o.time || (o.createdAt ? new Date(o.createdAt).toLocaleTimeString() : ''),
+    customer: o.customerName || o.customer || 'Unknown Customer',
+    location: o.location || o.shippingAddress?.city || 'Unknown Location',
+    items: o.itemsSummary || (Array.isArray(o.items) ? `${o.items.length} items` : 'Various Items'),
+    total: o.amount ? o.amount : formatAmount(o.totalAmount || o.total || 0),
+    status: o.status || o.orderStatus || 'Processing'
+  }));
+
+
 
   const getStatusBadge = (status) => {
     switch(status) {
@@ -166,7 +180,28 @@ const VendorOrders = () => {
 
         {/* Orders List */}
         <div className="space-y-4">
-          {dummyOrders.map((order) => (
+          {loading && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
+              <p className="text-slate-500 font-medium">Loading orders...</p>
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
+              <p className="text-red-500 font-medium">{error}</p>
+              <button onClick={fetchOrders} className="mt-4 px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200">
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && displayOrders.length === 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
+              <p className="text-slate-500 font-medium">No orders found.</p>
+            </div>
+          )}
+
+          {!loading && !error && displayOrders.map((order) => (
             <div key={order.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow">
               <div className="flex flex-col lg:flex-row gap-4">
                 
@@ -218,10 +253,19 @@ const VendorOrders = () => {
                         </button>
                       </div>
                     ) : null}
-                    <button className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-slate-200 hover:border-[#1E3A8A] text-slate-700 hover:text-[#1E3A8A] text-sm font-extrabold rounded-md transition-colors">
-                      <Eye className="w-4 h-4" />
-                      View Details
-                    </button>
+                    <div className="flex gap-2">
+                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-2 border-slate-200 hover:border-[#1E3A8A] text-slate-700 hover:text-[#1E3A8A] text-sm font-extrabold rounded-md transition-colors">
+                        <Eye className="w-4 h-4" />
+                        Details
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(order.id)}
+                        className="px-3 py-2 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-md transition-colors"
+                        title="Delete Order"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
