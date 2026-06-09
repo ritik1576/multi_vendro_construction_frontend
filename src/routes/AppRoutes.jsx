@@ -14,7 +14,9 @@ import ConfirmOrder from '../pages/customer/ConfirmOrder';
 import OrderHistory from '../pages/customer/OrderHistory';
 import OrderDetail from '../pages/customer/OrderDetail';
 import ProtectedRoute from './ProtectedRoute';
-
+import VendorApprovalStatus from '../pages/vendor/VendorApprovalStatus';
+import AddProduct from '../pages/vendor/AddProduct';
+import EditProduct from '../pages/vendor/EditProduct';
 const AppRoutes = () => {
   return (
     <Router>
@@ -32,6 +34,11 @@ const AppRoutes = () => {
         <Route path="/order-confirmation" element={<ProtectedRoute><ConfirmOrder /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+
+        {/* Vendor Routes */}
+        <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
+        <Route path="/vendor/products/add" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
+        <Route path="/vendor/products/edit/:productId" element={<ProtectedRoute><EditProduct /></ProtectedRoute>} />
       </Routes>
     </Router>
   );
