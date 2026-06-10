@@ -38,4 +38,4 @@ export const API_ENDPOINTS = {
   },
 };
 
-export const BACKEND_URL = 'http://192.168.10.104:5296';
+export const BACKEND_URL = 'https://multi-vendro-construction-backend-4.onrender.com';
