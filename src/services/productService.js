@@ -21,5 +21,10 @@ export const productService = {
   getCategories: async () => {
     const response = await api.get(API_ENDPOINTS.CATEGORIES.GET_ALL);
     return response.data;
+  },
+  
+  getVendorProducts: async (vendorId) => {
+    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_VENDOR_PRODUCTS.replace('{vendorId}', vendorId));
+    return response.data;
   }
 };

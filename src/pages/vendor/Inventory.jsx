@@ -1,15 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import {
   Package, Banknote, AlertTriangle, AlertCircle,
-  Search, ChevronDown, X, Eye, IndianRupee, Image as ImageIcon, Plus
+  Search, ChevronDown, X, Eye, IndianRupee, Image as ImageIcon, Plus, Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { productService } from '../../services/productService';
 
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
+  const [inventoryData, setInventoryData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const { user } = useSelector(state => state.auth);
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      if (!user?.vendorId) {
+        setIsLoading(false);
+        setError('Vendor ID not found. Please log in again.');
+        return;
+      }
+      try {
+        setIsLoading(true);
+        const response = await productService.getVendorProducts(user.vendorId);
+        setInventoryData(response.data || []);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch inventory.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInventory();
+  }, [user]);
 
   const clearAllFilters = () => {
     setSearchTerm('');
@@ -17,24 +45,52 @@ const Inventory = () => {
     setSelectedStatus('All');
   };
 
-  const kpis = [
-    { title: 'Total Products', value: '1,284', icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
-    { title: 'Total Value (₹)', value: '4.2M', icon: Banknote, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
-    { title: 'Low Stock', value: '42', icon: AlertTriangle, color: 'border-l-[#F59E0B]', textColor: 'text-[#F59E0B]' },
-    { title: 'Out of Stock', value: '8', icon: AlertCircle, color: 'border-l-[#EF4444]', textColor: 'text-[#EF4444]' },
-  ];
+  const getProductStatus = (product) => {
+    const stock = Number(product.stockQuantity || product.qty || 0);
+    if (stock <= 0) return 'OUT OF STOCK';
+    if (stock <= 20) return 'LOW STOCK';
+    return 'HEALTHY';
+  };
 
-  const inventoryData = [
-    { id: 1, name: 'Grade 8.8 Hex Bolts', subtitle: 'Industrial Series', category: 'Fasteners', status: 'HEALTHY', price: '1,240.00', qty: '850 Units' },
-    { id: 2, name: 'Industrial Copper Coil', subtitle: 'Grade A Conductors', category: 'Conductors', status: 'LOW STOCK', price: '18,500.00', qty: '12 Units' },
-    { id: 3, name: 'Hydraulic Pump Unit v2', subtitle: 'Heavy Lift Systems', category: 'Pumps', status: 'OUT OF STOCK', price: '142,000.00', qty: '0 Units' },
-    { id: 4, name: 'Reinforcement Bars (12mm)', subtitle: 'TMT Structural Steel', category: 'Steel', status: 'HEALTHY', price: '54,000.00', qty: '45 Tons' },
-  ];
+  const getProductPrice = (product) => Number(product.price || 0);
+  const getProductName = (product) => product.name || product.productName || product.ProductName || 'Unnamed Product';
+  const getProductCategory = (product) => product.category || product.categoryName || 'Uncategorized';
+
+  const calculateKPIs = () => {
+    let totalValue = 0;
+    let lowStock = 0;
+    let outOfStock = 0;
+
+    inventoryData.forEach(item => {
+      const status = getProductStatus(item);
+      const stock = Number(item.stockQuantity || item.qty || 0);
+      const price = getProductPrice(item);
+      totalValue += (price * stock);
+
+      if (status === 'LOW STOCK') lowStock++;
+      if (status === 'OUT OF STOCK') outOfStock++;
+    });
+
+    const formattedValue = totalValue > 1000000 
+      ? (totalValue / 1000000).toFixed(1) + 'M'
+      : totalValue > 1000 
+        ? (totalValue / 1000).toFixed(1) + 'K'
+        : totalValue.toString();
+
+    return [
+      { title: 'Total Products', value: inventoryData.length.toString(), icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
+      { title: 'Total Value (₹)', value: formattedValue, icon: Banknote, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
+      { title: 'Low Stock', value: lowStock.toString(), icon: AlertTriangle, color: 'border-l-[#F59E0B]', textColor: 'text-[#F59E0B]' },
+      { title: 'Out of Stock', value: outOfStock.toString(), icon: AlertCircle, color: 'border-l-[#EF4444]', textColor: 'text-[#EF4444]' },
+    ];
+  };
+
+  const kpis = calculateKPIs();
 
   const filteredData = inventoryData.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-    const matchesStatus = selectedStatus === 'All' || item.status === selectedStatus;
+    const matchesSearch = getProductName(item).toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || getProductCategory(item) === selectedCategory;
+    const matchesStatus = selectedStatus === 'All' || getProductStatus(item) === selectedStatus;
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -176,41 +232,55 @@ const Inventory = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredData.length > 0 ? filteredData.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-10 text-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-[#F97316] mx-auto" />
+                      <p className="mt-2 text-sm text-slate-500 font-medium">Loading inventory...</p>
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-10 text-center">
+                      <AlertCircle className="h-6 w-6 text-red-500 mx-auto" />
+                      <p className="mt-2 text-sm text-red-600 font-medium">{error}</p>
+                    </td>
+                  </tr>
+                ) : filteredData.length > 0 ? filteredData.map((item) => (
+                  <tr key={item.id || item.productId || Math.random()} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="font-extrabold text-[#0F172A] text-sm group-hover:text-[#F97316] transition-colors cursor-pointer">
-                        {item.name}
+                        {getProductName(item)}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {item.status === 'HEALTHY' && (
+                      {getProductStatus(item) === 'HEALTHY' && (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase tracking-wider">
                           Healthy
                         </span>
                       )}
-                      {item.status === 'LOW STOCK' && (
+                      {getProductStatus(item) === 'LOW STOCK' && (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-amber-100 text-amber-700 uppercase tracking-wider">
                           Low Stock
                         </span>
                       )}
-                      {item.status === 'OUT OF STOCK' && (
+                      {getProductStatus(item) === 'OUT OF STOCK' && (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-red-100 text-red-700 uppercase tracking-wider">
                           Out Of Stock
                         </span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm font-extrabold text-slate-700">
-                      {item.price}
+                      ₹{getProductPrice(item).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-sm font-extrabold ${item.status === 'OUT OF STOCK' ? 'text-red-500' : 'text-slate-700'}`}>
-                        {item.qty}
+                      <span className={`text-sm font-extrabold ${getProductStatus(item) === 'OUT OF STOCK' ? 'text-red-500' : 'text-slate-700'}`}>
+                        {item.stockQuantity || item.qty || 0} Units
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link 
-                        to={`/vendor/products/edit/${item.id}`}
+                        to={`/vendor/products/edit/${item.id || item.productId}`}
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#F97316] hover:bg-orange-600 text-white text-xs font-extrabold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-orange-500/20 active:scale-95"
                       >
                         <Eye className="w-3.5 h-3.5" />
