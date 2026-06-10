@@ -71,11 +71,11 @@ const Inventory = () => {
       if (status === 'OUT OF STOCK') outOfStock++;
     });
 
-    const formattedValue = totalValue > 1000000 
-      ? (totalValue / 1000000).toFixed(1) + 'M'
-      : totalValue > 1000 
-        ? (totalValue / 1000).toFixed(1) + 'K'
-        : totalValue.toString();
+    const formattedValue = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(totalValue);
 
     return [
       { title: 'Total Products', value: inventoryData.length.toString(), icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
@@ -303,7 +303,7 @@ const Inventory = () => {
           {/* Pagination Section */}
           <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm font-medium text-slate-500">
-              Showing <span className="font-extrabold text-slate-700">1-10</span> of <span className="font-extrabold text-slate-700">1,284</span> results
+              Showing <span className="font-extrabold text-slate-700">{filteredData.length > 0 ? 1 : 0}-{filteredData.length}</span> of <span className="font-extrabold text-slate-700">{filteredData.length}</span> results
             </div>
 
             <div className="flex items-center gap-6">
@@ -321,17 +321,7 @@ const Inventory = () => {
                 <button className="w-8 h-8 flex items-center justify-center rounded-md bg-[#D97706] text-white font-extrabold text-sm">
                   1
                 </button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-md text-slate-600 font-extrabold text-sm hover:bg-slate-200 transition-colors">
-                  2
-                </button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-md text-slate-600 font-extrabold text-sm hover:bg-slate-200 transition-colors">
-                  3
-                </button>
-                <span className="w-8 h-8 flex items-center justify-center text-slate-400 font-bold">...</span>
-                <button className="w-8 h-8 flex items-center justify-center rounded-md text-slate-600 font-extrabold text-sm hover:bg-slate-200 transition-colors">
-                  129
-                </button>
-                <button className="p-1 text-slate-400 hover:text-slate-700 transition-colors">
+                <button className="p-1 text-slate-400 hover:text-slate-700 transition-colors" disabled>
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </button>
               </div>

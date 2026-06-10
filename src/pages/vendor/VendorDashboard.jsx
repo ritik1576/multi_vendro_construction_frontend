@@ -2,39 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Package, TrendingUp, AlertTriangle, Plus, ShoppingBag, Eye, ArrowRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getVendorOrders, getVendorProducts } from '../../services/vendorApi';
+import { getVendorOrders, getVendorProducts, getVendorDashboard } from '../../services/vendorApi';
 
 const VendorDashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const vendorId = user?.vendorId || 3;
+  const userId = user?.userId || user?.id || 57;
 
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
+  const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [ordersData, productsData] = await Promise.all([
+        setError(null);
+        const [ordersData, productsData, dashboardData] = await Promise.all([
           getVendorOrders(vendorId),
-          getVendorProducts(vendorId)
+          getVendorProducts(vendorId),
+          getVendorDashboard(userId)
         ]);
         setOrders(Array.isArray(ordersData) ? ordersData : []);
         setProducts(Array.isArray(productsData) ? productsData : []);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
+        setDashboard(dashboardData || null);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [vendorId]);
+  }, [vendorId, userId]);
 
-  const activeOrdersCount = orders.filter(o => ['Pending Approval', 'Pending', 'Processing', 'Shipped'].includes(o.status || o.orderStatus)).length;
-  const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.totalAmount || o.total || o.amount) || 0), 0);
-  const totalProducts = products.length;
-  const lowStockCount = products.filter(p => p.stockQuantity <= 10 || p.inStock === false).length;
+  const activeOrdersCount = dashboard ? (Number(dashboard.pendingOrders || 0) + Number(dashboard.confirmedOrders || 0) + Number(dashboard.shippedOrders || 0)) : 0;
+  const totalRevenue = dashboard?.totalRevenue || 0;
+  const totalProducts = dashboard?.totalProducts || 0;
+  const lowStockCount = dashboard?.lowStockAlerts || 0;
   const formatAmount = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
 
   const kpis = [
@@ -45,7 +52,7 @@ const VendorDashboard = () => {
   ];
 
   const recentOrders = orders.slice(0, 5).map(o => ({
-    id: o.id || o._id || 'N/A',
+    id: o.orderNumber || o.order_number || o.orderNo || o.orderId || o.id || o._id || 'N/A',
     customer: o.customerName || o.customer || 'Unknown Customer',
     date: o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'Unknown Date'),
     amount: o.amount ? o.amount : formatAmount(o.totalAmount || o.total || 0),
@@ -68,6 +75,10 @@ const VendorDashboard = () => {
       {loading ? (
         <div className="flex justify-center items-center py-10">
           <p className="text-slate-500 font-medium">Loading dashboard data...</p>
+        </div>
+      ) : error ? (
+        <div className="flex justify-center items-center py-10">
+          <p className="text-red-500 font-medium">{error}</p>
         </div>
       ) : (
         <>
@@ -101,7 +112,7 @@ const VendorDashboard = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Order ID</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Order Number</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
@@ -135,9 +146,10 @@ const VendorDashboard = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-slate-400 hover:text-[#1E3A8A] transition-colors p-1.5 rounded-lg hover:bg-slate-100" title="View Order">
-                          <Eye className="w-4 h-4" />
-                        </button>
+                        <Link to="/vendor/orders" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-[#1E3A8A] text-slate-600 hover:text-[#1E3A8A] text-xs font-extrabold rounded-md shadow-sm transition-colors" title="View Order">
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </Link>
                       </td>
                     </tr>
                   ))}
