@@ -281,6 +281,7 @@ const Inventory = () => {
                     <td className="px-6 py-4 text-right">
                       <Link 
                         to={`/vendor/products/edit/${item.id || item.productId}`}
+                        state={{ product: item }}
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#F97316] hover:bg-orange-600 text-white text-xs font-extrabold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-orange-500/20 active:scale-95"
                       >
                         <Eye className="w-3.5 h-3.5" />

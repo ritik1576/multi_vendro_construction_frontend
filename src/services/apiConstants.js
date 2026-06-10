@@ -20,6 +20,9 @@ export const API_ENDPOINTS = {
     GET_BY_NAME: '/products/{name}',
     SEARCH: '/products/search',
     GET_VENDOR_PRODUCTS: '/vendor/products/{vendorId}',
+    ADD_PRODUCT: '/products',
+    UPDATE_PRODUCT: '/products/{id}',
+    DELETE_PRODUCT: '/products/{id}',
   },
   CATEGORIES: {
     GET_ALL: '/categories',
