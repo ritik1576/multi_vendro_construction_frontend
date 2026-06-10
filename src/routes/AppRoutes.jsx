@@ -40,6 +40,7 @@ const AppRoutes = () => {
 
         {/* Vendor Routes */}
         <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
+        <Route path="/vendor/orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
         <Route path="/vendor/products/add" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
         <Route path="/vendor/products/edit/:productId" element={<ProtectedRoute><EditProduct /></ProtectedRoute>} />
         <Route path="/vendor/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
