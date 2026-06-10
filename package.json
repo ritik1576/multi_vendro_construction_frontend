@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1065.0",
     "axios": "^1.16.1",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",
