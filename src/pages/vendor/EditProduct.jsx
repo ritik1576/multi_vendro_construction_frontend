@@ -1,32 +1,112 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { productService } from '../../services/productService';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import ProductForm from '../../components/vendor/ProductForm';
-import { Edit2, ArrowLeft, Image as ImageIcon, Package, Tag, Hash, Box, FileText, AlignLeft } from 'lucide-react';
+import { Edit2, ArrowLeft, Image as ImageIcon, Package, Tag, Hash, Box, FileText, AlignLeft, Trash2 } from 'lucide-react';
 
 const EditProduct = () => {
   const { productId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { user } = useSelector(state => state.auth);
 
-  // Simulated product data that would normally be fetched from an API
+  // Initialize with empty/fallback data, then update from router state
   const [productData, setProductData] = useState({
-    name: 'UltraTech Cement 50kg',
-    category: 'Cement',
-    brand: 'UltraTech',
-    price: '400.00',
-    discountPrice: '380.00',
-    stock: '150',
-    sku: 'CEM-UTC-50',
-    unit: 'Bag',
-    shortDescription: 'Premium quality ordinary portland cement for general construction.',
-    description: 'Premium quality ordinary portland cement suitable for all general construction purposes. High strength and durability. Ideal for concrete applications, plastering, and masonry.',
+    name: 'Unknown Product',
+    category: '',
+    brand: '',
+    price: '0.00',
+    discountPrice: '0.00',
+    stock: '0',
+    sku: '',
+    unit: '',
+    shortDescription: '',
+    description: '',
     image: null,
   });
 
-  const handleSave = (updatedData) => {
-    // In a real app, you would make an API call here to update the backend
-    setProductData(updatedData);
-    setIsEditing(false); // Switch back to view mode
+  useEffect(() => {
+    // If the user clicked "View Details" from Inventory, we have the product data
+    if (location.state && location.state.product) {
+      const product = location.state.product;
+      setProductData({
+        name: product.name || product.productName || 'Unknown Product',
+        category: product.category || product.categoryName || '',
+        brand: product.brand || '',
+        price: product.price ? product.price.toString() : '0.00',
+        discountPrice: product.discountPrice ? product.discountPrice.toString() : '0.00',
+        stock: (product.stockQuantity || product.quantity || product.qty || 0).toString(),
+        sku: product.sku || '',
+        unit: product.unit || '',
+        shortDescription: product.shortDescription || '',
+        description: product.description || '',
+        image: product.thumbnail || product.image || null,
+      });
+    } else {
+      // Fallback: If they refresh the page, we don't have the data since we only have a "get all" API.
+      // We could try to fetch all products again and filter by ID, but for now we'll just show empty.
+      console.warn("No product data passed in location state.");
+    }
+  }, [location.state]);
+
+  const handleSave = async (formData) => {
+    if (!user?.vendorId) {
+      alert("Vendor ID not found. Please log in again.");
+      return;
+    }
+
+    const price = Number(formData.price || 0);
+    const discountPrice = Number(formData.discountPrice || 0);
+    const quantity = Number(formData.stock || 0);
+    
+    // Auto-generate slug from name
+    const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+    const payload = {
+      vendorId: user.vendorId,
+      name: formData.name,
+      slug: slug,
+      shortDescription: formData.shortDescription,
+      description: formData.description,
+      price: price,
+      discountPrice: discountPrice,
+      sku: formData.sku,
+      thumbnail: formData.image || '',
+      inStock: quantity > 0,
+      quantity: quantity,
+      category: formData.category
+    };
+
+    setIsSubmitting(true);
+    try {
+      await productService.updateProduct(productId, payload);
+      setProductData(formData); // Update local state to show new details immediately
+      setIsEditing(false); // Switch back to view mode
+    } catch (error) {
+      console.error('Error updating product:', error);
+      alert(error.response?.data?.title || error.message || 'Failed to update product. Ensure your backend handles CORS for PUT requests.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
+      setIsDeleting(true);
+      try {
+        await productService.deleteProduct(productId);
+        navigate('/vendor/inventory');
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert(error.response?.data?.title || error.message || 'Failed to delete product.');
+        setIsDeleting(false);
+      }
+    }
   };
 
   return (
@@ -48,13 +128,23 @@ const EditProduct = () => {
                 <h1 className="text-2xl font-extrabold text-[#0F172A]">{productData.name}</h1>
                 <p className="text-sm font-medium text-slate-500 mt-1">Product ID: {productId} • SKU: {productData.sku}</p>
               </div>
-              <button 
-                onClick={() => setIsEditing(true)}
-                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#F97316] hover:bg-orange-600 text-white text-sm font-extrabold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-orange-500/20 active:scale-95"
-              >
-                <Edit2 className="w-4 h-4" />
-                Edit Details
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-sm font-extrabold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-red-500/20 active:scale-95 disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#F97316] hover:bg-orange-600 text-white text-sm font-extrabold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-orange-500/20 active:scale-95"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit Details
+                </button>
+              </div>
             </div>
 
             {/* Main Content Grid */}
@@ -119,10 +209,6 @@ const EditProduct = () => {
                         <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5"><Tag className="w-3.5 h-3.5" /> Category</div>
                         <div className="text-sm font-extrabold text-slate-900">{productData.category || '-'}</div>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5"><Hash className="w-3.5 h-3.5" /> Brand / Vendor</div>
-                        <div className="text-sm font-extrabold text-slate-900">{productData.brand || '-'}</div>
-                      </div>
                     </div>
                     <div className="p-6 space-y-6">
                       <div>
@@ -167,6 +253,7 @@ const EditProduct = () => {
             initialData={productData} 
             onCancel={() => setIsEditing(false)} 
             onSave={handleSave} 
+            isSubmitting={isSubmitting}
           />
         )}
       </div>
