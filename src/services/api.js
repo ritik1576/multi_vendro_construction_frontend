@@ -7,7 +7,7 @@ export const injectStore = (_store) => {
   store = _store;
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://multi-vendro-construction-backend-4.onrender.com';
 
 const createApiInstance = (baseURL) => {
   const apiInstance = axios.create({

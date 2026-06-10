@@ -10,7 +10,7 @@ import { getVendorOrders, deleteVendorOrder } from '../../services/vendorApi';
 
 const VendorOrders = () => {
   const { user } = useSelector((state) => state.auth);
-  const vendorId = user?.vendorId || user?.id || 2;
+  const vendorId = user?.vendorId || 3;
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

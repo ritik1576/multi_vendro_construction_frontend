@@ -2,38 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Package, TrendingUp, AlertTriangle, Plus, ShoppingBag, Eye, ArrowRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getVendorOrders } from '../../services/vendorApi';
+import { getVendorOrders, getVendorProducts } from '../../services/vendorApi';
 
 const VendorDashboard = () => {
   const { user } = useSelector((state) => state.auth);
-  const vendorId = user?.vendorId || user?.id || 2;
+  const vendorId = user?.vendorId || 3;
 
   const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getVendorOrders(vendorId);
-        setOrders(Array.isArray(data) ? data : []);
+        setLoading(true);
+        const [ordersData, productsData] = await Promise.all([
+          getVendorOrders(vendorId),
+          getVendorProducts(vendorId)
+        ]);
+        setOrders(Array.isArray(ordersData) ? ordersData : []);
+        setProducts(Array.isArray(productsData) ? productsData : []);
       } catch (error) {
-        console.error('Failed to fetch vendor orders:', error);
+        console.error('Failed to fetch dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchOrders();
+    fetchData();
   }, [vendorId]);
 
-  const activeOrdersCount = orders.filter(o => o.status !== 'Completed' && o.status !== 'Delivered').length;
+  const activeOrdersCount = orders.filter(o => ['Pending Approval', 'Pending', 'Processing', 'Shipped'].includes(o.status || o.orderStatus)).length;
   const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.totalAmount || o.total || o.amount) || 0), 0);
+  const totalProducts = products.length;
+  const lowStockCount = products.filter(p => p.stockQuantity <= 10 || p.inStock === false).length;
   const formatAmount = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
 
   const kpis = [
-    { title: 'Total Products', value: '124', icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
+    { title: 'Total Products', value: totalProducts.toString(), icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
     { title: 'Total Revenue', value: formatAmount(totalRevenue), icon: TrendingUp, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
     { title: 'Active Orders', value: activeOrdersCount.toString(), icon: ShoppingBag, color: 'border-l-[#F59E0B]', textColor: 'text-[#F59E0B]' },
-    { title: 'Low Stock Alerts', value: '8', icon: AlertTriangle, color: 'border-l-[#EF4444]', textColor: 'text-[#EF4444]' },
+    { title: 'Low Stock Alerts', value: lowStockCount.toString(), icon: AlertTriangle, color: 'border-l-[#EF4444]', textColor: 'text-[#EF4444]' },
   ];
 
   const recentOrders = orders.slice(0, 5).map(o => ({
@@ -44,7 +52,7 @@ const VendorDashboard = () => {
     status: o.status || o.orderStatus || 'Processing'
   }));
 
-  const lowStockCount = 8; // Match the KPI value
+
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -57,7 +65,13 @@ const VendorDashboard = () => {
       </div>
 
       {/* KPI Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {loading ? (
+        <div className="flex justify-center items-center py-10">
+          <p className="text-slate-500 font-medium">Loading dashboard data...</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
@@ -203,6 +217,8 @@ const VendorDashboard = () => {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };
