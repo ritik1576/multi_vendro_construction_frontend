@@ -19,6 +19,8 @@ export const API_ENDPOINTS = {
     GET_ALL: '/products',
     GET_BY_NAME: '/products/{name}',
     SEARCH: '/products/search',
+    BLOCK_PRODUCT: '/products/{id}/block',
+    GET_BLOCKED: '/products/blocked',
   },
   CATEGORIES: {
     GET_ALL: '/categories',
@@ -35,6 +37,15 @@ export const API_ENDPOINTS = {
     PLACE_ORDER: '/orders',
     CANCEL_ORDER: '/orders/{id}/cancel',
     TRACK_ORDER: '/orders/{id}/tracking',
+  },
+  ADMIN: {
+    LOGIN: '/admin/login',
+    GET_USERS: '/admin/users',
+    GET_USER_DETAILS: '/admin/users/{id}',
+    GET_VENDORS: '/admin/vendors',
+    APPROVE_VENDOR: '/admin/vendors/{id}/approve',
+    REJECT_VENDOR: '/admin/vendors/{id}/reject',
+    GET_ALL_ORDERS: '/orders/all-with-items',
   },
 };
 

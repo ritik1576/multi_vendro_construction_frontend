@@ -2,6 +2,10 @@ export const LOGIN_REQUEST = 'LOGIN_REQUEST';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGIN_FAILURE = 'LOGIN_FAILURE';
 
+export const ADMIN_LOGIN_REQUEST = 'ADMIN_LOGIN_REQUEST';
+export const ADMIN_LOGIN_SUCCESS = 'ADMIN_LOGIN_SUCCESS';
+export const ADMIN_LOGIN_FAILURE = 'ADMIN_LOGIN_FAILURE';
+
 export const LOGOUT = 'LOGOUT';
 export const CLEAR_AUTH_ERROR = 'CLEAR_AUTH_ERROR';
 
@@ -20,6 +24,10 @@ export const RESET_PASSWORD_FAILURE = 'RESET_PASSWORD_FAILURE';
 export const loginRequest = (payload) => ({ type: LOGIN_REQUEST, payload });
 export const loginSuccess = (payload) => ({ type: LOGIN_SUCCESS, payload });
 export const loginFailure = (error) => ({ type: LOGIN_FAILURE, payload: error });
+
+export const adminLoginRequest = (payload) => ({ type: ADMIN_LOGIN_REQUEST, payload });
+export const adminLoginSuccess = (payload) => ({ type: ADMIN_LOGIN_SUCCESS, payload });
+export const adminLoginFailure = (error) => ({ type: ADMIN_LOGIN_FAILURE, payload: error });
 
 export const logout = () => ({ type: LOGOUT });
 export const clearAuthError = () => ({ type: CLEAR_AUTH_ERROR });

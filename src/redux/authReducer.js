@@ -2,6 +2,9 @@ import {
   LOGIN_REQUEST,
   LOGIN_SUCCESS,
   LOGIN_FAILURE,
+  ADMIN_LOGIN_REQUEST,
+  ADMIN_LOGIN_SUCCESS,
+  ADMIN_LOGIN_FAILURE,
   LOGOUT,
   REGISTER_REQUEST,
   REGISTER_SUCCESS,
@@ -27,6 +30,7 @@ const initialState = {
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
     case LOGIN_REQUEST:
+    case ADMIN_LOGIN_REQUEST:
     case REGISTER_REQUEST:
     case FORGOT_PASSWORD_REQUEST:
     case RESET_PASSWORD_REQUEST:
@@ -37,6 +41,7 @@ const authReducer = (state = initialState, action) => {
         successMessage: null,
       };
     case LOGIN_SUCCESS:
+    case ADMIN_LOGIN_SUCCESS:
       return {
         ...state,
         isLoading: false,
@@ -75,6 +80,7 @@ const authReducer = (state = initialState, action) => {
         successMessage: action.payload || 'Operation successful',
       };
     case LOGIN_FAILURE:
+    case ADMIN_LOGIN_FAILURE:
     case REGISTER_FAILURE:
       return {
         ...state,

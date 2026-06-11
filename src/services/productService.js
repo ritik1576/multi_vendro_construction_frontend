@@ -21,5 +21,25 @@ export const productService = {
   getCategories: async () => {
     const response = await api.get(API_ENDPOINTS.CATEGORIES.GET_ALL);
     return response.data;
+  },
+  
+  blockProduct: async (id) => {
+    // The API requires admin credentials in the body to authorize the block action
+    const response = await api.put(API_ENDPOINTS.PRODUCTS.BLOCK_PRODUCT.replace('{id}', id), {
+      email: "admininf@inframart.com",
+      password: "sampada@123"
+    });
+    return response.data;
+  },
+
+  getBlockedProducts: async () => {
+    // Requires admin payload to fetch blocked products according to the provided postman screenshot
+    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_BLOCKED, {
+      data: {
+        email: "admininf@inframart.com",
+        password: "sampada@123"
+      }
+    });
+    return response.data;
   }
 };
