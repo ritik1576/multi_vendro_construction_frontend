@@ -14,7 +14,9 @@ import ConfirmOrder from '../pages/customer/ConfirmOrder';
 import OrderHistory from '../pages/customer/OrderHistory';
 import OrderDetail from '../pages/customer/OrderDetail';
 import ProtectedRoute from './ProtectedRoute';
+import VendorRoute from './VendorRoute';
 import VendorApprovalStatus from '../pages/vendor/VendorApprovalStatus';
+import VendorDashboard from '../pages/vendor/VendorDashboard';
 import AddProduct from '../pages/vendor/AddProduct';
 import EditProduct from '../pages/vendor/EditProduct';
 import Inventory from '../pages/vendor/Inventory';
@@ -39,11 +41,12 @@ const AppRoutes = () => {
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
 
         {/* Vendor Routes */}
-        <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
-        <Route path="/vendor/orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
-        <Route path="/vendor/products/add" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
-        <Route path="/vendor/products/edit/:productId" element={<ProtectedRoute><EditProduct /></ProtectedRoute>} />
-        <Route path="/vendor/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+        <Route path="/vendor/approval-status" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
+        <Route path="/vendor/dashboard" element={<VendorRoute><VendorDashboard /></VendorRoute>} />
+        <Route path="/vendor/orders" element={<VendorRoute><VendorOrders /></VendorRoute>} />
+        <Route path="/vendor/products/add" element={<VendorRoute><AddProduct /></VendorRoute>} />
+        <Route path="/vendor/products/edit/:productId" element={<VendorRoute><EditProduct /></VendorRoute>} />
+        <Route path="/vendor/inventory" element={<VendorRoute><Inventory /></VendorRoute>} />
       </Routes>
     </Router>
   );

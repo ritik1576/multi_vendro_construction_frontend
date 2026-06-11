@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Save, X, UploadCloud, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { uploadImageToR2 } from '../../services/r2Service';
+import { Save, X, Loader2, UploadCloud, Image as ImageIcon } from 'lucide-react';
 
 const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSubmitting = false }) => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -16,20 +13,18 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
     unit: '',
     shortDescription: '',
     description: '',
+    thumbnail: '',
   });
 
-  const [imagePreview, setImagePreview] = useState(null);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     if (initialData && mode === 'edit') {
       setFormData((prev) => ({ ...prev, ...initialData }));
-      if (initialData.image || initialData.thumbnail) {
-        setImagePreview(initialData.image || initialData.thumbnail);
-      }
+      if (initialData.thumbnail) setImagePreview(initialData.thumbnail);
     }
   }, [initialData, mode]);
 
@@ -37,13 +32,31 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
     setIsFormValid(true);
   }, [formData]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const dataToSubmit = { ...formData, image: imagePreview };
+    const price = Number(formData.price || 0);
+    const discountPrice = Number(formData.discountPrice || 0);
+    const quantity = Number(formData.stock || 0);
+    const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+    const payload = {
+      name: formData.name,
+      slug: slug,
+      shortDescription: formData.shortDescription,
+      description: formData.description,
+      price: price,
+      discountPrice: discountPrice,
+      sku: formData.sku,
+      thumbnail: formData.thumbnail || '',
+      inStock: quantity > 0,
+      createdAt: new Date().toISOString(),
+      quantity: quantity,
+      unit: formData.unit,
+      category: formData.category
+    };
+
     if (onSave) {
-      onSave(dataToSubmit);
-    } else {
-      navigate('/vendor/inventory');
+      onSave(payload);
     }
   };
 
@@ -52,29 +65,23 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
     if (file) {
-      // Show local preview immediately
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-
-      // Start R2 Upload
-      setIsUploadingImage(true);
-      setUploadError(null);
-      try {
-        const publicUrl = await uploadImageToR2(file);
-        setImagePreview(publicUrl); // Replace base64 preview with actual public URL
-      } catch (error) {
-        console.error("Upload failed", error);
-        setUploadError(error.message);
-        setImagePreview(null); // Revert on failure
-      } finally {
-        setIsUploadingImage(false);
+      if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+        alert('Please upload a valid image file (JPG, JPEG, or PNG)');
+        return;
       }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+      
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      
+      // TODO: upload selected image to backend/R2 and set thumbnail URL
+      setFormData(prev => ({ ...prev, thumbnail: '' }));
     }
   };
 
@@ -99,7 +106,7 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
             <button
               type="button"
               onClick={onCancel}
-              disabled={isSubmitting || isUploadingImage}
+              disabled={isSubmitting}
               className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-extrabold text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-200/50 shadow-sm disabled:opacity-50"
             >
               <X className="h-4 w-4" />
@@ -108,7 +115,7 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
           )}
           <button
             type="submit"
-            disabled={isSubmitting || isUploadingImage}
+            disabled={isSubmitting}
             className="flex items-center gap-2 rounded-lg bg-[#F97316] hover:bg-orange-600 focus:ring-orange-500/30 px-6 py-2 text-sm font-extrabold text-white transition-all focus:outline-none focus:ring-4 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {isSubmitting ? (
@@ -122,53 +129,52 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3 items-start">
-        {/* Left Column: Image Upload */}
+        {/* Left Column: Thumbnail URL */}
         <div className="lg:col-span-1">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-extrabold text-slate-900 mb-4 uppercase tracking-wider">Product Image</h3>
-            <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 transition-all hover:border-[#F97316] hover:bg-orange-50 h-64 group cursor-pointer overflow-hidden">
-              {isUploadingImage && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#F97316] mb-2" />
-                  <p className="text-sm font-extrabold text-slate-700">Uploading to R2...</p>
+            <h3 className="text-sm font-extrabold text-slate-900 mb-4 uppercase tracking-wider">Product Thumbnail</h3>
+            <div>
+              <div className="flex justify-between mb-1.5">
+                <label className="block text-sm font-bold text-slate-700">Product Image</label>
+                {errors.thumbnail && <span className="text-xs font-bold text-red-500">{errors.thumbnail}</span>}
+              </div>
+              
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:border-[#F97316] transition-colors bg-slate-50 relative group cursor-pointer overflow-hidden">
+                <input
+                  type="file"
+                  id="imageUpload"
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={handleImageChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                <div className="space-y-2 text-center relative z-0 w-full">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Product preview"
+                        className="mx-auto h-48 w-full object-contain rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                        <p className="text-white font-bold text-sm flex items-center gap-2">
+                          <UploadCloud className="w-4 h-4" /> Change Image
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <ImageIcon className="mx-auto h-12 w-12 text-slate-400 group-hover:text-[#F97316] transition-colors" />
+                      <div className="flex text-sm text-slate-600 justify-center">
+                        <span className="relative rounded-md font-bold text-[#F97316] hover:text-orange-600">
+                          Click to upload image
+                        </span>
+                      </div>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">PNG, JPG up to 5MB</p>
+                    </>
+                  )}
                 </div>
-              )}
-              {imagePreview ? (
-                <div className="relative h-full w-full flex items-center justify-center">
-                  <img src={imagePreview} alt="Preview" className="max-h-full max-w-full object-contain rounded-lg" />
-                  <button
-                    type="button"
-                    onClick={() => setImagePreview(null)}
-                    disabled={isUploadingImage}
-                    className="absolute -top-3 -right-3 grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 transition-transform hover:scale-105 disabled:opacity-50"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center group-hover:text-[#F97316] transition-colors">
-                  <UploadCloud className="mx-auto h-10 w-10 text-slate-400 group-hover:text-[#F97316] transition-colors mb-3" />
-                  <p className="text-sm font-extrabold text-slate-700 group-hover:text-[#F97316]">Click to upload image</p>
-                  <p className="text-xs font-medium text-slate-400 mt-1">PNG, JPG up to 5MB</p>
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={isUploadingImage}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed z-0"
-                title=""
-              />
+              </div>
             </div>
-            {uploadError && (
-              <p className="mt-3 text-xs font-bold text-red-500 text-center">{uploadError}</p>
-            )}
-            {imagePreview && !imagePreview.startsWith('data:') && (
-              <p className="mt-3 text-[10px] font-medium text-emerald-600 text-center truncate px-2" title={imagePreview}>
-                ✓ Image uploaded successfully
-              </p>
-            )}
           </div>
         </div>
 
