@@ -41,6 +41,8 @@ export const productService = {
       }
     });
     return response.data;
+  },
+  
   getVendorProducts: async (vendorId) => {
     const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_VENDOR_PRODUCTS.replace('{vendorId}', vendorId));
     return response.data;
