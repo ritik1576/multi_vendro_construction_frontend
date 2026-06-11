@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ShieldCheck, FileText, Mail, Loader2, ArrowRight } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
@@ -17,10 +17,12 @@ const Login = () => {
   const [selectedRole, setSelectedRole] = useState('customer');
   const [errors, setErrors] = useState({});
   const [loginSubmitted, setLoginSubmitted] = useState(false);
-  
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoading, isAuthenticated, error: authError, user } = useSelector((state) => state.auth);
+
+  const successMessage = location.state?.successMessage;
 
   useEffect(() => {
     dispatch(clearAuthError());
@@ -131,8 +133,14 @@ const Login = () => {
                 <p className="text-[13px] text-gray-500">Access India's largest industrial marketplace</p>
               </div>
 
+              {successMessage && !authError && (
+                <div className="mb-4 p-3 rounded-[6px] bg-emerald-50 border border-emerald-200 text-[12px] text-emerald-600 font-medium text-center">
+                  {successMessage}
+                </div>
+              )}
+
               {authError && (
-                <div className="mb-4 p-3 rounded-[6px] bg-red-50 border border-red-200 text-[12px] text-red-600 font-medium">
+                <div className="mb-4 p-3 rounded-[6px] bg-red-50 border border-red-200 text-[12px] text-red-600 font-medium text-center">
                   {authError}
                 </div>
               )}

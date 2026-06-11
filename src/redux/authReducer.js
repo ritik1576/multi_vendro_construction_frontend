@@ -47,6 +47,18 @@ const authReducer = (state = initialState, action) => {
         registrationSuccess: false,
       };
     case REGISTER_SUCCESS:
+      if (action.payload.isVendor) {
+        return {
+          ...state,
+          isLoading: false,
+          isAuthenticated: false,
+          user: null,
+          token: null,
+          error: null,
+          successMessage: action.payload.message,
+          registrationSuccess: true,
+        };
+      }
       return {
         ...state,
         isLoading: false,
@@ -55,6 +67,7 @@ const authReducer = (state = initialState, action) => {
         token: action.payload.token,
         error: null,
         successMessage: null,
+        registrationSuccess: true,
       };
     case LOGOUT:
       return {
@@ -98,6 +111,14 @@ const authReducer = (state = initialState, action) => {
         ...state,
         error: null,
         successMessage: null,
+      };
+    case 'UPDATE_VENDOR_STATUS':
+      return {
+        ...state,
+        user: state.user ? {
+          ...state.user,
+          status: action.payload
+        } : null
       };
     default:
       return state;

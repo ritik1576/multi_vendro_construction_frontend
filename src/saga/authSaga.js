@@ -33,8 +33,15 @@ function* handleRegister(action) {
     const { token: _, ...restData } = responseData;
     const userDetails = responseData.user || restData;
     
-    yield put(registerSuccess({ user: userDetails, token }));
-    alert('Account created successfully!');
+    if (action.payload.isVendor) {
+      yield put(registerSuccess({ 
+        isVendor: true, 
+        message: 'Registration submitted successfully. Your account is under review and requires admin approval before login.' 
+      }));
+    } else {
+      yield put(registerSuccess({ user: userDetails, token }));
+      alert('Account created successfully!');
+    }
   } catch (error) {
     let errorMessage = error.message || 'An unexpected error occurred during registration.';
     if (error.response?.data) {
@@ -68,6 +75,11 @@ function* handleLogin(action) {
     const { token: _, ...restData } = responseData;
     const userDetails = responseData.user || restData;
     
+    if (role === 'vendor' && userDetails.status === 'pending') {
+      yield put(loginFailure('Your vendor account is under review. Please login after admin approval.'));
+      return;
+    }
+
     yield put(loginSuccess({ user: userDetails, token }));
 
     alert('Logged in successfully!');

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Package, TrendingUp, AlertTriangle, Plus, ShoppingBag, Eye, ArrowRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getVendorOrders, getVendorProducts, getVendorDashboard } from '../../services/vendorApi';
+import { getVendorOrders, getVendorDashboard } from '../../services/vendorApi';
+import VendorLayout from '../../components/vendor/VendorLayout';
 
 const VendorDashboard = () => {
   const { user } = useSelector((state) => state.auth);
@@ -10,32 +11,48 @@ const VendorDashboard = () => {
   const userId = user?.userId || user?.id || 57;
 
   const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
   const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [errorDashboard, setErrorDashboard] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [ordersData, productsData, dashboardData] = await Promise.all([
-          getVendorOrders(vendorId),
-          getVendorProducts(vendorId),
-          getVendorDashboard(userId)
-        ]);
-        setOrders(Array.isArray(ordersData) ? ordersData : []);
-        setProducts(Array.isArray(productsData) ? productsData : []);
-        setDashboard(dashboardData || null);
-      } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
-        setError('Failed to load dashboard data. Please try again later.');
-      } finally {
-        setLoading(false);
+      setLoadingDashboard(true);
+      setLoadingOrders(true);
+      setErrorDashboard(null);
+
+      const [dashboardResult, ordersResult] = await Promise.allSettled([
+        getVendorDashboard(userId),
+        getVendorOrders(vendorId)
+      ]);
+
+      if (!isMounted) return;
+
+      if (dashboardResult.status === 'fulfilled') {
+        setDashboard(dashboardResult.value || null);
+      } else {
+        console.error('Failed to fetch dashboard data:', dashboardResult.reason);
+        setErrorDashboard('Failed to load dashboard metrics.');
       }
+      setLoadingDashboard(false);
+
+      if (ordersResult.status === 'fulfilled') {
+        const ordersData = ordersResult.value;
+        setOrders(Array.isArray(ordersData) ? ordersData : []);
+      } else {
+        console.error('Failed to fetch orders data:', ordersResult.reason);
+      }
+      setLoadingOrders(false);
     };
+
     fetchData();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [vendorId, userId]);
 
   const activeOrdersCount = dashboard ? (Number(dashboard.pendingOrders || 0) + Number(dashboard.confirmedOrders || 0) + Number(dashboard.shippedOrders || 0)) : 0;
@@ -45,10 +62,10 @@ const VendorDashboard = () => {
   const formatAmount = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
 
   const kpis = [
-    { title: 'Total Products', value: totalProducts.toString(), icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
-    { title: 'Total Revenue', value: formatAmount(totalRevenue), icon: TrendingUp, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
-    { title: 'Active Orders', value: activeOrdersCount.toString(), icon: ShoppingBag, color: 'border-l-[#F59E0B]', textColor: 'text-[#F59E0B]' },
-    { title: 'Low Stock Alerts', value: lowStockCount.toString(), icon: AlertTriangle, color: 'border-l-[#EF4444]', textColor: 'text-[#EF4444]' },
+    { title: 'Total Products', value: loadingDashboard ? '-' : totalProducts.toString(), icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
+    { title: 'Total Revenue', value: loadingDashboard ? '-' : formatAmount(totalRevenue), icon: TrendingUp, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
+    { title: 'Active Orders', value: loadingDashboard ? '-' : activeOrdersCount.toString(), icon: ShoppingBag, color: 'border-l-[#F59E0B]', textColor: 'text-[#F59E0B]' },
+    { title: 'Low Stock Alerts', value: loadingDashboard ? '-' : lowStockCount.toString(), icon: AlertTriangle, color: 'border-l-[#EF4444]', textColor: 'text-[#EF4444]' },
   ];
 
   const recentOrders = orders.slice(0, 5).map(o => ({
@@ -59,179 +76,178 @@ const VendorDashboard = () => {
     status: o.status || o.orderStatus || 'Processing'
   }));
 
-
-
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-[#0F172A]">Vendor Dashboard</h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">Business summary and performance metrics.</p>
+    <VendorLayout>
+      <div className="space-y-6 max-w-7xl mx-auto pb-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[#0F172A]">Vendor Dashboard</h1>
+            <p className="text-sm font-medium text-slate-500 mt-1">Business summary and performance metrics.</p>
+          </div>
         </div>
-      </div>
 
-      {/* KPI Section */}
-      {loading ? (
-        <div className="flex justify-center items-center py-10">
-          <p className="text-slate-500 font-medium">Loading dashboard data...</p>
-        </div>
-      ) : error ? (
-        <div className="flex justify-center items-center py-10">
-          <p className="text-red-500 font-medium">{error}</p>
-        </div>
-      ) : (
-        <>
+        {/* KPI Section */}
+        {errorDashboard ? (
+          <div className="flex justify-center items-center py-6 bg-red-50 rounded-xl border border-red-100">
+            <p className="text-red-500 font-medium">{errorDashboard}</p>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, idx) => {
-          const Icon = kpi.icon;
-          return (
-            <div key={idx} className={`bg-white rounded-xl shadow-sm border border-slate-200 p-5 border-l-4 ${kpi.color}`}>
-              <div className="flex items-center gap-2 mb-2">
-                <Icon className={`w-4 h-4 ${kpi.textColor}`} />
-                <span className="text-sm font-bold text-slate-500">{kpi.title}</span>
-              </div>
-              <div className={`text-3xl font-extrabold ${kpi.textColor}`}>
-                {kpi.value}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            {kpis.map((kpi, idx) => {
+              const Icon = kpi.icon;
+              return (
+                <div key={idx} className={`bg-white rounded-xl shadow-sm border border-slate-200 p-5 border-l-4 ${kpi.color}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className={`w-4 h-4 ${kpi.textColor}`} />
+                    <span className="text-sm font-bold text-slate-500">{kpi.title}</span>
+                  </div>
+                  <div className={`text-3xl font-extrabold ${kpi.textColor}`}>
+                    {kpi.value}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-      {/* Main Content Area */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recent Orders - Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-            <div className="border-b border-slate-200 px-6 py-5 flex items-center justify-between">
-              <h2 className="text-lg font-extrabold text-[#0F172A]">Recent Orders</h2>
-              <button className="text-sm font-bold text-[#F97316] hover:text-orange-600 transition-colors">View All</button>
+        {/* Main Content Area */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Recent Orders - Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+              <div className="border-b border-slate-200 px-6 py-5 flex items-center justify-between">
+                <h2 className="text-lg font-extrabold text-[#0F172A]">Recent Orders</h2>
+                <Link to="/vendor/orders" className="text-sm font-bold text-[#F97316] hover:text-orange-600 transition-colors">View All</Link>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Order Number</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {loadingOrders ? (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-8 text-center text-sm font-medium text-slate-500">
+                          <div className="flex justify-center items-center space-x-2">
+                            <div className="w-4 h-4 border-2 border-[#F97316] border-t-transparent rounded-full animate-spin"></div>
+                            <span>Loading orders...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : recentOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-8 text-center text-sm font-medium text-slate-500">
+                          No recent orders found.
+                        </td>
+                      </tr>
+                    ) : recentOrders.map((order) => (
+                      <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group">
+                        <td className="px-6 py-4 font-mono text-xs font-bold text-slate-700">{order.id}</td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-extrabold text-[#0F172A]">{order.customer}</div>
+                          <div className="text-xs text-slate-500 mt-0.5">{order.date}</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-extrabold text-slate-700">{order.amount}</td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 uppercase tracking-wider">
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link to="/vendor/orders" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-[#1E3A8A] text-slate-600 hover:text-[#1E3A8A] text-xs font-extrabold rounded-md shadow-sm transition-colors" title="View Order">
+                            <Eye className="w-3.5 h-3.5" />
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Order Number</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {loading ? (
-                    <tr>
-                      <td colSpan="5" className="px-6 py-8 text-center text-sm font-medium text-slate-500">
-                        Loading orders...
-                      </td>
-                    </tr>
-                  ) : recentOrders.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="px-6 py-8 text-center text-sm font-medium text-slate-500">
-                        No recent orders found.
-                      </td>
-                    </tr>
-                  ) : recentOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 font-mono text-xs font-bold text-slate-700">{order.id}</td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-extrabold text-[#0F172A]">{order.customer}</div>
-                        <div className="text-xs text-slate-500 mt-0.5">{order.date}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-extrabold text-slate-700">{order.amount}</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 uppercase tracking-wider">
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Link to="/vendor/orders" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-[#1E3A8A] text-slate-600 hover:text-[#1E3A8A] text-xs font-extrabold rounded-md shadow-sm transition-colors" title="View Order">
-                          <Eye className="w-3.5 h-3.5" />
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          </div>
+
+          {/* Right Column */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Quick Actions Card */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="border-b border-slate-200 px-6 py-5">
+                <h2 className="text-lg font-extrabold text-[#0F172A] flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-[#F97316]" />
+                  Quick Actions
+                </h2>
+              </div>
+              <div className="p-4 space-y-3">
+                <Link
+                  to="/vendor/products/add"
+                  className="flex items-center justify-between w-full p-4 rounded-lg border border-slate-200 hover:border-[#F97316] hover:bg-orange-50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="bg-orange-100 text-[#F97316] p-2 rounded-lg">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-slate-800 group-hover:text-[#F97316] transition-colors">Add Product</h3>
+                      <p className="text-xs font-medium text-slate-500">Create a new listing</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#F97316] transition-colors" />
+                </Link>
+                
+                <Link
+                  to="/vendor/inventory"
+                  className="flex items-center justify-between w-full p-4 rounded-lg border border-slate-200 hover:border-[#1E3A8A] hover:bg-blue-50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 text-[#1E3A8A] p-2 rounded-lg">
+                      <Package className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-slate-800 group-hover:text-[#1E3A8A] transition-colors">Manage Inventory</h3>
+                      <p className="text-xs font-medium text-slate-500">Update stock & pricing</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#1E3A8A] transition-colors" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Low Stock Summary Card */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="border-b border-slate-200 px-6 py-5">
+                <h2 className="text-lg font-extrabold text-[#0F172A] flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  Attention Needed
+                </h2>
+              </div>
+              <div className="p-6 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                  <span className="text-2xl font-extrabold text-red-600">{loadingDashboard ? '-' : lowStockCount}</span>
+                </div>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-1">Products Low on Stock</h3>
+                <p className="text-sm font-medium text-slate-500 mb-6">
+                  {loadingDashboard ? 'Loading stock alerts...' : `You have ${lowStockCount} products that need immediate restocking to prevent missing out on sales.`}
+                </p>
+                
+                <Link
+                  to="/vendor/inventory"
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-lg transition-colors"
+                >
+                  Review Inventory
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Right Column */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Quick Actions Card */}
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="border-b border-slate-200 px-6 py-5">
-              <h2 className="text-lg font-extrabold text-[#0F172A] flex items-center gap-2">
-                <Zap className="w-5 h-5 text-[#F97316]" />
-                Quick Actions
-              </h2>
-            </div>
-            <div className="p-4 space-y-3">
-              <Link
-                to="/vendor/products/add"
-                className="flex items-center justify-between w-full p-4 rounded-lg border border-slate-200 hover:border-[#F97316] hover:bg-orange-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-orange-100 text-[#F97316] p-2 rounded-lg">
-                    <Plus className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-800 group-hover:text-[#F97316] transition-colors">Add Product</h3>
-                    <p className="text-xs font-medium text-slate-500">Create a new listing</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#F97316] transition-colors" />
-              </Link>
-              
-              <Link
-                to="/vendor/inventory"
-                className="flex items-center justify-between w-full p-4 rounded-lg border border-slate-200 hover:border-[#1E3A8A] hover:bg-blue-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 text-[#1E3A8A] p-2 rounded-lg">
-                    <Package className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-800 group-hover:text-[#1E3A8A] transition-colors">Manage Inventory</h3>
-                    <p className="text-xs font-medium text-slate-500">Update stock & pricing</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#1E3A8A] transition-colors" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Low Stock Summary Card */}
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="border-b border-slate-200 px-6 py-5">
-              <h2 className="text-lg font-extrabold text-[#0F172A] flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-500" />
-                Attention Needed
-              </h2>
-            </div>
-            <div className="p-6 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                <span className="text-2xl font-extrabold text-red-600">{lowStockCount}</span>
-              </div>
-              <h3 className="text-lg font-extrabold text-slate-800 mb-1">Products Low on Stock</h3>
-              <p className="text-sm font-medium text-slate-500 mb-6">You have {lowStockCount} products that need immediate restocking to prevent missing out on sales.</p>
-              
-              <Link
-                to="/vendor/inventory"
-                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-lg transition-colors"
-              >
-                Review Inventory
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
-        </>
-      )}
-    </div>
+    </VendorLayout>
   );
 };
 

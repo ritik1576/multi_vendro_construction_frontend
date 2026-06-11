@@ -25,6 +25,9 @@ const VendorOrders = () => {
   const [orderDetails, setOrderDetails] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+
   const fetchOrderDetails = async (id) => {
     try {
       setSelectedOrderId(id);
@@ -63,6 +66,10 @@ const VendorOrders = () => {
     fetchOrders();
   }, [vendorId]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, dateFilter, sortBy]);
+
   const handleDelete = async (orderId) => {
     if (!window.confirm('Are you sure you want to delete this order?')) return;
     try {
@@ -98,7 +105,7 @@ const VendorOrders = () => {
 
   const formatAmount = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
 
-  const displayOrders = orders.map(o => ({
+  const filteredOrders = orders.map(o => ({
     id: o.orderId,
     displayId: o.orderNumber,
     date: o.placedAt ? new Date(o.placedAt).toLocaleDateString() : (o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'Unknown')),
@@ -108,7 +115,15 @@ const VendorOrders = () => {
     items: o.itemsSummary || (Array.isArray(o.items) ? `${o.items.length} items` : 'Various Items'),
     total: formatAmount(o.totalAmount || o.amount || o.total || 0),
     status: o.orderStatus || o.status || 'Processing'
-  }));
+  })).filter(o => {
+    const s = searchTerm.toLowerCase();
+    const matchesSearch = !s || o.displayId?.toLowerCase().includes(s) || o.customer?.toLowerCase().includes(s);
+    const matchesStatus = statusFilter === 'All Status' || o.status?.toLowerCase() === statusFilter.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
+  const displayOrders = filteredOrders.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
 
 
@@ -281,8 +296,8 @@ const VendorOrders = () => {
                   if (s === 'pending approval' || s === 'pending') {
                     return (
                       <>
-                        <button onClick={() => handleUpdateStatus(order.id, 'Confirmed')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-md shadow-sm transition-colors active:scale-95">Approve</button>
-                        <button onClick={() => handleUpdateStatus(order.id, 'Cancelled')} className="px-4 py-2 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 text-sm font-extrabold rounded-md transition-colors active:scale-95">Reject</button>
+                        <button onClick={() => handleUpdateStatus(order.id, 'confirmed')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-md shadow-sm transition-colors active:scale-95">Approve</button>
+                        <button onClick={() => handleUpdateStatus(order.id, 'cancelled')} className="px-4 py-2 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 text-sm font-extrabold rounded-md transition-colors active:scale-95">Reject</button>
                       </>
                     );
                   }
@@ -293,7 +308,7 @@ const VendorOrders = () => {
                   }
                   if (s === 'shipped') {
                     return (
-                      <button onClick={() => handleUpdateStatus(order.id, 'completed')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-md shadow-sm transition-colors active:scale-95">Mark Delivered</button>
+                      <button onClick={() => handleUpdateStatus(order.id, 'delivered')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-md shadow-sm transition-colors active:scale-95">Mark Delivered</button>
                     );
                   }
                   return null;
@@ -321,21 +336,41 @@ const VendorOrders = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-slate-200 pt-6">
           <div className="text-sm font-medium text-slate-500">
-            Showing <span className="font-extrabold text-slate-700">{displayOrders.length > 0 ? 1 : 0}</span> to <span className="font-extrabold text-slate-700">{displayOrders.length}</span> of <span className="font-extrabold text-slate-700">{displayOrders.length}</span> orders
+            Showing <span className="font-extrabold text-slate-700">{filteredOrders.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0}</span> to <span className="font-extrabold text-slate-700">{Math.min(currentPage * rowsPerPage, filteredOrders.length)}</span> of <span className="font-extrabold text-slate-700">{filteredOrders.length}</span> orders
           </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors" disabled>
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button className="w-10 h-10 rounded-lg bg-[#F97316] text-white font-extrabold text-sm flex items-center justify-center">1</button>
-            <button className="w-10 h-10 rounded-lg border border-slate-200 text-slate-600 font-extrabold text-sm hover:bg-slate-50 flex items-center justify-center transition-colors">2</button>
-            <button className="w-10 h-10 rounded-lg border border-slate-200 text-slate-600 font-extrabold text-sm hover:bg-slate-50 flex items-center justify-center transition-colors">3</button>
-            <span className="text-slate-400 font-bold px-1">...</span>
-            <button className="w-10 h-10 rounded-lg border border-slate-200 text-slate-600 font-extrabold text-sm hover:bg-slate-50 flex items-center justify-center transition-colors">45</button>
-            <button className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors">
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              
+              {[...Array(totalPages)].map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-lg font-extrabold text-sm flex items-center justify-center transition-colors ${
+                    currentPage === i + 1 
+                      ? 'bg-[#F97316] text-white' 
+                      : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
@@ -504,19 +539,19 @@ const VendorOrders = () => {
                   if (s === 'pending approval' || s === 'pending') {
                     return (
                       <>
-                        <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'Confirmed'); closeDrawer(); }} className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Approve</button>
-                        <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'Cancelled'); closeDrawer(); }} className="flex-1 py-2.5 border-2 border-red-200 text-red-600 hover:bg-red-50 text-sm font-extrabold rounded-lg transition-colors active:scale-95">Reject</button>
+                        <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'confirmed'); closeDrawer(); }} className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Approve</button>
+                        <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'cancelled'); closeDrawer(); }} className="flex-1 py-2.5 border-2 border-red-200 text-red-600 hover:bg-red-50 text-sm font-extrabold rounded-lg transition-colors active:scale-95">Reject</button>
                       </>
                     );
                   }
                   if (s === 'confirmed' || s === 'processing') {
                     return (
-                      <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'Shipped'); closeDrawer(); }} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Mark Shipped</button>
+                      <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'shipped'); closeDrawer(); }} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Mark Shipped</button>
                     );
                   }
                   if (s === 'shipped') {
                     return (
-                      <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'Completed'); closeDrawer(); }} className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Mark Delivered</button>
+                      <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'delivered'); closeDrawer(); }} className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Mark Delivered</button>
                     );
                   }
                   return null;
