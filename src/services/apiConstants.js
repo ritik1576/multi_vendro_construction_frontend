@@ -21,6 +21,10 @@ export const API_ENDPOINTS = {
     SEARCH: '/products/search',
     BLOCK_PRODUCT: '/products/{id}/block',
     GET_BLOCKED: '/products/blocked',
+    GET_VENDOR_PRODUCTS: '/vendor/products/{vendorId}',
+    ADD_PRODUCT: '/products',
+    UPDATE_PRODUCT: '/products/{id}',
+    DELETE_PRODUCT: '/products/{id}',
   },
   CATEGORIES: {
     GET_ALL: '/categories',

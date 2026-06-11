@@ -41,5 +41,40 @@ export const productService = {
       }
     });
     return response.data;
+  getVendorProducts: async (vendorId) => {
+    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_VENDOR_PRODUCTS.replace('{vendorId}', vendorId));
+    return response.data;
+  },
+
+  // Add new product
+  addProduct: async (productData) => {
+    try {
+      const response = await api.post(API_ENDPOINTS.PRODUCTS.ADD_PRODUCT, productData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Update existing product
+  updateProduct: async (id, productData) => {
+    try {
+      const url = API_ENDPOINTS.PRODUCTS.UPDATE_PRODUCT.replace('{id}', id);
+      const response = await api.put(url, productData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Delete product
+  deleteProduct: async (id) => {
+    try {
+      const url = API_ENDPOINTS.PRODUCTS.DELETE_PRODUCT.replace('{id}', id);
+      const response = await api.delete(url);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 };

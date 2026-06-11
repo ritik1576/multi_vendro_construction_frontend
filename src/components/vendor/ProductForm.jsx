@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Save, X, UploadCloud, Image as ImageIcon } from 'lucide-react';
+import { Save, X, UploadCloud, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { uploadImageToR2 } from '../../services/r2Service';
 
-const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => {
+const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSubmitting = false }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -18,25 +19,27 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => 
   });
 
   const [imagePreview, setImagePreview] = useState(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     if (initialData && mode === 'edit') {
       setFormData((prev) => ({ ...prev, ...initialData }));
-      if (initialData.image) setImagePreview(initialData.image);
+      if (initialData.image || initialData.thumbnail) {
+        setImagePreview(initialData.image || initialData.thumbnail);
+      }
     }
   }, [initialData, mode]);
 
   useEffect(() => {
-    // Validation is temporarily disabled for UI testing
     setIsFormValid(true);
   }, [formData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const dataToSubmit = { ...formData, image: imagePreview };
-    console.log('Form data to submit:', dataToSubmit);
     if (onSave) {
       onSave(dataToSubmit);
     } else {
@@ -49,14 +52,29 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => 
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Show local preview immediately
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+
+      // Start R2 Upload
+      setIsUploadingImage(true);
+      setUploadError(null);
+      try {
+        const publicUrl = await uploadImageToR2(file);
+        setImagePreview(publicUrl); // Replace base64 preview with actual public URL
+      } catch (error) {
+        console.error("Upload failed", error);
+        setUploadError(error.message);
+        setImagePreview(null); // Revert on failure
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -81,7 +99,8 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => 
             <button
               type="button"
               onClick={onCancel}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-extrabold text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-200/50 shadow-sm"
+              disabled={isSubmitting || isUploadingImage}
+              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-extrabold text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-200/50 shadow-sm disabled:opacity-50"
             >
               <X className="h-4 w-4" />
               Cancel
@@ -89,10 +108,15 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => 
           )}
           <button
             type="submit"
-            className="flex items-center gap-2 rounded-lg bg-[#F97316] hover:bg-orange-600 focus:ring-orange-500/30 px-6 py-2 text-sm font-extrabold text-white transition-all focus:outline-none focus:ring-4 shadow-sm cursor-pointer"
+            disabled={isSubmitting || isUploadingImage}
+            className="flex items-center gap-2 rounded-lg bg-[#F97316] hover:bg-orange-600 focus:ring-orange-500/30 px-6 py-2 text-sm font-extrabold text-white transition-all focus:outline-none focus:ring-4 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
-            <Save className="h-4 w-4" />
-            {mode === 'add' ? 'Save Product' : 'Update Product'}
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {isSubmitting ? 'Saving...' : mode === 'add' ? 'Save Product' : 'Update Product'}
           </button>
         </div>
       </div>
@@ -102,14 +126,21 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => 
         <div className="lg:col-span-1">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-sm font-extrabold text-slate-900 mb-4 uppercase tracking-wider">Product Image</h3>
-            <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 transition-all hover:border-[#F97316] hover:bg-orange-50 h-64 group cursor-pointer">
+            <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 transition-all hover:border-[#F97316] hover:bg-orange-50 h-64 group cursor-pointer overflow-hidden">
+              {isUploadingImage && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#F97316] mb-2" />
+                  <p className="text-sm font-extrabold text-slate-700">Uploading to R2...</p>
+                </div>
+              )}
               {imagePreview ? (
-                <div className="relative h-full w-full">
-                  <img src={imagePreview} alt="Preview" className="h-full w-full object-contain rounded-lg" />
+                <div className="relative h-full w-full flex items-center justify-center">
+                  <img src={imagePreview} alt="Preview" className="max-h-full max-w-full object-contain rounded-lg" />
                   <button
                     type="button"
                     onClick={() => setImagePreview(null)}
-                    className="absolute -top-3 -right-3 grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 transition-transform hover:scale-105"
+                    disabled={isUploadingImage}
+                    className="absolute -top-3 -right-3 grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 transition-transform hover:scale-105 disabled:opacity-50"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -125,10 +156,19 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => 
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                disabled={isUploadingImage}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed z-0"
                 title=""
               />
             </div>
+            {uploadError && (
+              <p className="mt-3 text-xs font-bold text-red-500 text-center">{uploadError}</p>
+            )}
+            {imagePreview && !imagePreview.startsWith('data:') && (
+              <p className="mt-3 text-[10px] font-medium text-emerald-600 text-center truncate px-2" title={imagePreview}>
+                ✓ Image uploaded successfully
+              </p>
+            )}
           </div>
         </div>
 
@@ -200,7 +240,7 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => 
           {/* Inventory & Pricing Section */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-sm font-extrabold text-slate-900 mb-5 uppercase tracking-wider border-b border-slate-100 pb-3">Inventory & Pricing</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
               <div className="col-span-2 md:col-span-1">
                 <div className="flex justify-between mb-1.5">
                   <label htmlFor="sku" className="block text-sm font-bold text-slate-700">SKU</label>
@@ -264,6 +304,24 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave }) => 
                   min="0"
                   step="0.01"
                   className={`${inputBaseClass} ${getErrorClass('price')}`}
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="col-span-2 md:col-span-1">
+                <div className="flex justify-between mb-1.5">
+                  <label htmlFor="discountPrice" className="block text-sm font-bold text-slate-700">Discount (₹)</label>
+                  {errors.discountPrice && <span className="text-xs font-bold text-red-500">{errors.discountPrice}</span>}
+                </div>
+                <input
+                  type="number"
+                  id="discountPrice"
+                  name="discountPrice"
+                  value={formData.discountPrice}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  className={`${inputBaseClass} ${getErrorClass('discountPrice')}`}
                   placeholder="0.00"
                 />
               </div>
