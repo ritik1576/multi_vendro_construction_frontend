@@ -64,7 +64,19 @@ function OrderDetail() {
   const deliveryCharge = displayOrder?.amount?.delivery ?? ((cartItems.length > 0) ? (displayOrder?.shippingCharge ?? 99) : 0);
   const subtotal = displayOrder?.amount?.itemsSubtotal ?? displayOrder?.subtotal ?? cartItems.reduce((sum, item) => sum + (item.price || getCartItemPrice(item)) * (item.quantity || 1), 0);
   const grandTotal = displayOrder?.amount?.totalAmount ?? displayOrder?.totalAmount ?? (subtotal + deliveryCharge);
-  const orderStatus = displayOrder?.displayStatus || displayOrder?.orderStatus || displayOrder?.status || 'Processing';
+  const orderStatus = displayOrder?.displayStatus || displayOrder?.orderStatus || displayOrder?.status || 'Pending';
+
+  const getStepIndex = (status) => {
+    const s = String(status).toLowerCase();
+    if (s.includes('pending')) return 0;
+    if (s.includes('confirmed')) return 1;
+    if (s.includes('shipped')) return 2;
+    if (s.includes('delivered')) return 3;
+    return 0; // Default pending
+  };
+  
+  const isCancelled = String(orderStatus).toLowerCase().includes('cancelled');
+  const currentStep = getStepIndex(orderStatus);
 
   const vendors = useMemo(
     () => Array.from(new Set(cartItems.map((item) => item.vendorName || item.vendor).filter(Boolean))),
@@ -97,7 +109,7 @@ function OrderDetail() {
                 Order Detail
               </p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">
-                {displayVendorName}
+                Order #{displayOrder?.id || displayOrder?._id || displayOrder?.orderId || orderId}
               </h1>
               <p className="mt-2 text-sm text-slate-600">
                 Review order items, delivery information, payment status, and vendor progress.
@@ -274,7 +286,7 @@ function OrderDetail() {
               </div>
             </DetailBlock>
 
-            <OrderStatusProgress currentStep={2} />
+            <OrderStatusProgress currentStep={currentStep} isCancelled={isCancelled} />
             </>
             )}
 

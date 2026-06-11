@@ -12,6 +12,6 @@ export const getCartItemPrice = (item) => {
 };
 
 export const formatCurrency = (value) =>
-  `Rs. ${Number(value || 0).toLocaleString("en-IN", {
+  `₹${Number(value || 0).toLocaleString("en-IN", {
     maximumFractionDigits: 0,
   })}`;

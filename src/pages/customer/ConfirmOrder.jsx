@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Navbar from '../../components/landing/Navbar';
+import { formatCurrency } from '../../context/cartUtils';
 
 const ConfirmOrder = () => {
   const location = useLocation();
@@ -46,6 +47,10 @@ const ConfirmOrder = () => {
           <div className="p-8 sm:p-10">
             <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Order Number</h3>
+                  <p className="mt-1 text-xl font-bold text-slate-900">{lastPlacedOrder?.id || lastPlacedOrder?._id || lastPlacedOrder?.orderId || 'Pending'}</p>
+                </div>
 
                 <div>
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Payment Method</h3>
@@ -55,9 +60,10 @@ const ConfirmOrder = () => {
                     </span>
                   </div>
                 </div>
+                
                 <div className="mt-4 flex flex-col gap-1">
                   <h3 className="text-xs font-semibold uppercase text-gray-500">Total Amount</h3>
-                  <p className="mt-1 text-3xl font-bold text-slate-900">₹{orderData.totalAmount}</p>
+                  <p className="mt-1 text-3xl font-bold text-slate-900">{formatCurrency(orderData.totalAmount)}</p>
                 </div>
               </div>
 
@@ -77,7 +83,7 @@ const ConfirmOrder = () => {
             {/* Actions */}
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
               <Link
-                to={`/orders/${lastPlacedOrder?.id || lastPlacedOrder?._id || 'INF-99824'}`}
+                to={`/orders/${lastPlacedOrder?.id || lastPlacedOrder?._id || lastPlacedOrder?.orderId || 'INF-99824'}`}
                 className="inline-flex w-full items-center justify-center rounded-full bg-[#0F172A] px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#152e63] sm:w-auto"
               >
                 Track Order

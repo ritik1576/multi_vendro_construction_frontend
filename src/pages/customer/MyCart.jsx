@@ -53,10 +53,10 @@ function MyCart() {
   }, [dispatch]);
 
   const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
-  const subtotal = cart?.data?.totalPrice || cart?.totalPrice || cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
   const discount = cart?.data?.discount || cart?.discount || 0;
   const deliveryCharge = cart?.data?.deliveryCharge || cart?.deliveryCharge || 0;
-  const grandTotal = cart?.data?.grandTotal || cart?.grandTotal || subtotal - discount + deliveryCharge;
+  const grandTotal = subtotal - discount + deliveryCharge;
 
   const decreaseQuantity = (id) => {
     const item = cartItems.find(i => (i.id || i.cartItemId) === id);
@@ -127,7 +127,7 @@ function MyCart() {
                 const displayCategory = matchedProduct.category || item.category || 'Material';
                 const displayName = matchedProduct.ProductName || matchedProduct.name || item.productName || item.name || 'Product name not available';
                 const displayVendor = matchedProduct.vendor || item.vendor || 'InfraMart Direct';
-                const displayUnit = matchedProduct.unit || item.unit || 'Unit not available';
+                const displayUnit = matchedProduct.unit || item.unit;
 
                 const resolveImageUrl = (item, product) => {
                   return getLocalProductImage(product || item);
@@ -147,7 +147,7 @@ function MyCart() {
                           <p className="text-xs font-extrabold uppercase tracking-widest text-[#F97316]">{displayCategory}</p>
                           <h2 className="mt-1 text-lg font-extrabold text-[#0F172A]">{displayName}</h2>
                           <p className="mt-2 text-sm font-semibold text-slate-500">Vendor: {displayVendor}</p>
-                          <p className="mt-1 text-sm text-slate-500">Unit: {displayUnit}</p>
+                          {displayUnit && <p className="mt-1 text-sm text-slate-500">Unit: {displayUnit}</p>}
                         </div>
 
                         <button

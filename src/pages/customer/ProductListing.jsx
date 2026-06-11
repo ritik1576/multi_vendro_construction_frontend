@@ -279,11 +279,13 @@ function ProductCard({ product }) {
               {status}
             </span>
           </div>
-          <div className="flex items-center gap-1 text-xs font-extrabold text-amber-500">
-            <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-            <span>{Number(product.rating || 0).toFixed(1)}</span>
-            <span className="font-semibold text-slate-400">({product.reviews || 0})</span>
-          </div>
+          {Number(product.rating || 0) > 0 && (
+            <div className="flex items-center gap-1 text-xs font-extrabold text-amber-500">
+              <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+              <span>{Number(product.rating || 0).toFixed(1)}</span>
+              <span className="font-semibold text-slate-400">({product.reviews || 0})</span>
+            </div>
+          )}
         </div>
 
         {/* Fixed heights for title and description to align all cards uniformly */}
@@ -313,7 +315,9 @@ function ProductCard({ product }) {
               )}
             </div>
             <p className="text-[10px] font-bold text-slate-400 w-full">per {unit}</p>
-            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium mt-1 inline-block">MOQ: 50 Units</span>
+            {product.moq && (
+              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium mt-1 inline-block">MOQ: {product.moq} Units</span>
+            )}
           </div>
 
           <hr className="my-4 border-slate-100" />

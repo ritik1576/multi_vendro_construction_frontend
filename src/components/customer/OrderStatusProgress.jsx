@@ -1,8 +1,19 @@
 import React from 'react';
 
-const steps = ['Order Placed', 'Confirmed', 'Packed', 'Out for Delivery', 'Delivered'];
+const steps = ['Pending', 'Confirmed', 'Shipped', 'Delivered'];
 
-const OrderStatusProgress = ({ currentStep = 2 }) => {
+const OrderStatusProgress = ({ currentStep = 0, isCancelled = false }) => {
+  if (isCancelled) {
+    return (
+      <div className="overflow-hidden rounded-[1.75rem] border border-red-200 bg-white p-6 shadow-sm">
+        <div className="mb-2">
+          <h3 className="text-lg font-semibold text-red-600">Order Cancelled</h3>
+          <p className="text-sm text-slate-500">This order has been cancelled.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-6">

@@ -46,7 +46,7 @@ const Navbar = () => {
           {/* Search Bar */}
 
 
-          {!hideSearchAndIcons && !isProductsPage && (
+          {!hideSearchAndIcons && (
             <div className="hidden md:flex flex-1 max-w-md mx-5 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-customText-disabled" />
@@ -91,16 +91,14 @@ const Navbar = () => {
                 </>
               ) : isAuthenticated ? (
                 <>
-                  {!isProductsPage && (
-                    <span className="text-sm font-medium text-slate-700 mr-2">
-                      Hi, {user?.name || user?.firstName || 'User'}
-                    </span>
-                  )}
+                  <span className="text-sm font-medium text-slate-700 mr-2">
+                    Hi, {user?.name || user?.firstName || 'User'}
+                  </span>
                   <Link 
                     to="/orders"
                     className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors"
                   >
-                    MYorders
+                    My Orders
                   </Link>
                   <button 
                     onClick={handleLogout}

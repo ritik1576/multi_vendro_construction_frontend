@@ -105,7 +105,6 @@ useEffect(() => {
               : 'Unknown date');
             const orderTotal = order.totalAmount || order.total || 0;
             const itemsCount = order.itemCount || order.itemsCount || (Array.isArray(order.items) ? order.items.length : Number(order.items || 0));
-            const vendorName = order.vendorName || order.vendor || 'Vendor';
             const orderStatus = order.displayStatus || order.orderStatus || order.status || 'Processing';
 
             return (
@@ -115,7 +114,7 @@ useEffect(() => {
                     <div className="flex flex-wrap items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
                       <span>{orderDate}</span>
                     </div>
-                    <p className="text-xl font-semibold text-[#0F172A]">{vendorName}</p>
+                    <p className="text-xl font-semibold text-[#0F172A]">Order #{orderId}</p>
                     <p className="text-sm text-slate-500">Review order details and status</p>
                   </div>
 

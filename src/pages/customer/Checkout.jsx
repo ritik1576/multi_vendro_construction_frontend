@@ -265,12 +265,11 @@ const Checkout = () => {
     <div className="min-h-screen bg-[#F8FAFC]">
       <Navbar />
       <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="mb-6 overflow-hidden rounded-[1.75rem] bg-[#0F172A] px-6 py-8 text-white shadow-sm sm:px-8 sm:py-10">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 overflow-hidden rounded-[1.75rem] bg-[#0F172A] px-6 py-6 text-white shadow-sm sm:px-8 sm:py-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-300">InfraMart</p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Checkout</h1>
-              <p className="mt-3 max-w-2xl text-sm text-slate-200">
+              <h1 className="text-2xl font-semibold tracking-tight">Checkout</h1>
+              <p className="mt-1 max-w-2xl text-sm text-slate-200">
                 Complete your procurement order with a compact, business-ready checkout experience.
               </p>
             </div>
@@ -464,9 +463,12 @@ const Checkout = () => {
                           )}
                         </div>
                         {address && (
-                          <div className="rounded-xl border border-[#0F172A] bg-slate-50 p-4 shadow-sm">
-                            <p className="text-base font-semibold text-[#0F172A]">{address.name}</p>
-                            <p className="mt-1 text-sm text-slate-600">{address.line1}</p>
+                          <div className="rounded-xl border-2 border-[#1E3A8A] bg-blue-50/50 p-4 shadow-sm">
+                            <div className="mb-2 flex items-center justify-between">
+                              <p className="text-base font-bold text-[#0F172A]">{address.name}</p>
+                              <span className="rounded-full bg-[#1E3A8A] px-2 py-0.5 text-[10px] font-bold text-white tracking-wider uppercase">Selected Delivery Address</span>
+                            </div>
+                            <p className="mt-1 text-sm text-slate-700 font-medium">{address.line1}</p>
                             {address.line2 && <p className="text-sm text-slate-600">{address.line2}</p>}
                             <p className="text-sm text-slate-600">{address.city}, {address.state} {address.pincode}</p>
                             <p className="text-sm text-slate-600">{address.country}</p>
@@ -509,19 +511,20 @@ const Checkout = () => {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { value: 'cod', label: 'Cash on Delivery' },
-                  { value: 'online', label: 'Pay Online' },
+                  { value: 'cod', label: 'Cash on Delivery', disabled: false },
+                  { value: 'online', label: 'Pay Online (Coming Soon)', disabled: true },
                 ].map((option) => (
                   <label
                     key={option.value}
-                    className={`flex cursor-pointer items-center gap-4 rounded-3xl border px-4 py-4 transition ${paymentMethod === option.value ? 'border-[#0F172A] bg-white shadow-sm' : 'border-slate-300 bg-white hover:border-slate-400'}`}
+                    className={`flex ${option.disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} items-center gap-4 rounded-3xl border px-4 py-4 transition ${paymentMethod === option.value ? 'border-[#0F172A] bg-white shadow-sm' : 'border-slate-300 bg-white hover:border-slate-400'}`}
                   >
                     <input
                       type="radio"
                       name="payment"
                       value={option.value}
                       checked={paymentMethod === option.value}
-                      onChange={() => setPaymentMethod(option.value)}
+                      onChange={() => !option.disabled && setPaymentMethod(option.value)}
+                      disabled={option.disabled}
                       className="h-5 w-5 accent-[#0F172A]"
                     />
                     <span className="text-sm font-semibold text-[#0F172A]">{option.label}</span>
