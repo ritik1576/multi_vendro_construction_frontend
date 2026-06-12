@@ -20,12 +20,15 @@
   --color-customBorder-light: #E5E7EB;
   --color-customBorder-main: #D1D5DB;
   --color-customBorder-dark: #9CA3AF;
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   body {
     background-color: var(--color-customBackground-default);
     color: var(--color-customText-primary);
-    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
