@@ -14,7 +14,9 @@ import ConfirmOrder from '../pages/customer/ConfirmOrder';
 import OrderHistory from '../pages/customer/OrderHistory';
 import OrderDetail from '../pages/customer/OrderDetail';
 import ProtectedRoute from './ProtectedRoute';
+import VendorRoute from './VendorRoute';
 import VendorApprovalStatus from '../pages/vendor/VendorApprovalStatus';
+import VendorDashboard from '../pages/vendor/VendorDashboard';
 import AddProduct from '../pages/vendor/AddProduct';
 import EditProduct from '../pages/vendor/EditProduct';
 import Inventory from '../pages/vendor/Inventory';
@@ -71,6 +73,7 @@ const AppRoutes = () => {
         <Route path="/admin/products" element={<AdminProductManagement />} />
         <Route path="/admin/orders" element={<AdminOrderManagement />} />
         <Route path="/admin/reports" element={<AdminReports />} />
+        <Route path="/vendor/approval-status" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

@@ -62,7 +62,11 @@ export const productService = {
   updateProduct: async (id, productData) => {
     try {
       const url = API_ENDPOINTS.PRODUCTS.UPDATE_PRODUCT.replace('{id}', id);
-      const response = await api.put(url, productData);
+      const response = await api.put(url, productData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
