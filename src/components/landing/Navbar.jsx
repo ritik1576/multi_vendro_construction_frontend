@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/authActions';
 
-const Navbar = () => {
+const Navbar = ({ searchTerm, onSearchChange }) => {
   const location = useLocation();
   const cartState = useSelector((state) => state.cart.cart);
   const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
@@ -55,6 +55,8 @@ const Navbar = () => {
                 type="text"
                 className="block w-full pl-10 pr-3 py-2 border border-customBorder-light rounded-md leading-5 bg-gray-50 placeholder-customText-disabled focus:outline-none focus:ring-1 focus:ring-primary-main focus:border-primary-main sm:text-sm"
                 placeholder="Search 10,000+ construction products..."
+                value={searchTerm !== undefined ? searchTerm : ''}
+                onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
               />
             </div>
           )}

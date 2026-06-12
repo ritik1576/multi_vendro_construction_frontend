@@ -222,7 +222,15 @@ function ProductCard({ product }) {
 
   const handleAddToCart = (event) => {
     event.stopPropagation();
-    dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity: 1 }));
+    if (cartItem && (cartItem.id || cartItem.cartItemId)) {
+      dispatch(updateCartItemRequest({
+        cartitemID: cartItem.id || cartItem.cartItemId,
+        productname: product.ProductName || product.name,
+        quantity: quantity + 1
+      }));
+    } else {
+      dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity: 1 }));
+    }
   };
 
   const handleDecreaseQuantity = (event) => {
@@ -259,7 +267,8 @@ function ProductCard({ product }) {
 
   return (
     <article
-      className="group flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1E3A8A]/30 hover:shadow-lg"
+      onClick={openProduct}
+      className="group flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1E3A8A]/30 hover:shadow-lg cursor-pointer"
     >
       {/* Uniform Square Image Container */}
       <div className="relative flex aspect-square w-full items-center justify-center p-6 bg-slate-50/50 hover:bg-white transition-all duration-300 border-b border-slate-100">
@@ -322,9 +331,12 @@ function ProductCard({ product }) {
 
           <hr className="my-4 border-slate-100" />
 
-          <div className={`grid gap-3 ${cartItem ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <div className="grid gap-3 grid-cols-2">
             {cartItem ? (
-              <div className="flex h-10 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition-colors focus-within:border-[#1E3A8A] hover:bg-white">
+              <div
+                className="flex h-10 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition-colors focus-within:border-[#1E3A8A] hover:bg-white"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   aria-label={`Decrease quantity of ${productName}`}
                   className="grid h-full w-12 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
@@ -344,24 +356,22 @@ function ProductCard({ product }) {
                 </button>
               </div>
             ) : (
-              <>
-                <button
-                  className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-2 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95"
-                  onClick={handleAddToCart}
-                  type="button"
-                >
-                  <ShoppingCart className="h-3.5 w-3.5" />
-                  Add to Cart
-                </button>
-                <button
-                  className="flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-xs font-extrabold text-[#1E3A8A] transition-all duration-200 hover:border-[#1E3A8A] hover:bg-slate-50 hover:shadow-sm active:scale-95"
-                  onClick={openProduct}
-                  type="button"
-                >
-                  Details
-                </button>
-              </>
+              <button
+                className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-2 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#172554] hover:shadow-md active:scale-95"
+                onClick={handleAddToCart}
+                type="button"
+              >
+                <ShoppingCart className="h-3.5 w-3.5" />
+                Add to Cart
+              </button>
             )}
+            <button
+              className="flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-xs font-extrabold text-[#1E3A8A] transition-all duration-200 hover:border-[#1E3A8A] hover:bg-slate-50 hover:shadow-sm active:scale-95"
+              onClick={openProduct}
+              type="button"
+            >
+              Details
+            </button>
           </div>
         </div>
       </div>
@@ -468,7 +478,7 @@ function ProductListing() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
-      <Navbar />
+      <Navbar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
       <main className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8">
         <nav className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-500">
           <Link className="hover:text-[#F97316]" to="/">Home</Link>
@@ -491,33 +501,6 @@ function ProductListing() {
               <SlidersHorizontal className="h-4 w-4" />
               Filters
             </button>
-          </div>
-
-          <div className="mt-6">
-            <label className="sr-only" htmlFor="product-search">
-              Search products
-            </label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input
-                className="min-h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-12 text-sm font-semibold text-[#0F172A] outline-none transition placeholder:text-slate-400 focus:border-[#1E3A8A] focus:bg-white"
-                id="product-search"
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search by product, category, vendor, or description"
-                type="search"
-                value={searchTerm}
-              />
-              {searchTerm && (
-                <button
-                  aria-label="Clear search"
-                  className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-slate-500 transition hover:bg-white hover:text-[#F97316]"
-                  onClick={() => setSearchTerm('')}
-                  type="button"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
           </div>
 
           <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
