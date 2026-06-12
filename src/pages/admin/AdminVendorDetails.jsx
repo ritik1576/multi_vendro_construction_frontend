@@ -128,24 +128,67 @@ const AdminVendorDetails = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="h-24 bg-slate-900"></div>
           <div className="px-8 pb-8">
-            <div className="relative flex justify-between items-end -mt-10 mb-6">
+            <div className="relative flex items-end -mt-10 mb-6">
               <div className="w-20 h-20 rounded-2xl bg-white p-1.5 shadow-md border border-slate-100">
                 <div className="w-full h-full rounded-xl bg-[#C2410C]/10 text-[#C2410C] flex items-center justify-center font-extrabold text-3xl">
                   {vendor.business_name.charAt(0)}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-              </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-extrabold text-slate-900">{vendor.business_name}</h1>
-                {getStatusBadge(vendor.approval_status)}
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-2xl font-extrabold text-slate-900">{vendor.business_name}</h1>
+                  {getStatusBadge(vendor.approval_status)}
+                </div>
+                <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4" /> Vendor ID: VEND-{vendor.id?.toString().padStart(4, '0')}
+                </p>
               </div>
-              <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
-                <Building2 className="w-4 h-4" /> Vendor ID: VEND-{vendor.id?.toString().padStart(4, '0')}
-              </p>
+
+              {/* Actions */}
+              {!showRejectReason && (
+                <div className="flex gap-3">
+                  {vendor.approval_status === 'Pending Approval' && (
+                    <>
+                      <button 
+                        onClick={() => setShowRejectReason(true)}
+                        className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-extrabold rounded-lg shadow-sm transition-colors"
+                      >
+                        <XCircle className="w-4 h-4" /> Reject
+                      </button>
+                      <button 
+                        onClick={handleApprove}
+                        disabled={isProcessing}
+                        className="flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors"
+                      >
+                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve
+                      </button>
+                    </>
+                  )}
+                  
+                  {vendor.approval_status === 'Approved' && (
+                    <button 
+                      onClick={handleBlock}
+                      disabled={isProcessing}
+                      className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-red-600 hover:bg-red-50 hover:border-red-200 text-sm font-extrabold rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />} Block Vendor
+                    </button>
+                  )}
+                  
+                  {(vendor.approval_status === 'Blocked' || vendor.approval_status === 'Rejected') && (
+                    <button 
+                      onClick={handleApprove}
+                      disabled={isProcessing}
+                      className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 text-sm font-extrabold rounded-lg shadow-sm transition-colors"
+                    >
+                      {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve Back
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -200,7 +243,7 @@ const AdminVendorDetails = () => {
         </div>
 
         {/* Bottom Actions */}
-        {vendor.approval_status === 'Pending Approval' && showRejectReason ? (
+        {vendor.approval_status === 'Pending Approval' && showRejectReason && (
           <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-6 mt-4">
             <h3 className="text-sm font-extrabold text-red-600 mb-2">Reason for Rejection</h3>
             <textarea 
@@ -225,48 +268,7 @@ const AdminVendorDetails = () => {
               </button>
             </div>
           </div>
-        ) : (
-          <div className="flex justify-end gap-3 pt-4">
-            {vendor.approval_status === 'Pending Approval' && (
-              <>
-                <button 
-                  onClick={() => setShowRejectReason(true)}
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-extrabold rounded-lg shadow-sm transition-colors"
-                >
-                  <XCircle className="w-4 h-4" /> Reject
-                </button>
-                <button 
-                  onClick={handleApprove}
-                  disabled={isProcessing}
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors"
-                >
-                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve
-                </button>
-              </>
-            )}
-            
-            {vendor.approval_status === 'Approved' && (
-              <button 
-                onClick={handleBlock}
-                disabled={isProcessing}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-red-600 hover:bg-red-50 hover:border-red-200 text-sm font-extrabold rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />} Block Vendor
-              </button>
-            )}
-            
-            {(vendor.approval_status === 'Blocked' || vendor.approval_status === 'Rejected') && (
-              <button 
-                onClick={handleApprove}
-                disabled={isProcessing}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 text-sm font-extrabold rounded-lg shadow-sm transition-colors"
-              >
-                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve Back
-              </button>
-            )}
-          </div>
         )}
-
       </div>
     </AdminLayout>
   );

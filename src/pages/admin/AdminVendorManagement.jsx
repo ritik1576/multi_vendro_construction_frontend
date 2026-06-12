@@ -12,6 +12,13 @@ const AdminVendorManagement = () => {
   const location = useLocation();
   const [activeFilter, setActiveFilter] = useState(location.state?.filter || 'All Vendors');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset to page 1 on filter or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery]);
 
   const dispatch = useDispatch();
   const { vendors, vendorsLoading: isLoading, vendorsError: error } = useSelector((state) => state.admin);
@@ -57,8 +64,23 @@ const AdminVendorManagement = () => {
         if (!matchesSearch) return false;
       }
       return true;
-      return true;
     });
+
+  const totalItems = filteredAndSortedVendors.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedVendors = filteredAndSortedVendors.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== '...') {
+        pages.push('...');
+      }
+    }
+    return pages;
+  };
 
   return (
     <AdminLayout>
@@ -175,7 +197,7 @@ const AdminVendorManagement = () => {
                       </div>
                     </td>
                   </tr>
-                ) : filteredAndSortedVendors.map((vendor) => (
+                ) : paginatedVendors.map((vendor) => (
                   <tr key={vendor.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -231,13 +253,39 @@ const AdminVendorManagement = () => {
           
           {/* Pagination */}
           <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
-            <span className="text-xs font-bold text-slate-500">Showing {filteredAndSortedVendors.length} entries</span>
+            <span className="text-xs font-bold text-slate-500">
+              Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+            </span>
             <div className="flex items-center gap-1">
-              <button className="px-3 py-1 text-xs font-bold text-slate-400 hover:text-slate-600 disabled:opacity-50" disabled>Prev</button>
-              <button className="w-7 h-7 flex items-center justify-center rounded bg-[#C2410C] text-white text-xs font-extrabold shadow-sm">1</button>
-              <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 text-xs font-bold transition-colors">2</button>
-              <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 text-xs font-bold transition-colors">3</button>
-              <button className="px-3 py-1 text-xs font-bold text-slate-600 hover:text-[#C2410C]">Next</button>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-xs font-bold text-slate-400 hover:text-slate-600 disabled:opacity-50 transition-colors"
+              >
+                Prev
+              </button>
+              
+              {getPageNumbers().map((pageNum, idx) => (
+                pageNum === '...' ? (
+                  <span key={`dots-${idx}`} className="text-slate-400 text-xs px-1">...</span>
+                ) : (
+                  <button 
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-7 h-7 flex items-center justify-center rounded text-xs transition-colors ${currentPage === pageNum ? 'bg-[#C2410C] text-white shadow-sm font-extrabold' : 'hover:bg-slate-200 text-slate-600 font-bold'}`}
+                  >
+                    {pageNum}
+                  </button>
+                )
+              ))}
+
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-xs font-bold text-slate-600 hover:text-[#C2410C] disabled:opacity-50 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>

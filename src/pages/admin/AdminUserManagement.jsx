@@ -12,6 +12,12 @@ import {
 const AdminUserManagement = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery]);
   const dispatch = useDispatch();
   const { users, loading: isLoading, error } = useSelector((state) => state.admin);
 
@@ -49,7 +55,7 @@ const AdminUserManagement = () => {
 
   // Filtering Logic
   const filteredUsers = users.filter(user => {
-    if (activeFilter === 'Active' && user.status !== 'Active') return false;
+    if (activeFilter === 'Active' && Number(user.orders || 0) <= 0) return false;
     if (activeFilter === 'Suspended' && user.status !== 'Suspended') return false;
     
     if (searchQuery) {
@@ -58,11 +64,27 @@ const AdminUserManagement = () => {
         user.full_name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
         user.phone.toLowerCase().includes(query) ||
-        user.id.toLowerCase().includes(query)
+        user.id.toString().includes(query)
       );
     }
     return true;
   });
+
+  const totalItems = filteredUsers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== '...') {
+        pages.push('...');
+      }
+    }
+    return pages;
+  };
 
   return (
     <AdminLayout>
@@ -177,7 +199,7 @@ const AdminUserManagement = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map((user) => (
+                  paginatedUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
@@ -213,11 +235,39 @@ const AdminUserManagement = () => {
           
           {/* Pagination */}
           <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
-            <span className="text-xs font-bold text-slate-500">Showing {filteredUsers.length} entries</span>
+            <span className="text-xs font-bold text-slate-500">
+              Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+            </span>
             <div className="flex items-center gap-1">
-              <button className="px-3 py-1 text-xs font-bold text-slate-400 hover:text-slate-600 disabled:opacity-50" disabled>Prev</button>
-              <button className="w-7 h-7 flex items-center justify-center rounded bg-[#C2410C] text-white text-xs font-extrabold shadow-sm">1</button>
-              <button className="px-3 py-1 text-xs font-bold text-slate-600 hover:text-[#C2410C]">Next</button>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-xs font-bold text-slate-400 hover:text-slate-600 disabled:opacity-50 transition-colors"
+              >
+                Prev
+              </button>
+              
+              {getPageNumbers().map((pageNum, idx) => (
+                pageNum === '...' ? (
+                  <span key={`dots-${idx}`} className="text-slate-400 text-xs px-1">...</span>
+                ) : (
+                  <button 
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-7 h-7 flex items-center justify-center rounded text-xs transition-colors ${currentPage === pageNum ? 'bg-[#C2410C] text-white shadow-sm font-extrabold' : 'hover:bg-slate-200 text-slate-600 font-bold'}`}
+                  >
+                    {pageNum}
+                  </button>
+                )
+              ))}
+
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-xs font-bold text-slate-600 hover:text-[#C2410C] disabled:opacity-50 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>

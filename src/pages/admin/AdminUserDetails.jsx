@@ -82,7 +82,7 @@ const AdminUserDetails = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="h-24 bg-slate-900"></div>
           <div className="px-8 pb-8">
-            <div className="relative flex justify-between items-end -mt-10 mb-6">
+            <div className="relative flex items-end -mt-10 mb-6">
               <div className="w-20 h-20 rounded-2xl bg-white p-1.5 shadow-md border border-slate-100">
                 <div className={`w-full h-full rounded-xl flex items-center justify-center font-extrabold text-3xl ${getAvatarColor(user.full_name)}`}>
                   {user.full_name.split(' ').map(n => n[0]).join('')}
@@ -90,14 +90,32 @@ const AdminUserDetails = () => {
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-extrabold text-slate-900">{user.full_name}</h1>
-                {getStatusBadge(user.status)}
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-2xl font-extrabold text-slate-900">{user.full_name}</h1>
+                  {getStatusBadge(user.status)}
+                </div>
+                <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
+                  User ID: {user.id}
+                </p>
               </div>
-              <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
-                User ID: {user.id}
-              </p>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                {user.status !== 'Suspended' ? (
+                  <button 
+                    onClick={() => setIsSuspendModalOpen(true)}
+                    className="flex items-center justify-center gap-2 px-6 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-extrabold rounded-lg shadow-sm transition-colors"
+                  >
+                    <ShieldBan className="w-4 h-4" /> Suspend User
+                  </button>
+                ) : (
+                  <button className="flex items-center justify-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors">
+                    <ShieldCheck className="w-4 h-4" /> Reactivate User
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -196,22 +214,6 @@ const AdminUserDetails = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Bottom Actions */}
-        <div className="flex justify-end gap-3 pt-4">
-          {user.status !== 'Suspended' ? (
-            <button 
-              onClick={() => setIsSuspendModalOpen(true)}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-extrabold rounded-lg shadow-sm transition-colors"
-            >
-              <ShieldBan className="w-4 h-4" /> Suspend User
-            </button>
-          ) : (
-            <button className="flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors">
-              <ShieldCheck className="w-4 h-4" /> Reactivate User
-            </button>
-          )}
         </div>
 
       </div>

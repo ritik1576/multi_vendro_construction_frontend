@@ -94,6 +94,11 @@ const AdminOrderManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Reset to page 1 on filter or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery]);
+
   // Drawer & Modal States
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -123,6 +128,18 @@ const AdminOrderManagement = () => {
   const totalItems = filteredOrders.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== '...') {
+        pages.push('...');
+      }
+    }
+    return pages;
+  };
 
   // KPIs
   const totalOrdersCount = orders.length;
@@ -363,20 +380,35 @@ const AdminOrderManagement = () => {
           {totalItems > 0 && (
             <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
               <span className="text-xs font-bold text-slate-500">
-                Showing <span className="font-extrabold text-slate-900">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-extrabold text-slate-900">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of <span className="font-extrabold text-slate-900">{totalItems}</span> entries
+                Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
               </span>
               <div className="flex items-center gap-1">
                 <button 
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1.5 border border-slate-200 rounded-md text-xs font-extrabold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                  className="px-3 py-1 text-xs font-bold text-slate-400 hover:text-slate-600 disabled:opacity-50 transition-colors"
                 >
                   Prev
                 </button>
+                
+                {getPageNumbers().map((pageNum, idx) => (
+                  pageNum === '...' ? (
+                    <span key={`dots-${idx}`} className="text-slate-400 text-xs px-1">...</span>
+                  ) : (
+                    <button 
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-7 h-7 flex items-center justify-center rounded text-xs transition-colors ${currentPage === pageNum ? 'bg-[#C2410C] text-white shadow-sm font-extrabold' : 'hover:bg-slate-200 text-slate-600 font-bold'}`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                ))}
+
                 <button 
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 border border-slate-200 rounded-md text-xs font-extrabold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                  className="px-3 py-1 text-xs font-bold text-slate-600 hover:text-[#C2410C] disabled:opacity-50 transition-colors"
                 >
                   Next
                 </button>
