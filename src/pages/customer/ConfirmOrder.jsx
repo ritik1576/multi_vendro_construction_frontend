@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import Navbar from '../../components/landing/Navbar';
+import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
 import { formatCurrency } from '../../context/cartUtils';
 
 const ConfirmOrder = () => {
@@ -26,56 +26,54 @@ const ConfirmOrder = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <Navbar />
+      <ProductListingNavbar />
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[2rem] bg-white shadow-xl ring-1 ring-slate-200">
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
           {/* Header Section */}
-          <div className="bg-[#0F172A] px-8 py-12 text-center text-white">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 ring-8 ring-emerald-500/10">
-              <svg className="h-10 w-10 text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
+          <div className="bg-white px-8 py-12 text-center border-b border-slate-100">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50">
+              <svg className="h-10 w-10 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             </div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-400">Order Successful</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Your order is placed</h1>
-            <p className="mt-4 text-slate-300">
-              The order is being confirmed by vendor
+            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mb-2">Order Successful</p>
+            <h1 className="text-3xl font-extrabold text-[#0F172A]">Your order is placed</h1>
+            <p className="mt-3 text-sm text-slate-500">
+              The order is being confirmed by the vendor.
             </p>
           </div>
 
           {/* Details Section */}
-          <div className="p-8 sm:p-10">
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="space-y-6">
+          <div className="p-8 sm:p-10 bg-[#F8FAFC]">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm space-y-6">
                 <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Order Number</h3>
-                  <p className="mt-1 text-xl font-bold text-slate-900">{lastPlacedOrder?.id || lastPlacedOrder?._id || lastPlacedOrder?.orderId || 'Pending'}</p>
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Order Number</h3>
+                  <p className="text-lg font-bold text-[#0F172A]">{lastPlacedOrder?.id || lastPlacedOrder?._id || lastPlacedOrder?.orderId || 'Pending'}</p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Payment Method</h3>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700 ring-1 ring-inset ring-sky-600/20">
-                      {isOnline ? 'Paid Online' : 'Cash on Delivery'}
-                    </span>
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Payment Method</h3>
+                  <div className="inline-flex items-center rounded bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-700">
+                    {isOnline ? 'Paid Online' : 'Cash on Delivery'}
                   </div>
                 </div>
                 
-                <div className="mt-4 flex flex-col gap-1">
-                  <h3 className="text-xs font-semibold uppercase text-gray-500">Total Amount</h3>
-                  <p className="mt-1 text-3xl font-bold text-slate-900">{formatCurrency(orderData.totalAmount)}</p>
+                <div className="pt-4 border-t border-slate-100">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Amount</h3>
+                  <p className="text-2xl font-extrabold text-[#0F172A]">{formatCurrency(orderData.totalAmount)}</p>
                 </div>
               </div>
 
-              <div className="rounded-[1.5rem] bg-slate-50 p-6 ring-1 ring-slate-200">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Delivery Address</h3>
-                <div className="mt-4 space-y-1 text-sm text-slate-700">
-                  <p className="font-semibold text-slate-900">{orderData.shippingAddress.name}</p>
+              <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-4">Delivery Address</h3>
+                <div className="space-y-1.5 text-[13px] text-slate-600">
+                  <p className="text-[14px] font-bold text-[#0F172A] mb-2">{orderData.shippingAddress.name}</p>
                   <p>{orderData.shippingAddress.line1}</p>
                   {orderData.shippingAddress.line2 && <p>{orderData.shippingAddress.line2}</p>}
-                  <p>{orderData.shippingAddress.city}, {orderData.shippingAddress.state} {orderData.shippingAddress.pincode}</p>
+                  <p>{orderData.shippingAddress.city}, {orderData.shippingAddress.state} - {orderData.shippingAddress.pincode}</p>
                   <p>{orderData.shippingAddress.country}</p>
-                  <p className="mt-2 font-medium">{orderData.shippingAddress.phone}</p>
+                  <p className="mt-3 font-semibold text-slate-700">Mobile: {orderData.shippingAddress.phone}</p>
                 </div>
               </div>
             </div>
@@ -84,15 +82,15 @@ const ConfirmOrder = () => {
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
               <Link
                 to={`/orders/${lastPlacedOrder?.id || lastPlacedOrder?._id || lastPlacedOrder?.orderId || 'INF-99824'}`}
-                className="inline-flex w-full items-center justify-center rounded-full bg-[#0F172A] px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#152e63] sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded bg-[#EA580C] px-8 py-3 text-[13px] font-bold tracking-wide text-white transition hover:bg-[#C2410C] sm:w-auto shadow-sm"
               >
-                Track Order
+                TRACK ORDER
               </Link>
               <Link
                 to="/products"
-                className="inline-flex w-full items-center justify-center rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 transition hover:bg-slate-50 hover:text-slate-900 sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded border border-slate-300 bg-white px-8 py-3 text-[13px] font-bold tracking-wide text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 sm:w-auto shadow-sm"
               >
-                Continue Shopping
+                CONTINUE SHOPPING
               </Link>
             </div>
           </div>

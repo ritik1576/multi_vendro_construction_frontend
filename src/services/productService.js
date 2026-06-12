@@ -1,37 +1,50 @@
 import api from './api';
 import { API_ENDPOINTS } from './apiConstants';
+import { store } from '../redux/store';
+
+const getAuthHeaders = () => {
+  const token = store?.getState()?.auth?.token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export const productService = {
   getAllProducts: async () => {
-    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_ALL);
+    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_ALL, { headers: getAuthHeaders() });
     return response.data;
   },
   
-  getProductByName: async (name) => {
-    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_BY_NAME.replace('{name}', name));
+  getProductById: async (id) => {
+    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_BY_ID.replace('{id}', id), { headers: getAuthHeaders() });
     return response.data;
   },
   
   searchProducts: async (query) => {
-    // query could be an object of search parameters, we pass it as params
-    const response = await api.get(API_ENDPOINTS.PRODUCTS.SEARCH, { params: query });
+    const response = await api.get(API_ENDPOINTS.PRODUCTS.SEARCH, { 
+      params: query,
+      headers: getAuthHeaders()
+    });
     return response.data;
   },
   
   getCategories: async () => {
-    const response = await api.get(API_ENDPOINTS.CATEGORIES.GET_ALL);
+    const response = await api.get(API_ENDPOINTS.CATEGORIES.GET_ALL, { headers: getAuthHeaders() });
     return response.data;
   },
   
   getVendorProducts: async (vendorId) => {
-    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_VENDOR_PRODUCTS.replace('{vendorId}', vendorId));
+    const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_VENDOR_PRODUCTS.replace('{vendorId}', vendorId), { headers: getAuthHeaders() });
     return response.data;
   },
 
   // Add new product
   addProduct: async (productData) => {
     try {
-      const response = await api.post(API_ENDPOINTS.PRODUCTS.ADD_PRODUCT, productData);
+      const response = await api.post(API_ENDPOINTS.PRODUCTS.ADD_PRODUCT, productData, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -44,7 +57,8 @@ export const productService = {
       const url = API_ENDPOINTS.PRODUCTS.UPDATE_PRODUCT.replace('{id}', id);
       const response = await api.put(url, productData, {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
         }
       });
       return response.data;
@@ -57,7 +71,7 @@ export const productService = {
   deleteProduct: async (id) => {
     try {
       const url = API_ENDPOINTS.PRODUCTS.DELETE_PRODUCT.replace('{id}', id);
-      const response = await api.delete(url);
+      const response = await api.delete(url, { headers: getAuthHeaders() });
       return response.data;
     } catch (error) {
       throw error;

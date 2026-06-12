@@ -7,8 +7,8 @@ import VendorLayout from '../../components/vendor/VendorLayout';
 
 const VendorDashboard = () => {
   const { user } = useSelector((state) => state.auth);
-  const vendorId = user?.vendorId || 3;
-  const userId = user?.userId || user?.id || 57;
+  const vendorId = user?.vendorId;
+  const userId = user?.userId || user?.id;
 
   const [orders, setOrders] = useState([]);
   const [dashboard, setDashboard] = useState(null);

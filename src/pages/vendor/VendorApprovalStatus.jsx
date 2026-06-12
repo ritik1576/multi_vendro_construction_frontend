@@ -9,7 +9,7 @@ import { getVendorStatus } from '../../services/vendorApi';
 const VendorApprovalStatus = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const vendorId = user?.vendorId || 3;
+  const vendorId = user?.vendorId;
 
   const [vendorStatus, setVendorStatus] = useState(user?.status);
   const [loading, setLoading] = useState(!user?.status);

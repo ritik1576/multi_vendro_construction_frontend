@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 import LandingPage from '../pages/LandingPage';
 import Register from '../pages/authentication/Register';
@@ -22,18 +23,26 @@ import EditProduct from '../pages/vendor/EditProduct';
 import Inventory from '../pages/vendor/Inventory';
 import VendorOrders from '../pages/vendor/VendorOrders';
 
+const ProtectedLanding = () => {
+  const { isAuthenticated } = useSelector((state) => state.auth || {});
+  if (isAuthenticated) {
+    return <Navigate to="/products" replace />;
+  }
+  return <LandingPage />;
+};
+
 const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<ProtectedLanding />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        <Route path="/products" element={<ProtectedRoute><ProductListing /></ProtectedRoute>} />
-        <Route path="/product/:name" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+        <Route path="/products" element={<ProductListing />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<ProtectedRoute><MyCart /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/order-confirmation" element={<ProtectedRoute><ConfirmOrder /></ProtectedRoute>} />

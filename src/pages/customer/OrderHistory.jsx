@@ -2,24 +2,19 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrdersRequest } from '../../redux/orderActions';
-import Navbar from '../../components/landing/Navbar';
+import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
 import { formatCurrency } from '../../context/cartUtils';
+import { Package, ChevronRight, Clock, ArrowLeft } from 'lucide-react';
 
 const badgeClass = (status) => {
-  switch (status) {
-    case 'Delivered':
-      return 'bg-emerald-100 text-emerald-700';
-    case 'Out for Delivery':
-      return 'bg-sky-100 text-sky-700';
-    case 'Confirmed':
-      return 'bg-indigo-100 text-indigo-700';
-    case 'Packed':
-      return 'bg-orange-100 text-orange-700';
-    case 'Vendor Confirmation Pending':
-      return 'bg-yellow-100 text-yellow-800';
-    default:
-      return 'bg-slate-100 text-slate-700';
-  }
+  const s = String(status).toLowerCase();
+  if (s.includes('delivered')) return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20';
+  if (s.includes('out for delivery')) return 'bg-sky-50 text-sky-700 ring-1 ring-sky-600/20';
+  if (s.includes('confirmed')) return 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20';
+  if (s.includes('packed')) return 'bg-orange-50 text-orange-700 ring-1 ring-orange-600/20';
+  if (s.includes('pending')) return 'bg-yellow-50 text-yellow-800 ring-1 ring-yellow-600/20';
+  if (s.includes('cancelled')) return 'bg-red-50 text-red-700 ring-1 ring-red-600/20';
+  return 'bg-slate-50 text-slate-700 ring-1 ring-slate-600/20';
 };
 
 const OrderHistory = () => {
@@ -27,120 +22,196 @@ const OrderHistory = () => {
   const { orders = [], loading, error } = useSelector((state) => state.order);
   const { user } = useSelector((state) => state.auth);
 
-useEffect(() => {
-  const userId = user?.id || user?.userId || user?._id || 21;
+  useEffect(() => {
+    const userId = user?.id || user?.userId || user?._id || 21;
+    if (userId) {
+      dispatch(getOrdersRequest(userId));
+    }
+  }, [dispatch, user]);
 
-  if (userId) {
-    dispatch(getOrdersRequest(userId));
-  }
-}, [dispatch, user]);
+  useEffect(() => {
+    const hideLinksByText = (text) => {
+      const allLinks = document.querySelectorAll('nav a');
+      const linkElements = [];
+      allLinks.forEach((link) => {
+        if (link.textContent.trim() === text) {
+          link.style.display = 'none';
+          linkElements.push(link);
+        }
+      });
+      return linkElements;
+    };
+    
+    const hiddenLinks = [
+      ...hideLinksByText('Categories'),
+      ...hideLinksByText('Bulk Orders'),
+      ...hideLinksByText('Verified Sellers'),
+    ];
+    
+    return () => {
+      hiddenLinks.forEach((link) => link.style.display = '');
+    };
+  }, []);
 
   const hasOrders = !loading && !error && orders.length > 0;
   const showEmpty = !loading && !error && orders.length === 0;
   const showError = !loading && Boolean(error);
 
+  // Sort orders by date descending if possible
+  const sortedOrders = [...orders].sort((a, b) => {
+    const dateA = new Date(a.createdAt || a.date || 0);
+    const dateB = new Date(b.createdAt || b.date || 0);
+    return dateB - dateA;
+  });
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <Navbar />
-      <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-        <div className="mb-6 overflow-hidden rounded-[1.75rem] bg-[#0F172A] px-6 py-8 text-white shadow-sm sm:px-8 sm:py-10">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
+      <ProductListingNavbar />
+      
+      <main className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+        
+        {/* Top Navigation */}
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/products" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#0F172A] transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Continue Shopping
+          </Link>
+        </div>
+
+        {/* Header Card */}
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-300">InfraMart</p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Order History</h1>
-              <p className="mt-3 max-w-2xl text-sm text-slate-200">
-                Review past procurement orders and open details for status, totals, and next steps.
+              <h1 className="text-2xl font-extrabold text-[#0F172A] flex items-center gap-2">
+                <Package className="h-6 w-6 text-[#F97316]" />
+                Order History
+              </h1>
+              <p className="mt-1 text-sm font-medium text-slate-500">
+                Track, manage, and review your procurement orders
               </p>
             </div>
-            <nav className="text-sm text-slate-200/90" aria-label="Breadcrumb">
-              <ol className="flex flex-wrap items-center gap-2">
-                <li>
-                  <Link to="/" className="font-medium text-orange-300 hover:text-white">Home</Link>
-                </li>
-                <li>/</li>
-                <li className="font-semibold">Orders</li>
-              </ol>
-            </nav>
+            {hasOrders && (
+              <div className="text-sm font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
+                Total Orders: <span className="text-[#0F172A]">{orders.length}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        <Link
-          to="/products"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-[#1E3A8A] hover:bg-slate-50"
-        >
-          ← Back to Products
-        </Link>
-
-        <div className="space-y-6">
+        {/* Content */}
+        <div className="space-y-4">
           {loading && (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
-              <p className="text-sm font-medium text-slate-600">Loading orders...</p>
+            <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[#1E3A8A] border-r-transparent mb-4"></div>
+              <p className="text-sm font-bold text-slate-600">Loading your orders...</p>
             </div>
           )}
 
           {showError && (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="text-lg font-semibold text-[#0F172A]">Unable to load orders</p>
-              <p className="mt-2 text-sm text-slate-600">Please try again later. If the issue persists, refresh the page or check back soon.</p>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+              <p className="text-lg font-bold text-red-800">Unable to load orders</p>
+              <p className="mt-2 text-sm font-medium text-red-600">Please try again later or contact support.</p>
             </div>
           )}
 
           {showEmpty && (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
-              <h2 className="text-xl font-extrabold text-[#0F172A]">No orders yet</h2>
-              <p className="mt-2 text-sm text-slate-600">Start by browsing and adding items to your cart.</p>
+            <div className="rounded-xl border border-slate-200 bg-white p-16 text-center shadow-sm">
+              <Package className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+              <h2 className="text-lg font-extrabold text-[#0F172A]">No active orders</h2>
+              <p className="mt-2 text-sm font-medium text-slate-500 max-w-sm mx-auto">
+                You haven't placed any procurement orders yet. Browse our catalog to start building your inventory.
+              </p>
               <Link
-                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1E3A8A] px-5 text-sm font-extrabold text-white hover:bg-[#172554]"
+                className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-[#F97316] px-6 text-sm font-extrabold text-white hover:bg-orange-600 transition-colors shadow-sm"
                 to="/products"
               >
-                Continue Shopping
+                Browse Products
               </Link>
             </div>
           )}
 
-          {hasOrders && orders.map((order) => {
-            const orderId = order.id || order._id;
-            const orderDate = order.date || (order.createdAt
-              ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-              : 'Unknown date');
-            const orderTotal = order.totalAmount || order.total || 0;
-            const itemsCount = order.itemCount || order.itemsCount || (Array.isArray(order.items) ? order.items.length : Number(order.items || 0));
-            const orderStatus = order.displayStatus || order.orderStatus || order.status || 'Processing';
-
-            return (
-              <div key={orderId} className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
-                <div className="grid gap-6 p-6 md:grid-cols-[1.8fr_0.9fr_0.9fr]">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
-                      <span>{orderDate}</span>
-                    </div>
-                    <p className="text-xl font-semibold text-[#0F172A]">Order #{orderId}</p>
-                    <p className="text-sm text-slate-500">Review order details and status</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Total</p>
-                    <p className="text-2xl font-semibold text-[#1E3A8A]">{formatCurrency(orderTotal)}</p>
-                    <p className="text-sm text-slate-500">{itemsCount} items</p>
-                  </div>
-
-                  <div className="flex flex-col items-start justify-between gap-4 text-right md:items-end">
-                    <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${badgeClass(orderStatus)}`}>
-                      {orderStatus}
-                    </span>
-                    <Link
-                      to={`/orders/${orderId}`}
-                      className="inline-flex h-12 items-center justify-center rounded-full bg-[#1E3A8A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#152e63]"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
+          {hasOrders && (
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              {/* Desktop Header row */}
+              <div className="hidden md:grid grid-cols-12 gap-4 bg-slate-50 border-b border-slate-200 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <div className="col-span-3">Order Details</div>
+                <div className="col-span-2">Date</div>
+                <div className="col-span-2 text-right">Items</div>
+                <div className="col-span-2 text-right">Total</div>
+                <div className="col-span-3 text-right">Status</div>
               </div>
-            );
-          })}
+
+              <div className="divide-y divide-slate-100">
+                {sortedOrders.map((order) => {
+                  const orderId = order.id || order._id;
+                  const orderDate = order.date || (order.createdAt
+                    ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'Unknown date');
+                  const orderTotal = order.totalAmount || order.total || 0;
+                  const itemsCount = order.itemCount || order.itemsCount || (Array.isArray(order.items) ? order.items.length : Number(order.items || 0));
+                  const orderStatus = order.displayStatus || order.orderStatus || order.status || 'Processing';
+
+                  return (
+                    <Link
+                      key={orderId}
+                      to={`/orders/${orderId}`}
+                      className="block hover:bg-slate-50 transition-colors group"
+                    >
+                      <div className="px-6 py-5 md:grid md:grid-cols-12 md:items-center gap-4 flex flex-col">
+                        
+                        {/* Mobile Header / Desktop Col 1 */}
+                        <div className="md:col-span-3 flex items-start justify-between">
+                          <div>
+                            <p className="text-sm font-extrabold text-[#1E3A8A] group-hover:text-blue-700">
+                              #{String(orderId).slice(-8).toUpperCase()}
+                            </p>
+                            <p className="text-xs font-medium text-slate-500 mt-0.5 md:hidden">
+                              <Clock className="inline-block w-3 h-3 mr-1" /> {orderDate}
+                            </p>
+                          </div>
+                          
+                          {/* Mobile Status Badge */}
+                          <div className="md:hidden">
+                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-bold ${badgeClass(orderStatus)}`}>
+                              {orderStatus}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Desktop Date */}
+                        <div className="hidden md:block col-span-2">
+                          <p className="text-sm font-medium text-slate-700">{orderDate}</p>
+                        </div>
+
+                        {/* Items Count */}
+                        <div className="md:col-span-2 flex justify-between md:block md:text-right">
+                          <span className="text-xs font-bold text-slate-500 md:hidden">Items</span>
+                          <p className="text-sm font-medium text-slate-700">{itemsCount} product{itemsCount !== 1 ? 's' : ''}</p>
+                        </div>
+
+                        {/* Total Amount */}
+                        <div className="md:col-span-2 flex justify-between md:block md:text-right">
+                          <span className="text-xs font-bold text-slate-500 md:hidden">Total</span>
+                          <p className="text-sm font-extrabold text-[#0F172A]">{formatCurrency(orderTotal)}</p>
+                        </div>
+
+                        {/* Desktop Status & Action */}
+                        <div className="hidden md:flex col-span-3 items-center justify-end gap-4">
+                          <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold ${badgeClass(orderStatus)}`}>
+                            {orderStatus}
+                          </span>
+                          <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-[#F97316] transition-colors" />
+                        </div>
+
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

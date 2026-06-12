@@ -26,7 +26,7 @@ function* handleGetProducts() {
 
 function* handleGetProductDetails(action) {
   try {
-    const response = yield call(productService.getProductByName, action.payload);
+    const response = yield call(productService.getProductById, action.payload);
     // Assuming response is the product object
     const product = response.data || response;
     yield put(getProductDetailsSuccess(product));
