@@ -54,39 +54,17 @@ const EditProduct = () => {
     }
   }, [location.state]);
 
-  const handleSave = async (formData) => {
+  const handleSave = async (payload) => {
     if (!user?.vendorId) {
       alert("Vendor ID not found. Please log in again.");
       return;
     }
 
-    const price = Number(formData.price || 0);
-    const discountPrice = Number(formData.discountPrice || 0);
-    const quantity = Number(formData.stock || 0);
-    
-    // Auto-generate slug from name
-    const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-
-    const payload = {
-      vendorId: user.vendorId,
-      name: formData.name,
-      slug: slug,
-      shortDescription: formData.shortDescription,
-      description: formData.description,
-      price: price,
-      discountPrice: discountPrice,
-      sku: formData.sku,
-      thumbnail: formData.image || '',
-      inStock: quantity > 0,
-      quantity: quantity,
-      category: formData.category
-    };
-
     setIsSubmitting(true);
     try {
       await productService.updateProduct(productId, payload);
-      setProductData(formData); // Update local state to show new details immediately
-      setIsEditing(false); // Switch back to view mode
+      alert('Product updated successfully!');
+      navigate('/vendor/inventory');
     } catch (error) {
       console.error('Error updating product:', error);
       alert(error.response?.data?.title || error.message || 'Failed to update product. Ensure your backend handles CORS for PUT requests.');

@@ -40,7 +40,7 @@ const VendorNavbar = () => {
             
             <div className="hidden md:flex items-center space-x-2 ml-2 pl-4 border-l border-slate-200">
               <span className="text-sm font-bold text-slate-700 mr-2">
-                Hi, {user?.name || user?.firstName || 'Vendor'}
+                Hi, {user?.businessName || user?.shopName || user?.fullName || 'Vendor'}
               </span>
               <button 
                 onClick={handleLogout}
