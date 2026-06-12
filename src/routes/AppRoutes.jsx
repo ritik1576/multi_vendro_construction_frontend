@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 import LandingPage from '../pages/LandingPage';
 import Register from '../pages/authentication/Register';
@@ -33,6 +34,17 @@ import AdminLogin from '../pages/admin/auth/AdminLogin';
 import AdminForgotPassword from '../pages/admin/auth/AdminForgotPassword';
 import AdminResetPassword from '../pages/admin/auth/AdminResetPassword';
 
+const AdminProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
+
 const AppRoutes = () => {
   return (
     <Router>
@@ -63,14 +75,14 @@ const AppRoutes = () => {
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
         <Route path="/admin/reset-password" element={<AdminResetPassword />} />
 
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/vendors" element={<AdminVendorManagement />} />
-        <Route path="/admin/vendors/:vendorId" element={<AdminVendorDetails />} />
-        <Route path="/admin/customers" element={<AdminUserManagement />} />
-        <Route path="/admin/customers/:userId" element={<AdminUserDetails />} />
-        <Route path="/admin/products" element={<AdminProductManagement />} />
-        <Route path="/admin/orders" element={<AdminOrderManagement />} />
-        <Route path="/admin/reports" element={<AdminReports />} />
+        <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+        <Route path="/admin/vendors" element={<AdminProtectedRoute><AdminVendorManagement /></AdminProtectedRoute>} />
+        <Route path="/admin/vendors/:vendorId" element={<AdminProtectedRoute><AdminVendorDetails /></AdminProtectedRoute>} />
+        <Route path="/admin/customers" element={<AdminProtectedRoute><AdminUserManagement /></AdminProtectedRoute>} />
+        <Route path="/admin/customers/:userId" element={<AdminProtectedRoute><AdminUserDetails /></AdminProtectedRoute>} />
+        <Route path="/admin/products" element={<AdminProtectedRoute><AdminProductManagement /></AdminProtectedRoute>} />
+        <Route path="/admin/orders" element={<AdminProtectedRoute><AdminOrderManagement /></AdminProtectedRoute>} />
+        <Route path="/admin/reports" element={<AdminProtectedRoute><AdminReports /></AdminProtectedRoute>} />
       </Routes>
     </Router>
   );
