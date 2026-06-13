@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Search, ShoppingCart, MapPin, User, ChevronDown, Menu, Grid, Wrench, Zap, Droplet, Hammer, Truck, Shield, Lightbulb } from 'lucide-react';
 import { logout } from '../../../redux/authActions';
+import SearchDropdown from './SearchDropdown';
 
 export default function ProductListingNavbar({ 
   searchTerm, 
@@ -70,7 +71,7 @@ export default function ProductListingNavbar({
   });
 
   return (
-    <div className="w-full relative z-50 bg-white">
+    <div className="w-full sticky top-0 z-[110] bg-white">
       {/* Top Navbar */}
       <div className="w-full h-[72px] px-4 sm:px-6 lg:px-8 flex items-center justify-between border-b border-slate-100 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.05)]">
         
@@ -93,19 +94,11 @@ export default function ProductListingNavbar({
         </div>
 
         {/* Center: Search Bar */}
-        <div className="flex-1 max-w-4xl px-8 hidden md:block">
-          <div className="relative w-full group flex items-center bg-[#F1F3F6] rounded overflow-hidden">
-            <div className="pl-3 pr-2 flex items-center pointer-events-none text-slate-500">
-              <Search className="h-5 w-5" />
-            </div>
-            <input
-              type="text"
-              className="w-full bg-transparent text-slate-800 text-[15px] font-medium py-2.5 pr-4 focus:outline-none placeholder-slate-500"
-              placeholder="Search for Products, Brands and More"
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-          </div>
+        <div className="flex-1 max-w-4xl px-8 hidden md:block z-[100]">
+          <SearchDropdown 
+            searchTerm={searchTerm} 
+            onSearchChange={onSearchChange} 
+          />
         </div>
 
         {/* Right: Actions */}
@@ -177,19 +170,11 @@ export default function ProductListingNavbar({
 
       {/* Mobile Search Bar */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white p-3 border-b border-slate-100 shadow-sm">
-          <div className="relative w-full flex items-center bg-[#F1F3F6] rounded overflow-hidden">
-            <div className="pl-3 pr-2 text-slate-500">
-              <Search className="h-4 w-4" />
-            </div>
-            <input
-              type="text"
-              className="w-full bg-transparent text-sm py-2.5 pr-4 focus:outline-none"
-              placeholder="Search for Products, Brands and More"
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-          </div>
+        <div className="md:hidden bg-white p-3 border-b border-slate-100 shadow-sm relative z-[100]">
+          <SearchDropdown 
+            searchTerm={searchTerm} 
+            onSearchChange={onSearchChange} 
+          />
         </div>
       )}
 

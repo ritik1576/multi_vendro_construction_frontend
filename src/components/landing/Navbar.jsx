@@ -2,6 +2,7 @@ import { Search, ShoppingCart, Bell, MapPin } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/authActions';
+import SearchDropdown from '../customer/catalog/SearchDropdown';
 
 const Navbar = ({ searchTerm, onSearchChange }) => {
   const location = useLocation();
@@ -49,16 +50,11 @@ const Navbar = ({ searchTerm, onSearchChange }) => {
 
 
           {!hideSearchAndIcons && !isProductsPage && (
-            <div className="hidden md:flex flex-1 max-w-md mx-5 relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-customText-disabled" />
-              </div>
-              <input
-                type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-customBorder-light rounded-md leading-5 bg-gray-50 placeholder-customText-disabled focus:outline-none focus:ring-1 focus:ring-primary-main focus:border-primary-main sm:text-sm"
+            <div className="hidden md:flex flex-1 max-w-md mx-5 relative z-[100]">
+              <SearchDropdown 
+                searchTerm={searchTerm} 
+                onSearchChange={onSearchChange} 
                 placeholder="Search 10,000+ construction products..."
-                value={searchTerm !== undefined ? searchTerm : ''}
-                onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
               />
             </div>
           )}

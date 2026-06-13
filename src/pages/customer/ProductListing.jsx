@@ -158,7 +158,7 @@ export default function ProductListing() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen flex flex-col bg-[#F8FAFC] font-sans text-[#0F172A]">
-        <div className="sticky top-0 z-50">
+        <div>
           <ProductListingNavbar 
             searchTerm={searchTerm} 
             onSearchChange={setSearchTerm} 
