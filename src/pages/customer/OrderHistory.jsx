@@ -104,8 +104,7 @@ const OrderHistory = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A] flex flex-col">
       <ProductListingNavbar />
-      
-      <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-6">
@@ -141,7 +140,7 @@ const OrderHistory = () => {
               You haven't placed any procurement orders yet. Browse our catalog to start building your inventory.
             </p>
             <Link
-              className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-[#F97316] px-6 text-sm font-extrabold text-white hover:bg-orange-600 transition-colors shadow-sm"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-[#1E3A8A] px-6 text-sm font-extrabold text-white hover:bg-[#172554] transition-colors shadow-sm"
               to="/products"
             >
               Browse Products

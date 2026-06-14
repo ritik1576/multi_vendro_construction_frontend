@@ -51,6 +51,23 @@ export const productService = {
     }
   },
 
+  // Upload Image
+  uploadImage: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await api.post('/sys/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...getAuthHeaders()
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Update existing product
   updateProduct: async (id, productData) => {
     try {

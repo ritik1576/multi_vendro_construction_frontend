@@ -62,18 +62,18 @@ const VendorDashboard = () => {
   const formatAmount = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
 
   const kpis = [
-    { title: 'Total Products', value: loadingDashboard ? '-' : totalProducts.toString(), icon: Package, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
-    { title: 'Total Revenue', value: loadingDashboard ? '-' : formatAmount(totalRevenue), icon: TrendingUp, color: 'border-l-[#0F172A]', textColor: 'text-[#0F172A]' },
-    { title: 'Active Orders', value: loadingDashboard ? '-' : activeOrdersCount.toString(), icon: ShoppingBag, color: 'border-l-[#F59E0B]', textColor: 'text-[#F59E0B]' },
-    { title: 'Low Stock Alerts', value: loadingDashboard ? '-' : lowStockCount.toString(), icon: AlertTriangle, color: 'border-l-[#EF4444]', textColor: 'text-[#EF4444]' },
+    { title: 'Total Products', value: totalProducts.toString(), icon: Package, iconBg: 'bg-slate-50', iconColor: 'text-[#0F172A]' },
+    { title: 'Total Revenue', value: formatAmount(totalRevenue), icon: TrendingUp, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+    { title: 'Active Orders', value: activeOrdersCount.toString(), icon: ShoppingBag, iconBg: 'bg-orange-50', iconColor: 'text-[#EA580C]' },
+    { title: 'Low Stock Alerts', value: lowStockCount.toString(), icon: AlertTriangle, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
   ];
 
   const recentOrders = orders.slice(0, 5).map(o => ({
-    id: o.orderNumber || o.order_number || o.orderNo || o.orderId || o.id || o._id || 'N/A',
-    customer: o.customerName || o.customer || 'Unknown Customer',
-    date: o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'Unknown Date'),
+    id: o.orderNumber || o.order_number || o.orderNo || o.orderId || o.id || o._id || '',
+    customer: o.customerName || o.customer || '',
+    date: o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : ''),
     amount: o.amount ? o.amount : formatAmount(o.totalAmount || o.total || 0),
-    status: o.status || o.orderStatus || 'Processing'
+    status: o.status || o.orderStatus || ''
   }));
 
   return (
@@ -97,13 +97,19 @@ const VendorDashboard = () => {
             {kpis.map((kpi, idx) => {
               const Icon = kpi.icon;
               return (
-                <div key={idx} className={`bg-white rounded-xl shadow-sm border border-slate-200 p-5 border-l-4 ${kpi.color}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon className={`w-4 h-4 ${kpi.textColor}`} />
-                    <span className="text-sm font-bold text-slate-500">{kpi.title}</span>
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${kpi.iconBg} ${kpi.iconColor}`}>
+                    <Icon className="w-6 h-6" />
                   </div>
-                  <div className={`text-3xl font-extrabold ${kpi.textColor}`}>
-                    {kpi.value}
+                  <div>
+                    <p className="text-[13px] font-bold text-slate-500 uppercase tracking-wider mb-1">{kpi.title}</p>
+                    {loadingDashboard ? (
+                      <div className="h-8 w-24 bg-slate-200 animate-pulse rounded"></div>
+                    ) : (
+                      <h3 className="text-2xl font-extrabold text-[#0F172A] leading-none">
+                        {kpi.value}
+                      </h3>
+                    )}
                   </div>
                 </div>
               );
@@ -115,32 +121,33 @@ const VendorDashboard = () => {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Recent Orders - Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
               <div className="border-b border-slate-200 px-6 py-5 flex items-center justify-between">
                 <h2 className="text-lg font-extrabold text-[#0F172A]">Recent Orders</h2>
-                <Link to="/vendor/orders" className="text-sm font-bold text-[#F97316] hover:text-orange-600 transition-colors">View All</Link>
+                <Link to="/vendor/orders" className="text-sm font-bold text-[#1E3A8A] hover:underline transition-colors">View All</Link>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Order Number</th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
+                      <th className="px-6 py-4 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Order Number</th>
+                      <th className="px-6 py-4 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Customer</th>
+                      <th className="px-6 py-4 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-4 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {loadingOrders ? (
-                      <tr>
-                        <td colSpan="5" className="px-6 py-8 text-center text-sm font-medium text-slate-500">
-                          <div className="flex justify-center items-center space-x-2">
-                            <div className="w-4 h-4 border-2 border-[#F97316] border-t-transparent rounded-full animate-spin"></div>
-                            <span>Loading orders...</span>
-                          </div>
-                        </td>
-                      </tr>
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <tr key={i} className="animate-pulse">
+                          <td className="px-6 py-4"><div className="h-4 bg-slate-200 rounded w-20"></div></td>
+                          <td className="px-6 py-4"><div className="h-4 bg-slate-200 rounded w-32 mb-1"></div><div className="h-3 bg-slate-200 rounded w-24"></div></td>
+                          <td className="px-6 py-4"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                          <td className="px-6 py-4"><div className="h-6 bg-slate-200 rounded-full w-20"></div></td>
+                          <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-200 rounded w-16 ml-auto"></div></td>
+                        </tr>
+                      ))
                     ) : recentOrders.length === 0 ? (
                       <tr>
                         <td colSpan="5" className="px-6 py-8 text-center text-sm font-medium text-slate-500">
@@ -149,20 +156,22 @@ const VendorDashboard = () => {
                       </tr>
                     ) : recentOrders.map((order) => (
                       <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group">
-                        <td className="px-6 py-4 font-mono text-xs font-bold text-slate-700">{order.id}</td>
+                        <td className="px-6 py-4 font-mono text-[13px] font-bold text-[#0F172A]">#{order.id}</td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-extrabold text-[#0F172A]">{order.customer}</div>
-                          <div className="text-xs text-slate-500 mt-0.5">{order.date}</div>
+                          {order.customer ? <div className="text-[14px] font-extrabold text-[#0F172A]">{order.customer}</div> : null}
+                          {order.date ? <div className="text-[12px] font-medium text-slate-500 mt-0.5">{order.date}</div> : null}
                         </td>
-                        <td className="px-6 py-4 text-sm font-extrabold text-slate-700">{order.amount}</td>
+                        <td className="px-6 py-4 text-[14px] font-extrabold text-[#0F172A]">{order.amount}</td>
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 uppercase tracking-wider">
-                            {order.status}
-                          </span>
+                          {order.status ? (
+                            <span className="inline-flex items-center rounded bg-blue-50 px-2.5 py-0.5 text-[11px] font-extrabold tracking-wider uppercase text-[#1E3A8A]">
+                              {order.status}
+                            </span>
+                          ) : null}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Link to="/vendor/orders" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-[#1E3A8A] text-slate-600 hover:text-[#1E3A8A] text-xs font-extrabold rounded-md shadow-sm transition-colors" title="View Order">
-                            <Eye className="w-3.5 h-3.5" />
+                          <Link to="/vendor/orders" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-[#0F172A] text-[12px] font-extrabold rounded-lg shadow-sm transition-colors" title="View Order">
+                            <Eye className="w-3.5 h-3.5 text-slate-400" />
                             View
                           </Link>
                         </td>
@@ -177,41 +186,41 @@ const VendorDashboard = () => {
           {/* Right Column */}
           <div className="lg:col-span-1 space-y-6">
             {/* Quick Actions Card */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
               <div className="border-b border-slate-200 px-6 py-5">
                 <h2 className="text-lg font-extrabold text-[#0F172A] flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-[#F97316]" />
+                  <Zap className="w-5 h-5 text-[#EA580C]" />
                   Quick Actions
                 </h2>
               </div>
-              <div className="p-4 space-y-3">
+              <div className="p-5 space-y-3">
                 <Link
                   to="/vendor/products/add"
-                  className="flex items-center justify-between w-full p-4 rounded-lg border border-slate-200 hover:border-[#F97316] hover:bg-orange-50 transition-colors group"
+                  className="flex items-center justify-between w-full p-4 rounded-xl border border-slate-200 hover:border-[#EA580C] hover:bg-orange-50 transition-colors group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 text-[#F97316] p-2 rounded-lg">
+                    <div className="bg-orange-100 text-[#EA580C] p-2.5 rounded-xl">
                       <Plus className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-slate-800 group-hover:text-[#F97316] transition-colors">Add Product</h3>
-                      <p className="text-xs font-medium text-slate-500">Create a new listing</p>
+                      <h3 className="text-[14px] font-extrabold text-[#0F172A] group-hover:text-[#EA580C] transition-colors">Add Product</h3>
+                      <p className="text-[12px] font-medium text-slate-500">Create a new listing</p>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#F97316] transition-colors" />
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#EA580C] transition-colors" />
                 </Link>
                 
                 <Link
                   to="/vendor/inventory"
-                  className="flex items-center justify-between w-full p-4 rounded-lg border border-slate-200 hover:border-[#1E3A8A] hover:bg-blue-50 transition-colors group"
+                  className="flex items-center justify-between w-full p-4 rounded-xl border border-slate-200 hover:border-[#1E3A8A] hover:bg-blue-50 transition-colors group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 text-[#1E3A8A] p-2 rounded-lg">
+                    <div className="bg-blue-100 text-[#1E3A8A] p-2.5 rounded-xl">
                       <Package className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-slate-800 group-hover:text-[#1E3A8A] transition-colors">Manage Inventory</h3>
-                      <p className="text-xs font-medium text-slate-500">Update stock & pricing</p>
+                      <h3 className="text-[14px] font-extrabold text-[#0F172A] group-hover:text-[#1E3A8A] transition-colors">Manage Inventory</h3>
+                      <p className="text-[12px] font-medium text-slate-500">Update stock & pricing</p>
                     </div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#1E3A8A] transition-colors" />
@@ -220,25 +229,29 @@ const VendorDashboard = () => {
             </div>
 
             {/* Low Stock Summary Card */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
               <div className="border-b border-slate-200 px-6 py-5">
                 <h2 className="text-lg font-extrabold text-[#0F172A] flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
                   Attention Needed
                 </h2>
               </div>
               <div className="p-6 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                  <span className="text-2xl font-extrabold text-red-600">{loadingDashboard ? '-' : lowStockCount}</span>
-                </div>
-                <h3 className="text-lg font-extrabold text-slate-800 mb-1">Products Low on Stock</h3>
-                <p className="text-sm font-medium text-slate-500 mb-6">
-                  {loadingDashboard ? 'Loading stock alerts...' : `You have ${lowStockCount} products that need immediate restocking to prevent missing out on sales.`}
+                {loadingDashboard ? (
+                  <div className="w-16 h-16 rounded-full bg-slate-200 animate-pulse mb-4 flex items-center justify-center"></div>
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-4">
+                    <span className="text-2xl font-extrabold leading-none">{lowStockCount}</span>
+                  </div>
+                )}
+                <h3 className="text-[15px] font-extrabold text-[#0F172A] mb-1">Products Low on Stock</h3>
+                <p className="text-[13px] font-medium leading-relaxed text-slate-500 mb-6 max-w-[240px]">
+                  {loadingDashboard ? 'Loading stock alerts...' : `You have ${lowStockCount} products that need immediate restocking.`}
                 </p>
                 
                 <Link
                   to="/vendor/inventory"
-                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-lg transition-colors"
+                  className="inline-flex min-h-11 items-center justify-center w-full rounded-lg bg-[#1E3A8A] px-5 text-sm font-extrabold text-white hover:bg-[#172554] transition-colors shadow-sm"
                 >
                   Review Inventory
                 </Link>

@@ -27,8 +27,8 @@ const ConfirmOrder = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       <ProductListingNavbar />
-      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
           {/* Header Section */}
           <div className="bg-white px-8 py-12 text-center border-b border-slate-100">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50">

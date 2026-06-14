@@ -23,19 +23,11 @@ import EditProduct from '../pages/vendor/EditProduct';
 import Inventory from '../pages/vendor/Inventory';
 import VendorOrders from '../pages/vendor/VendorOrders';
 
-const ProtectedLanding = () => {
-  const { isAuthenticated } = useSelector((state) => state.auth || {});
-  if (isAuthenticated) {
-    return <Navigate to="/products" replace />;
-  }
-  return <LandingPage />;
-};
-
 const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<ProtectedLanding />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

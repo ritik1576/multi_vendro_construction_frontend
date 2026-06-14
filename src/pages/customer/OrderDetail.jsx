@@ -77,7 +77,7 @@ function OrderDetail() {
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
       <ProductListingNavbar />
 
-      <main className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
         
         {/* Compact Top Navigation */}
         <div className="flex flex-wrap items-center gap-4 mb-6">

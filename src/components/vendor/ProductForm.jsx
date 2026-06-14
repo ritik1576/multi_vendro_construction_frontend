@@ -34,6 +34,23 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate required fields
+    const newErrors = {};
+    if (!formData.name) newErrors.name = 'Name is required';
+    if (!formData.category) newErrors.category = 'Category is required';
+    if (!formData.price) newErrors.price = 'Price is required';
+    if (!formData.sku) newErrors.sku = 'SKU is required';
+    if (!formData.stock) newErrors.stock = 'Stock is required';
+    if (!formData.unit) newErrors.unit = 'Unit is required';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
+
     const price = Number(formData.price || 0);
     const discountPrice = Number(formData.discountPrice || 0);
     const quantity = Number(formData.stock || 0);
@@ -56,7 +73,7 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
     };
 
     if (onSave) {
-      onSave(payload);
+      onSave(payload, imageFile);
     }
   };
 
@@ -85,8 +102,8 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
     }
   };
 
-  const inputBaseClass = "block w-full min-h-[44px] rounded-lg border px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-4 transition-all bg-slate-50 focus:bg-white placeholder-slate-400 font-medium";
-  const getErrorClass = (field) => errors[field] ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : "border-slate-200 focus:border-[#F97316] focus:ring-[#F97316]/20 hover:border-slate-300";
+  const inputBaseClass = "block w-full min-h-[44px] rounded-lg border px-4 py-2.5 text-[14px] text-[#0F172A] focus:outline-none focus:ring-2 transition-all bg-slate-50 focus:bg-white placeholder-slate-400 font-medium";
+  const getErrorClass = (field) => errors[field] ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : "border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20 hover:border-slate-300";
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-6xl pb-10">
@@ -107,16 +124,16 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
               type="button"
               onClick={onCancel}
               disabled={isSubmitting}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-extrabold text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-200/50 shadow-sm disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-[13px] font-extrabold text-slate-700 transition-colors hover:bg-slate-50 hover:text-[#0F172A] shadow-sm disabled:opacity-50"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 text-slate-400" />
               Cancel
             </button>
           )}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 rounded-lg bg-[#F97316] hover:bg-orange-600 focus:ring-orange-500/30 px-6 py-2 text-sm font-extrabold text-white transition-all focus:outline-none focus:ring-4 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="flex items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] hover:bg-[#172554] px-5 py-2.5 text-[13px] font-extrabold text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -132,14 +149,14 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
         {/* Left Column: Thumbnail URL */}
         <div className="lg:col-span-1">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-extrabold text-slate-900 mb-4 uppercase tracking-wider">Product Thumbnail</h3>
+            <h3 className="text-[14px] font-extrabold text-[#0F172A] mb-5 uppercase tracking-wider border-b border-slate-100 pb-3">Product Thumbnail</h3>
             <div>
-              <div className="flex justify-between mb-1.5">
-                <label className="block text-sm font-bold text-slate-700">Product Image</label>
-                {errors.thumbnail && <span className="text-xs font-bold text-red-500">{errors.thumbnail}</span>}
+              <div className="flex justify-between mb-2">
+                <label className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Product Image</label>
+                {errors.thumbnail && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.thumbnail}</span>}
               </div>
               
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:border-[#F97316] transition-colors bg-slate-50 relative group cursor-pointer overflow-hidden">
+              <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-xl hover:border-[#1E3A8A] hover:bg-blue-50/50 transition-colors bg-slate-50 relative group cursor-pointer overflow-hidden">
                 <input
                   type="file"
                   id="imageUpload"
@@ -163,13 +180,13 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
                     </div>
                   ) : (
                     <>
-                      <ImageIcon className="mx-auto h-12 w-12 text-slate-400 group-hover:text-[#F97316] transition-colors" />
-                      <div className="flex text-sm text-slate-600 justify-center">
-                        <span className="relative rounded-md font-bold text-[#F97316] hover:text-orange-600">
+                      <ImageIcon className="mx-auto h-12 w-12 text-slate-400 group-hover:text-[#1E3A8A] transition-colors" />
+                      <div className="flex text-[13px] text-slate-600 justify-center mt-2">
+                        <span className="relative rounded-md font-extrabold text-[#1E3A8A] hover:text-[#172554]">
                           Click to upload image
                         </span>
                       </div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">PNG, JPG up to 5MB</p>
+                      <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mt-1">PNG, JPG up to 5MB</p>
                     </>
                   )}
                 </div>
@@ -183,12 +200,12 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
           
           {/* Basic Information Section */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-extrabold text-slate-900 mb-5 uppercase tracking-wider border-b border-slate-100 pb-3">Basic Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <h3 className="text-[14px] font-extrabold text-[#0F172A] mb-5 uppercase tracking-wider border-b border-slate-100 pb-3">Basic Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="name" className="block text-sm font-bold text-slate-700">Product Name</label>
-                  {errors.name && <span className="text-xs font-bold text-red-500">{errors.name}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="name" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Product Name</label>
+                  {errors.name && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.name}</span>}
                 </div>
                 <input
                   type="text"
@@ -202,9 +219,9 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
               </div>
 
               <div>
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="category" className="block text-sm font-bold text-slate-700">Category</label>
-                  {errors.category && <span className="text-xs font-bold text-red-500">{errors.category}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="category" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Category</label>
+                  {errors.category && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.category}</span>}
                 </div>
                 <select
                   id="category"
@@ -226,9 +243,9 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
               </div>
 
               <div>
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="brand" className="block text-sm font-bold text-slate-700">Brand / Vendor</label>
-                  {errors.brand && <span className="text-xs font-bold text-red-500">{errors.brand}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="brand" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Brand / Vendor</label>
+                  {errors.brand && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.brand}</span>}
                 </div>
                 <input
                   type="text"
@@ -245,12 +262,12 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
 
           {/* Inventory & Pricing Section */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-extrabold text-slate-900 mb-5 uppercase tracking-wider border-b border-slate-100 pb-3">Inventory & Pricing</h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+            <h3 className="text-[14px] font-extrabold text-[#0F172A] mb-5 uppercase tracking-wider border-b border-slate-100 pb-3">Inventory & Pricing</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
               <div className="col-span-2 md:col-span-1">
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="sku" className="block text-sm font-bold text-slate-700">SKU</label>
-                  {errors.sku && <span className="text-xs font-bold text-red-500">{errors.sku}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="sku" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">SKU</label>
+                  {errors.sku && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.sku}</span>}
                 </div>
                 <input
                   type="text"
@@ -264,9 +281,9 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
               </div>
 
               <div className="col-span-2 md:col-span-1">
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="stock" className="block text-sm font-bold text-slate-700">Stock Qty</label>
-                  {errors.stock && <span className="text-xs font-bold text-red-500">{errors.stock}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="stock" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Stock Qty</label>
+                  {errors.stock && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.stock}</span>}
                 </div>
                 <input
                   type="number"
@@ -281,9 +298,9 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
               </div>
 
               <div className="col-span-2 md:col-span-1">
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="unit" className="block text-sm font-bold text-slate-700">Unit</label>
-                  {errors.unit && <span className="text-xs font-bold text-red-500">{errors.unit}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="unit" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Unit</label>
+                  {errors.unit && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.unit}</span>}
                 </div>
                 <input
                   type="text"
@@ -297,9 +314,9 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
               </div>
 
               <div className="col-span-2 md:col-span-1">
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="price" className="block text-sm font-bold text-slate-700">Price (₹)</label>
-                  {errors.price && <span className="text-xs font-bold text-red-500">{errors.price}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="price" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Price (₹)</label>
+                  {errors.price && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.price}</span>}
                 </div>
                 <input
                   type="number"
@@ -315,9 +332,9 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
               </div>
 
               <div className="col-span-2 md:col-span-1">
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="discountPrice" className="block text-sm font-bold text-slate-700">Discount (₹)</label>
-                  {errors.discountPrice && <span className="text-xs font-bold text-red-500">{errors.discountPrice}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="discountPrice" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Discount (₹)</label>
+                  {errors.discountPrice && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.discountPrice}</span>}
                 </div>
                 <input
                   type="number"
@@ -336,14 +353,14 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
 
           {/* Descriptions Section */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-extrabold text-slate-900 mb-5 uppercase tracking-wider border-b border-slate-100 pb-3">Descriptions</h3>
-            <div className="space-y-5">
+            <h3 className="text-[14px] font-extrabold text-[#0F172A] mb-5 uppercase tracking-wider border-b border-slate-100 pb-3">Descriptions</h3>
+            <div className="space-y-6">
               <div>
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="shortDescription" className="block text-sm font-bold text-slate-700">Short Description</label>
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="shortDescription" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Short Description</label>
                   <div className="flex gap-2">
-                    {errors.shortDescription && <span className="text-xs font-bold text-red-500">{errors.shortDescription}</span>}
-                    <span className={`text-xs font-medium ${formData.shortDescription.length > 120 ? 'text-red-500' : 'text-slate-500'}`}>
+                    {errors.shortDescription && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.shortDescription}</span>}
+                    <span className={`text-[11px] font-extrabold tracking-wider ${formData.shortDescription.length > 120 ? 'text-red-500' : 'text-slate-400'}`}>
                       {formData.shortDescription.length}/120
                     </span>
                   </div>
@@ -360,9 +377,9 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
               </div>
 
               <div>
-                <div className="flex justify-between mb-1.5">
-                  <label htmlFor="description" className="block text-sm font-bold text-slate-700">Full Description</label>
-                  {errors.description && <span className="text-xs font-bold text-red-500">{errors.description}</span>}
+                <div className="flex justify-between mb-2">
+                  <label htmlFor="description" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Full Description</label>
+                  {errors.description && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.description}</span>}
                 </div>
                 <textarea
                   id="description"
