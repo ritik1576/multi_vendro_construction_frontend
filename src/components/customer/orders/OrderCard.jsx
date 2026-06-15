@@ -50,7 +50,7 @@ const OrderCard = ({ order, onClick }) => {
   const vendor = product.vendor || order.vendorName;
   const paymentStatus = order.paymentStatus;
   
-  const imageSrc = product.image ? getLocalProductImage(product) : (product.imageUrl || null);
+  const imageSrc = getLocalProductImage(product);
 
   const getStatusMessage = (status) => {
     const s = String(status).toLowerCase();

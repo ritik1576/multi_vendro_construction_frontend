@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, X, Loader2, UploadCloud, Image as ImageIcon } from 'lucide-react';
+import { normalizeProductImage } from '../../utils/productImages';
 
 const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSubmitting = false }) => {
   const [formData, setFormData] = useState({
@@ -168,7 +169,7 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
                   {imagePreview ? (
                     <div className="relative">
                       <img
-                        src={imagePreview}
+                        src={normalizeProductImage(imagePreview)}
                         alt="Product preview"
                         className="mx-auto h-48 w-full object-contain rounded-lg"
                       />
