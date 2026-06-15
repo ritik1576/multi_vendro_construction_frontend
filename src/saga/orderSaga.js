@@ -1,5 +1,6 @@
 import { call, put, takeLatest, select } from 'redux-saga/effects';
 import { orderService } from '../services/orderService';
+import { cartService } from '../services/cartService';
 import {
   GET_ORDERS_REQUEST, getOrdersSuccess, getOrdersFailure,
   GET_ORDER_DETAILS_REQUEST, getOrderDetailsSuccess, getOrderDetailsFailure,
@@ -43,6 +44,21 @@ function* handlePlaceOrder(action) {
     const response = yield call(orderService.placeOrder, action.payload);
     const order = response.data || response;
     yield put(placeOrderSuccess(order));
+    
+    // Clear cart items that were successfully ordered
+    if (action.payload.items && action.payload.items.length > 0) {
+      for (const item of action.payload.items) {
+        if (item.cartItemId) {
+          try {
+            yield call(cartService.removeCartItem, item.cartItemId);
+          } catch (e) {
+            console.error("Failed to remove cart item after order:", e);
+          }
+        }
+      }
+      // Refresh the cart to reflect the cleared items
+      yield put({ type: 'GET_CART_REQUEST' });
+    }
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to place order';
     yield put(placeOrderFailure(message));

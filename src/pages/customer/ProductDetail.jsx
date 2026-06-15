@@ -19,7 +19,7 @@ function ProductDetailImage({ alt, src }) {
   return (
     <img
       alt={alt || 'Product image'}
-      className="max-h-full max-w-full object-contain mix-blend-multiply"
+      className="w-full h-full object-contain mix-blend-multiply"
       onError={() => setFailedSrc(src)}
       src={imageSrc}
     />
@@ -69,7 +69,7 @@ function ProductDetail() {
   const [activeTab, setActiveTab] = useState('overview');
   
   const dispatch = useDispatch();
-  const { productDetails: product, loading: isLoading, error } = useSelector((state) => state.product);
+  const { productDetails: product, detailsLoading: isLoading, detailsError: error } = useSelector((state) => state.product);
   const cart = useSelector((state) => state.cart.cart);
   const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
 
@@ -126,12 +126,12 @@ function ProductDetail() {
     if (isProductInCart) {
       if (cartItem && (cartItem.quantity || 1) > 1) {
         dispatch(updateCartItemRequest({
-          cartitemID: cartItem.id || cartItem.cartItemId,
+          cartitemID: cartItem.id || cartItem.cartItemId || cartItem.cartitemID || cartItem._id,
           productname: product.ProductName || product.name,
           quantity: (cartItem.quantity || 1) - 1
         }));
       } else if (cartItem) {
-        dispatch(removeCartItemRequest(cartItem.id || cartItem.cartItemId));
+        dispatch(removeCartItemRequest(cartItem.id || cartItem.cartItemId || cartItem.cartitemID || cartItem._id));
       }
     } else {
       setQuantity((value) => Math.max(1, value - 1));
@@ -142,7 +142,7 @@ function ProductDetail() {
     if (isProductInCart) {
       if (cartItem) {
         dispatch(updateCartItemRequest({
-          cartitemID: cartItem.id || cartItem.cartItemId,
+          cartitemID: cartItem.id || cartItem.cartItemId || cartItem.cartitemID || cartItem._id,
           productname: product.ProductName || product.name,
           quantity: (cartItem.quantity || 1) + 1
         }));
@@ -152,12 +152,6 @@ function ProductDetail() {
     }
   };
 
-  const handleBuyNow = () => {
-    if (!isProductInCart) {
-      dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity }));
-    }
-    navigate('/cart');
-  };
 
   const resolveImageUrl = (product) => {
     return getLocalProductImage(product);
@@ -181,11 +175,11 @@ function ProductDetail() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] items-start">
           
           {/* Image Column */}
-          <div className="relative aspect-[4/3] w-full flex items-center justify-center rounded-[16px] border border-slate-200 bg-[#F8FAFC] p-0 overflow-hidden shadow-sm h-full max-h-[600px]">
+          <div className="relative w-full h-full flex items-center justify-center rounded-[16px] border border-slate-200 bg-[#F8FAFC] p-6 lg:p-10 overflow-hidden shadow-sm min-h-[350px] lg:min-h-[500px] max-h-[600px]">
             <button className="absolute top-3 right-3 p-1.5 rounded-full border border-slate-200 text-slate-500 hover:bg-white transition-colors bg-white/80 backdrop-blur-sm z-10 shadow-sm">
               <Expand className="h-4 w-4" />
             </button>
-            <div className="w-full h-full flex items-center justify-center scale-[1.15]">
+            <div className="w-full h-full flex items-center justify-center">
               <ProductDetailImage alt={name} src={resolveImageUrl(product)} />
             </div>
           </div>
@@ -278,33 +272,25 @@ function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 items-center">
-                {/* Qty Selector */}
-                <div className="flex items-center h-12 w-full sm:w-32 bg-white border border-slate-300 rounded-lg overflow-hidden shadow-sm shrink-0">
-                  <button onClick={handleDecreaseQuantity} className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="flex-1 text-center text-[14px] font-bold text-[#0F172A] border-x border-slate-200 h-full flex items-center justify-center bg-slate-50/50">{displayQuantity}</span>
-                  <button onClick={handleIncreaseQuantity} className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
+                {isProductInCart && (
+                  <div className="flex items-center h-12 w-full sm:w-32 bg-white border border-slate-300 rounded-lg overflow-hidden shadow-sm shrink-0">
+                    <button onClick={handleDecreaseQuantity} className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="flex-1 text-center text-[14px] font-bold text-[#0F172A] border-x border-slate-200 h-full flex items-center justify-center bg-slate-50/50">{displayQuantity}</span>
+                    <button onClick={handleIncreaseQuantity} className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
 
-                {/* Add/Buy Buttons */}
-                <div className="flex flex-1 gap-3 w-full">
-                  <button 
-                    onClick={handleCartAction} 
-                    className={`flex-1 flex items-center justify-center h-12 rounded-lg bg-[#1E3A8A] text-white font-bold text-[14px] gap-2 transition-colors hover:bg-[#172554] shadow-sm`}
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    {isProductInCart ? 'Go to Cart' : 'Add to Cart'}
-                  </button>
-                  <button 
-                    onClick={handleBuyNow} 
-                    className="flex-1 flex items-center justify-center h-12 rounded-lg bg-[#EA580C] text-white font-bold text-[14px] transition-colors hover:bg-[#C2410C] shadow-sm"
-                  >
-                    Buy Now
-                  </button>
-                </div>
+                <button 
+                  onClick={handleCartAction} 
+                  className="flex-1 w-full flex items-center justify-center h-12 rounded-lg bg-[#1E3A8A] text-white font-bold text-[14px] gap-2 transition-colors hover:bg-[#172554] shadow-sm"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  {isProductInCart ? 'Go to Cart' : 'Add to Cart'}
+                </button>
               </div>
             </div>
 

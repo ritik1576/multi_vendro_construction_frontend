@@ -59,7 +59,7 @@ function MyCart() {
   const grandTotal = subtotal - discount + deliveryCharge;
 
   const decreaseQuantity = (id) => {
-    const item = cartItems.find(i => (i.id || i.cartItemId) === id);
+    const item = cartItems.find(i => (i.id || i.cartItemId || i.cartitemID || i._id) === id);
     if (item) {
       if (item.quantity > 1) {
         dispatch(updateCartItemRequest({ 
@@ -74,7 +74,7 @@ function MyCart() {
   };
 
   const increaseQuantity = (id) => {
-    const item = cartItems.find(i => (i.id || i.cartItemId) === id);
+    const item = cartItems.find(i => (i.id || i.cartItemId || i.cartitemID || i._id) === id);
     if (item) {
       dispatch(updateCartItemRequest({ 
         cartitemID: id,
@@ -131,7 +131,7 @@ function MyCart() {
                   return getLocalProductImage(product || item);
                 };
 
-                const itemId = item.id || item.cartItemId;
+                const itemId = item.id || item.cartItemId || item.cartitemID || item._id;
 
                 return (
                   <article className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm" key={itemId}>
@@ -242,7 +242,7 @@ function MyCart() {
                       className="mt-2 text-xs font-bold text-red-500 hover:text-red-700 hover:underline block text-center cursor-pointer transition-colors"
                       onClick={() => {
                         cartItems.forEach((item) => {
-                          dispatch(removeCartItemRequest(item.id || item.cartItemId));
+                          dispatch(removeCartItemRequest(item.id || item.cartItemId || item.cartitemID || item._id));
                         });
                       }}
                     >

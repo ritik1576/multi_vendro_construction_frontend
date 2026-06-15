@@ -93,14 +93,8 @@ const Navbar = ({ searchTerm, onSearchChange }) => {
               ) : isAuthenticated && !isAdminAuthPage ? (
                 <>
                   <span className="text-sm font-medium text-slate-700 mr-2">
-                    Hi, {user?.name || user?.firstName || 'User'}
+                    Hi, {(user?.fullName || user?.FullName || user?.name || user?.Name || user?.firstName || user?.customerName || user?.shopName || user?.username || user?.UserName || 'User').split(' ')[0]}
                   </span>
-                  <Link 
-                    to="/orders"
-                    className="px-4 py-2 rounded-md text-sm font-medium text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors"
-                  >
-                    My Orders
-                  </Link>
                   <button 
                     onClick={handleLogout}
                     className="px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"

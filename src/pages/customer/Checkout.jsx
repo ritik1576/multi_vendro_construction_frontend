@@ -25,9 +25,18 @@ const validateAddress = (address) => {
   const errors = {};
   requiredFields.forEach((field) => {
     if (!address[field] || !address[field].toString().trim()) {
-      errors[field] = true;
+      errors[field] = 'This field is required';
     }
   });
+
+  if (!errors.phone && !/^\d{10}$/.test(address.phone.toString().trim())) {
+    errors.phone = 'Phone must be exactly 10 digits';
+  }
+
+  if (!errors.pincode && !/^\d{6}$/.test(address.pincode.toString().trim())) {
+    errors.pincode = 'Pincode must be exactly 6 digits';
+  }
+
   return errors;
 };
 
@@ -285,80 +294,86 @@ const Checkout = () => {
                     <h3 className="text-lg font-bold text-[#0F172A] mb-4">{draftAddress.id ? 'Edit Address' : 'Add New Address'}</h3>
                     <div className="grid gap-4">
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="space-y-2 text-sm text-slate-700 font-medium">
-                          <span>Name</span>
+                        <div className="flex flex-col">
+                          <label className="mb-2 text-sm text-slate-700 font-medium">Name</label>
                           <input
                             value={draftAddress.name}
                             onChange={(e) => handleFieldChange('name', e.target.value)}
                             className={`w-full rounded border px-4 py-3 text-sm outline-none transition focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] ${addressErrors.name ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white'}`}
                           />
-                        </label>
-                        <label className="space-y-2 text-sm text-slate-700 font-medium">
-                          <span>Phone</span>
+                          {addressErrors.name && <span className="text-red-500 text-[11px] mt-1">{addressErrors.name}</span>}
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="mb-2 text-sm text-slate-700 font-medium">Phone</label>
                           <input
                             value={draftAddress.phone}
                             onChange={(e) => handleFieldChange('phone', e.target.value)}
                             className={`w-full rounded border px-4 py-3 text-sm outline-none transition focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] ${addressErrors.phone ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white'}`}
                           />
-                        </label>
+                          {addressErrors.phone && <span className="text-red-500 text-[11px] mt-1">{addressErrors.phone}</span>}
+                        </div>
                       </div>
 
-                      <label className="space-y-2 text-sm text-slate-700 font-medium">
-                        <span>Address line 1</span>
+                      <div className="flex flex-col">
+                        <label className="mb-2 text-sm text-slate-700 font-medium">Address line 1</label>
                         <input
                           value={draftAddress.line1}
                           onChange={(e) => handleFieldChange('line1', e.target.value)}
                           className={`w-full rounded border px-4 py-3 text-sm outline-none transition focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] ${addressErrors.line1 ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white'}`}
                         />
-                      </label>
+                        {addressErrors.line1 && <span className="text-red-500 text-[11px] mt-1">{addressErrors.line1}</span>}
+                      </div>
 
-                      <label className="space-y-2 text-sm text-slate-700 font-medium">
-                        <span>Address line 2</span>
+                      <div className="flex flex-col">
+                        <label className="mb-2 text-sm text-slate-700 font-medium">Address line 2 (Optional)</label>
                         <input
                           value={draftAddress.line2}
                           onChange={(e) => handleFieldChange('line2', e.target.value)}
                           className="w-full rounded border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
                         />
-                      </label>
+                      </div>
 
                       <div className="grid gap-4 sm:grid-cols-3">
-                        <label className="space-y-2 text-sm text-slate-700 font-medium">
-                          <span>City</span>
+                        <div className="flex flex-col">
+                          <label className="mb-2 text-sm text-slate-700 font-medium">City</label>
                           <input
                             value={draftAddress.city}
                             onChange={(e) => handleFieldChange('city', e.target.value)}
                             className={`w-full rounded border px-4 py-3 text-sm outline-none transition focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] ${addressErrors.city ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white'}`}
                           />
-                        </label>
-                        <label className="space-y-2 text-sm text-slate-700 font-medium">
-                          <span>State</span>
+                          {addressErrors.city && <span className="text-red-500 text-[11px] mt-1">{addressErrors.city}</span>}
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="mb-2 text-sm text-slate-700 font-medium">State</label>
                           <input
                             value={draftAddress.state}
                             onChange={(e) => handleFieldChange('state', e.target.value)}
                             className={`w-full rounded border px-4 py-3 text-sm outline-none transition focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] ${addressErrors.state ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white'}`}
                           />
-                        </label>
-                        <label className="space-y-2 text-sm text-slate-700 font-medium">
-                          <span>Pincode</span>
+                          {addressErrors.state && <span className="text-red-500 text-[11px] mt-1">{addressErrors.state}</span>}
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="mb-2 text-sm text-slate-700 font-medium">Pincode</label>
                           <input
                             value={draftAddress.pincode}
                             onChange={(e) => handleFieldChange('pincode', e.target.value)}
                             className={`w-full rounded border px-4 py-3 text-sm outline-none transition focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] ${addressErrors.pincode ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white'}`}
                           />
-                        </label>
+                          {addressErrors.pincode && <span className="text-red-500 text-[11px] mt-1">{addressErrors.pincode}</span>}
+                        </div>
                       </div>
 
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="space-y-2 text-sm text-slate-700 font-medium">
-                          <span>Country</span>
+                        <div className="flex flex-col">
+                          <label className="mb-2 text-sm text-slate-700 font-medium">Country</label>
                           <input
                             value={draftAddress.country}
                             readOnly
                             className="w-full rounded border border-slate-300 bg-slate-100 px-4 py-3 text-sm text-slate-600 outline-none"
                           />
-                        </label>
-                        <label className="space-y-2 text-sm text-slate-700 font-medium">
-                          <span>Address Type</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="mb-2 text-sm text-slate-700 font-medium">Address Type</label>
                           <select
                             value={draftAddress.addressType}
                             onChange={(e) => handleFieldChange('addressType', e.target.value)}
@@ -367,7 +382,7 @@ const Checkout = () => {
                             <option value="Home">Home</option>
                             <option value="Office">Office</option>
                           </select>
-                        </label>
+                        </div>
                       </div>
 
                       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">

@@ -88,12 +88,12 @@ export default function ProductCardCompact({ product, viewMode = 'grid' }) {
     if (cartItem && (cartItem.id || cartItem.cartItemId)) {
       if (quantity > 1) {
         dispatch(updateCartItemRequest({
-          cartitemID: cartItem.id || cartItem.cartItemId,
+          cartitemID: cartItem.id || cartItem.cartItemId || cartItem.cartitemID || cartItem._id,
           productname: product?.ProductName || product?.name,
           quantity: quantity - 1
         }));
       } else {
-        dispatch(removeCartItemRequest(cartItem.id || cartItem.cartItemId));
+        dispatch(removeCartItemRequest(cartItem.id || cartItem.cartItemId || cartItem.cartitemID || cartItem._id));
       }
     }
   };
