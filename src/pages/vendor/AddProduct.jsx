@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import ProductForm from '../../components/vendor/ProductForm';
 import { productService } from '../../services/productService';
+import toast from 'react-hot-toast';
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const AddProduct = () => {
       }
 
       await productService.addProduct(finalPayload);
-      alert('Product created successfully!');
+      toast.success('Product created successfully!');
       navigate('/vendor/inventory');
     } catch (error) {
       console.error('Error adding product:', error);

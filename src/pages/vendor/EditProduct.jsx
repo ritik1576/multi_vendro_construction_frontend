@@ -6,6 +6,7 @@ import VendorLayout from '../../components/vendor/VendorLayout';
 import ProductForm from '../../components/vendor/ProductForm';
 import { Edit2, ArrowLeft, Image as ImageIcon, Package, Tag, Hash, Box, FileText, AlignLeft, Trash2 } from 'lucide-react';
 import { normalizeProductImage } from '../../utils/productImages';
+import toast from 'react-hot-toast';
 
 const EditProduct = () => {
   const { productId } = useParams();
@@ -57,35 +58,45 @@ const EditProduct = () => {
 
   const handleSave = async (payload) => {
     if (!user?.vendorId) {
-      alert("Vendor ID not found. Please log in again.");
+      toast.error("Vendor ID not found. Please log in again.");
       return;
     }
 
     setIsSubmitting(true);
     try {
       await productService.updateProduct(productId, payload);
-      alert('Product updated successfully!');
+      toast.success('Product updated successfully!');
       navigate('/vendor/inventory');
     } catch (error) {
       console.error('Error updating product:', error);
-      alert(error.response?.data?.title || error.message || 'Failed to update product. Ensure your backend handles CORS for PUT requests.');
+      toast.error(error.response?.data?.title || error.message || 'Failed to update product. Ensure your backend handles CORS for PUT requests.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
-      setIsDeleting(true);
-      try {
-        await productService.deleteProduct(productId);
-        navigate('/vendor/inventory');
-      } catch (error) {
-        console.error('Error deleting product:', error);
-        alert(error.response?.data?.title || error.message || 'Failed to delete product.');
-        setIsDeleting(false);
-      }
-    }
+  const handleDelete = () => {
+    toast((t) => (
+      <div>
+        <p className="mb-3 text-sm font-medium">Are you sure you want to delete this product? This action cannot be undone.</p>
+        <div className="flex gap-2 justify-end">
+          <button onClick={() => toast.dismiss(t.id)} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded">Cancel</button>
+          <button onClick={async () => {
+            toast.dismiss(t.id);
+            setIsDeleting(true);
+            try {
+              await productService.deleteProduct(productId);
+              toast.success('Product deleted successfully');
+              navigate('/vendor/inventory');
+            } catch (error) {
+              console.error('Error deleting product:', error);
+              toast.error(error.response?.data?.title || error.message || 'Failed to delete product.');
+              setIsDeleting(false);
+            }
+          }} className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded">Delete</button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   return (

@@ -3,35 +3,57 @@ import { ShoppingCart, Star } from 'lucide-react';
 import { normalizeProductImage } from '../../utils/productImages';
 
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const FeaturedProducts = () => {
   const { products: apiProducts, loading } = useSelector(state => state.product);
   const [failedImages, setFailedImages] = useState({});
+  const navigate = useNavigate();
 
   const handleImageError = (id) => {
     setFailedImages(prev => ({ ...prev, [id]: true }));
   };
 
-  const staticFallbacks = [
-    { tag: "Bestseller", tagColor: "bg-danger-main", priceTag: "Wholesale", unit: "Bag", rating: 4.8, reviews: 120, image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&q=80" },
-    { tag: "", tagColor: "", priceTag: "Bulk Deal", unit: "50kg", rating: 4.9, reviews: 540, image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80" },
-    { tag: "NEW", tagColor: "bg-primary-dark", priceTag: "Wholesale", unit: "1L", rating: 4.7, reviews: 320, image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?auto=format&fit=crop&q=80" },
-    { tag: "", tagColor: "", priceTag: "Contractor Rate", unit: "Piece", rating: 4.9, reviews: 210, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80" }
-  ];
-
-  const displayProducts = apiProducts?.slice(0, 4).map((p, idx) => ({
-    id: p.id || p._id || idx,
-    name: p.name || p.title || 'Product',
-    description: p.description || 'Premium construction material',
-    price: p.price || p.basePrice || '0.00',
-    unit: p.unit || staticFallbacks[idx % 4].unit,
-    rating: p.rating || staticFallbacks[idx % 4].rating,
-    reviews: p.reviews || staticFallbacks[idx % 4].reviews,
-    image: p.image || p.thumbnail || staticFallbacks[idx % 4].image,
-    tag: staticFallbacks[idx % 4].tag,
-    tagColor: staticFallbacks[idx % 4].tagColor,
-    priceTag: staticFallbacks[idx % 4].priceTag
-  })) || [];
+  const displayProducts = apiProducts
+    ?.filter(p => p.image || p.thumbnail || (p.images && p.images.length > 0))
+    .filter(p => {
+      const name = (p.name || p.title || '').toLowerCase();
+      if (
+        name.includes('ultratech cement opc 53 gra') || 
+        name.includes('acc cement 50kg') ||
+        name.includes('ambuja')
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const aName = (a.name || a.title || '').toLowerCase();
+      const bName = (b.name || b.title || '').toLowerCase();
+      const aMatch = aName.includes('white cement') || aName.includes('plywood') || aName.includes('birla white');
+      const bMatch = bName.includes('white cement') || bName.includes('plywood') || bName.includes('birla white');
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    })
+    .slice(0, 4)
+    .map((p, idx) => {
+      let img = p.image || p.thumbnail;
+      if (!img && p.images && p.images.length > 0) img = p.images[0];
+      return {
+        id: p.id || p._id || idx,
+        name: p.name || p.title || 'Product',
+        description: p.description || 'Premium construction material',
+        price: p.price || p.basePrice || '0.00',
+        unit: p.unit || 'Piece',
+        rating: p.rating || 4.5,
+        reviews: p.reviews || 0,
+        image: img,
+        tag: '',
+        tagColor: '',
+        priceTag: 'Wholesale'
+      };
+    }) || [];
 
   const renderSkeletons = () => {
     return Array(4).fill(0).map((_, idx) => (
@@ -105,7 +127,10 @@ const FeaturedProducts = () => {
                   <span className="text-[10px] font-bold text-secondary-main uppercase tracking-wide">{product.priceTag}</span>
                 </div>
 
-                <button className="w-full flex items-center justify-center gap-2 bg-primary-dark hover:bg-[#111827] text-white py-2.5 rounded-md font-medium transition-colors">
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="w-full flex items-center justify-center gap-2 bg-primary-dark hover:bg-[#111827] text-white py-2.5 rounded-md font-medium transition-colors"
+                >
                   <ShoppingCart className="h-4 w-4" />
                   Add to Cart
                 </button>

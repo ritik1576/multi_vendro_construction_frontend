@@ -4,38 +4,30 @@ import { Navigate } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 import ApprovalStateCard from '../../components/vendor/ApprovalStateCard';
 import VendorNavbar from '../../components/vendor/VendorNavbar';
-import { getVendorStatus } from '../../services/vendorApi';
+import { getVendorStatusRequest } from '../../redux/vendorActions';
 
 const VendorApprovalStatus = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const vendorId = user?.vendorId;
 
-  const [vendorStatus, setVendorStatus] = useState(user?.status);
-  const [loading, setLoading] = useState(!user?.status);
+  const { status, loading: vendorLoading } = useSelector((state) => state.vendor || {});
+  const isStatusLoading = vendorLoading?.status || !user?.status;
 
-  const fetchStatus = async () => {
-    setLoading(true);
-    try {
-      const data = await getVendorStatus(vendorId);
-      const status = data?.status || data || 'pending';
-      setVendorStatus(status);
-      dispatch({ type: 'UPDATE_VENDOR_STATUS', payload: status });
-    } catch (error) {
-      console.error('Failed to fetch vendor status:', error);
-      setVendorStatus('pending');
-    } finally {
-      setLoading(false);
-    }
+  // Use either the redux state status, or fallback to user status from auth
+  const currentStatus = status?.status || status || user?.status;
+
+  const fetchStatus = () => {
+    dispatch(getVendorStatusRequest(vendorId, true));
   };
 
   useEffect(() => {
-    if (!user?.status) {
-      fetchStatus();
+    if (vendorId) {
+      dispatch(getVendorStatusRequest(vendorId));
     }
-  }, [user?.status, vendorId]);
+  }, [vendorId, dispatch]);
 
-  if (loading) {
+  if (isStatusLoading && !currentStatus) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
         <div className="sticky top-0 z-50">
@@ -48,7 +40,7 @@ const VendorApprovalStatus = () => {
     );
   }
 
-  if (vendorStatus === 'approved') {
+  if (currentStatus === 'approved') {
     return <Navigate to="/vendor/dashboard" replace />;
   }
 
@@ -58,7 +50,7 @@ const VendorApprovalStatus = () => {
         <VendorNavbar />
       </div>
       <div className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full flex flex-col items-center">
-        <ApprovalStateCard state={vendorStatus || 'pending'} />
+        <ApprovalStateCard state={currentStatus || 'pending'} />
         
         {/* Check Button to refresh status */}
         <div className="mt-8 text-center">

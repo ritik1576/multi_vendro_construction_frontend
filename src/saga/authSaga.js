@@ -17,6 +17,7 @@ import {
   resetPasswordFailure
 } from '../redux/authActions';
 import authService from '../services/authService';
+import toast from 'react-hot-toast';
 
 function* handleRegister(action) {
   try {
@@ -32,18 +33,29 @@ function* handleRegister(action) {
       throw new Error('Request timed out. The server is not responding.');
     }
     
-    const token = responseData.token || null;
-    const { token: _, ...restData } = responseData;
-    const userDetails = responseData.user || restData;
-    
     if (action.payload.isVendor) {
       yield put(registerSuccess({ 
         isVendor: true, 
         message: 'Registration submitted successfully. Your account is under review and requires admin approval before login.' 
       }));
     } else {
-      yield put(registerSuccess({ user: userDetails, token }));
-      alert('Account created successfully!');
+      // The backend register doesn't return a token, so we auto-login to get one
+      try {
+        const { email, password } = action.payload;
+        const loginResponse = yield call(authService.login, { email, password });
+        
+        const token = loginResponse.token || null;
+        const { token: _, ...restData } = loginResponse;
+        const userDetails = loginResponse.user || restData;
+        
+        yield put(registerSuccess({ user: userDetails, token }));
+      } catch (loginError) {
+        // If auto-login fails, still consider register successful but without token
+        const token = responseData.token || null;
+        const { token: _, ...restData } = responseData;
+        const userDetails = responseData.user || restData;
+        yield put(registerSuccess({ user: userDetails, token }));
+      }
     }
   } catch (error) {
     let errorMessage = error.message || 'An unexpected error occurred during registration.';
@@ -91,7 +103,7 @@ function* handleLogin(action) {
 
     yield put(loginSuccess({ user: userDetails, token }));
 
-    alert('Logged in successfully!');
+    toast.success('Logged in successfully!');
   } catch (error) {
     console.error('❌ [Saga] Login Error Caught:', error);
     let errorMessage = error.message || 'An unexpected error occurred during login.';

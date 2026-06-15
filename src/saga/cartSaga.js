@@ -6,6 +6,7 @@ import {
   UPDATE_CART_ITEM_REQUEST, updateCartItemSuccess, updateCartItemFailure,
   REMOVE_CART_ITEM_REQUEST, removeCartItemSuccess, removeCartItemFailure
 } from '../redux/cartActions';
+import { LOGIN_SUCCESS, REGISTER_SUCCESS } from '../redux/authActions';
 
 function* handleGetCart() {
   try {
@@ -87,9 +88,15 @@ function* handleRemoveCartItem(action) {
   }
 }
 
+function* handleAuthSuccess() {
+  yield put({ type: GET_CART_REQUEST, payload: { forceRefresh: true } });
+}
+
 export default function* cartSaga() {
   yield takeLatest(GET_CART_REQUEST, handleGetCart);
   yield takeLatest(ADD_TO_CART_REQUEST, handleAddToCart);
   yield takeLatest(UPDATE_CART_ITEM_REQUEST, handleUpdateCartItem);
   yield takeLatest(REMOVE_CART_ITEM_REQUEST, handleRemoveCartItem);
+  yield takeLatest(LOGIN_SUCCESS, handleAuthSuccess);
+  yield takeLatest(REGISTER_SUCCESS, handleAuthSuccess);
 }
