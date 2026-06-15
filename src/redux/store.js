@@ -6,6 +6,7 @@ import productReducer from './productReducer';
 import categoryReducer from './categoryReducer';
 import cartReducer from './cartReducer';
 import orderReducer from './orderReducer';
+import adminReducer from './adminReducer';
 import rootSaga from '../saga/rootSaga';
 
 // Create a foolproof storage wrapper to fix Vite CJS interop issues with redux-persist
@@ -27,6 +28,7 @@ const rootReducer = combineReducers({
   category: categoryReducer,
   cart: cartReducer,
   order: orderReducer,
+  admin: adminReducer,
 });
 
 const rootPersistConfig = {

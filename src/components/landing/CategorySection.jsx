@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const CategorySection = () => {
-  const categories = [
+  const { categories: apiCategories, loading } = useSelector(state => state.category);
+
+  const staticFallbacks = [
     {
       title: "Cement & Concrete",
       desc: "Top quality OPC 53, PPC, and White Cement from trusted brands.",
@@ -25,6 +28,28 @@ const CategorySection = () => {
     }
   ];
 
+  // Map the API categories to ensure we don't break the layout. We use static fallbacks if properties are missing.
+  // We'll limit to 4 categories for the landing page grid.
+  const displayCategories = apiCategories?.slice(0, 4).map((c, idx) => ({
+    title: c.name || c.title || staticFallbacks[idx % 4].title,
+    desc: c.description || staticFallbacks[idx % 4].desc,
+    image: c.image || c.thumbnail || staticFallbacks[idx % 4].image
+  })) || [];
+
+  const renderSkeletons = () => {
+    return Array(4).fill(0).map((_, idx) => (
+      <div key={`cat-skel-${idx}`} className="bg-white rounded-xl shadow-sm border border-customBorder-light overflow-hidden flex flex-col">
+        <div className="h-48 w-full bg-gray-200 animate-pulse"></div>
+        <div className="p-6 flex flex-col flex-grow">
+          <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded mb-2"></div>
+          <div className="h-4 w-full bg-gray-200 animate-pulse rounded mb-2"></div>
+          <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded mb-6"></div>
+          <div className="mt-auto h-4 w-32 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+      </div>
+    ));
+  };
+
   return (
     <div className="bg-white py-20 border-b border-customBorder-light">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +66,7 @@ const CategorySection = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.map((category, index) => (
+          {loading ? renderSkeletons() : displayCategories.map((category, index) => (
             <Link 
               key={index} 
               to="#" 

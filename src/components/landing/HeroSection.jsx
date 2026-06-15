@@ -1,6 +1,14 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 
 const HeroSection = () => {
+  const { products = [] } = useSelector(state => state.product);
+  
+  const productCount = products.length > 0 ? `${products.length}+` : '10,000+';
+  
+  // Calculate unique vendors/suppliers from products to avoid requiring admin auth
+  const uniqueVendors = new Set(products.map(p => p.vendorId || p.vendorName || p.vendor_id || p.shopName).filter(Boolean));
+  const supplierCount = uniqueVendors.size > 0 ? `${uniqueVendors.size}+` : '500+';
   return (
     <div className="relative bg-primary-dark text-white overflow-hidden">
       {/* Background pattern placeholder */}
@@ -20,7 +28,7 @@ const HeroSection = () => {
             <span className="text-blue-200 font-bold">Delivered Fast</span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-200 mb-10 max-w-xl font-medium">
-            India's trusted B2B marketplace — 10,000+ products from 500+ verified sellers at direct wholesale prices.
+            India's trusted B2B marketplace — {productCount} products from {supplierCount} verified sellers at direct wholesale prices.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 mb-16">
@@ -34,11 +42,11 @@ const HeroSection = () => {
 
           <div className="grid grid-cols-3 divide-x divide-white/20 border-t border-white/20 pt-8 mt-12 relative">
             <div className="px-6 first:pl-0">
-              <div className="text-2xl sm:text-3xl font-bold text-secondary-main mb-1">10,000+</div>
+              <div className="text-2xl sm:text-3xl font-bold text-secondary-main mb-1">{productCount}</div>
               <div className="text-xs sm:text-sm text-gray-300 font-medium uppercase tracking-wide">Building Products</div>
             </div>
             <div className="px-6">
-              <div className="text-2xl sm:text-3xl font-bold text-secondary-main mb-1">500+</div>
+              <div className="text-2xl sm:text-3xl font-bold text-secondary-main mb-1">{supplierCount}</div>
               <div className="text-xs sm:text-sm text-gray-300 font-medium uppercase tracking-wide">Verified Suppliers</div>
             </div>
             <div className="px-6">

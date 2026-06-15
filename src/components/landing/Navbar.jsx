@@ -13,13 +13,14 @@ const Navbar = ({ searchTerm, onSearchChange }) => {
   const isLandingPage = location.pathname === '/'; // Restore original landing page check for Navbar
   const isRegisterPage = location.pathname.includes('/register');
   const isLoginPage = location.pathname.includes('/login');
-  const isForgotPasswordPage = location.pathname.includes('/forgot-password');
+  const isForgotPasswordPage = location.pathname.includes('/forgot-password') && !location.pathname.startsWith('/admin');
   const isProductsPage = location.pathname === '/products';
   const isProductDetailPage = location.pathname.startsWith('/product/');
   const isCartPage = location.pathname === '/cart';
   const isOrderPage = location.pathname.startsWith('/orders/');
   const isCustomerProductPage = isProductsPage || isProductDetailPage || isCartPage || isOrderPage;
-  const isAuthPage = isRegisterPage || isLoginPage || isForgotPasswordPage;
+  const isAdminAuthPage = location.pathname.startsWith('/admin/login') || location.pathname.startsWith('/admin/forgot-password') || location.pathname.startsWith('/admin/reset-password');
+  const isAuthPage = isRegisterPage || isLoginPage || isForgotPasswordPage || isAdminAuthPage;
   const hideSearchAndIcons = isLandingPage || isAuthPage;
 
   const { isAuthenticated, user } = useSelector((state) => state.auth || {});
@@ -89,7 +90,7 @@ const Navbar = ({ searchTerm, onSearchChange }) => {
                     Register
                   </Link>
                 </>
-              ) : isAuthenticated ? (
+              ) : isAuthenticated && !isAdminAuthPage ? (
                 <>
                   <span className="text-sm font-medium text-slate-700 mr-2">
                     Hi, {user?.name || user?.firstName || 'User'}
@@ -122,6 +123,11 @@ const Navbar = ({ searchTerm, onSearchChange }) => {
                   {(!isRegisterPage || isForgotPasswordPage) && (
                     <Link to="/register" className="px-4 py-2 rounded-md text-sm font-medium text-primary-main bg-orange-50 hover:bg-orange-100 transition-colors">
                       Register
+                    </Link>
+                  )}
+                  {isAdminAuthPage && (
+                    <Link to="/" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
+                      Return to Main Site
                     </Link>
                   )}
                 </>

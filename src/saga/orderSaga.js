@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, takeLatest, select } from 'redux-saga/effects';
 import { orderService } from '../services/orderService';
 import {
   GET_ORDERS_REQUEST, getOrdersSuccess, getOrdersFailure,
@@ -10,6 +10,14 @@ import {
 
 function* handleGetOrders(action) {
   try {
+    const forceRefresh = action?.payload?.forceRefresh;
+    const existingOrders = yield select(state => state.order.orders);
+    
+    if (!forceRefresh && existingOrders && existingOrders.length > 0) {
+      yield put(getOrdersSuccess(existingOrders));
+      return;
+    }
+
     const response = yield call(orderService.getOrders, action.payload);
     const orders = Array.isArray(response) ? response : (response.data || []);
     yield put(getOrdersSuccess(orders));

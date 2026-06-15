@@ -6,6 +6,9 @@ import {
   LOGIN_REQUEST,
   loginSuccess,
   loginFailure,
+  ADMIN_LOGIN_REQUEST,
+  adminLoginSuccess,
+  adminLoginFailure,
   FORGOT_PASSWORD_REQUEST,
   forgotPasswordSuccess,
   forgotPasswordFailure,
@@ -101,6 +104,45 @@ function* handleLogin(action) {
   }
 }
 
+function* handleAdminLogin(action) {
+  try {
+    const { email, password, navigate } = action.payload;
+    const credentials = { email, password };
+
+    const { responseData, timeout } = yield race({
+      responseData: call(authService.adminLogin, credentials),
+      timeout: delay(60000)
+    });
+
+    if (timeout) {
+      throw new Error('Request timed out. The server is not responding.');
+    }
+    
+    // Admin login may return { token: '...' } or { token: '...', user: {...} }
+    const token = responseData.token || null;
+    const { token: _, ...restData } = responseData;
+    const userDetails = responseData.user || restData;
+    
+    // Store token
+    if (token) {
+      localStorage.setItem('adminToken', token);
+    }
+    
+    yield put(adminLoginSuccess({ user: userDetails, token }));
+    if (navigate) {
+      navigate('/admin/dashboard');
+    }
+  } catch (error) {
+    let errorMessage = error.message || 'An unexpected error occurred during admin login.';
+    if (error.response?.data) {
+      if (typeof error.response.data.message === 'string') errorMessage = error.response.data.message;
+      else if (typeof error.response.data.error === 'string') errorMessage = error.response.data.error;
+      else if (typeof error.response.data === 'string') errorMessage = error.response.data;
+    }
+    yield put(adminLoginFailure(errorMessage));
+  }
+}
+
 function* handleForgotPassword(action) {
   try {
     const { responseData, timeout } = yield race({
@@ -150,6 +192,7 @@ function* handleResetPassword(action) {
 export default function* authSaga() {
   yield takeLatest(REGISTER_REQUEST, handleRegister);
   yield takeLatest(LOGIN_REQUEST, handleLogin);
+  yield takeLatest(ADMIN_LOGIN_REQUEST, handleAdminLogin);
   yield takeLatest(FORGOT_PASSWORD_REQUEST, handleForgotPassword);
   yield takeLatest(RESET_PASSWORD_REQUEST, handleResetPassword);
 }

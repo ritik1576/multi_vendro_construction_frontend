@@ -10,6 +10,10 @@ const authService = {
     const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
     return response.data;
   },
+  adminLogin: async (credentials) => {
+    const response = await api.post(API_ENDPOINTS.ADMIN.LOGIN, credentials);
+    return response.data;
+  },
   vendorLogin: async (credentials) => {
     const response = await api.post(API_ENDPOINTS.AUTH.VENDOR_LOGIN, credentials);
     return response.data;

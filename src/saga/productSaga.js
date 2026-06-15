@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, takeLatest, select } from 'redux-saga/effects';
 import { productService } from '../services/productService';
 import {
   GET_PRODUCTS_REQUEST,
@@ -12,8 +12,16 @@ import {
   searchProductsFailure
 } from '../redux/productActions';
 
-function* handleGetProducts() {
+function* handleGetProducts(action) {
   try {
+    const forceRefresh = action?.payload?.forceRefresh;
+    const existingProducts = yield select(state => state.product.products);
+    
+    if (!forceRefresh && existingProducts && existingProducts.length > 0) {
+      yield put(getProductsSuccess(existingProducts));
+      return;
+    }
+
     const response = yield call(productService.getAllProducts);
     // Assuming the backend returns an array of products or an object with a products array
     const products = Array.isArray(response) ? response : (response.data || []);

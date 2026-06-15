@@ -2,61 +2,54 @@ import React from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import { normalizeProductImage } from '../../utils/productImages';
 
+import { useSelector } from 'react-redux';
+
 const FeaturedProducts = () => {
-  const products = [
-    {
-      id: 1,
-      name: "ACC Suraksha Power",
-      description: "High-performance cement for durable slabs",
-      price: "385",
-      unit: "Bag",
-      rating: 4.8,
-      reviews: 120,
-      image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&q=80",
-      tag: "Bestseller",
-      tagColor: "bg-danger-main",
-      priceTag: "Wholesale"
-    },
-    {
-      id: 2,
-      name: "Birla White Cement",
-      description: "Premium white cement for wall finishes",
-      price: "1,150",
-      unit: "50kg",
-      rating: 4.9,
-      reviews: 540,
-      image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80",
-      tag: "",
-      tagColor: "",
-      priceTag: "Bulk Deal"
-    },
-    {
-      id: 3,
-      name: "Dr. Fixit LW+",
-      description: "Integral waterproofing liquid for concrete",
-      price: "155",
-      unit: "1L",
-      rating: 4.7,
-      reviews: 320,
-      image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?auto=format&fit=crop&q=80",
-      tag: "NEW",
-      tagColor: "bg-primary-dark",
-      priceTag: "Wholesale"
-    },
-    {
-      id: 4,
-      name: "Astral CPVC Pipes",
-      description: "High pressure plumbing solutions",
-      price: "450",
-      unit: "Piece",
-      rating: 4.9,
-      reviews: 210,
-      image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80",
-      tag: "",
-      tagColor: "",
-      priceTag: "Contractor Rate"
-    }
+  const { products: apiProducts, loading } = useSelector(state => state.product);
+
+  const staticFallbacks = [
+    { tag: "Bestseller", tagColor: "bg-danger-main", priceTag: "Wholesale", unit: "Bag", rating: 4.8, reviews: 120, image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&q=80" },
+    { tag: "", tagColor: "", priceTag: "Bulk Deal", unit: "50kg", rating: 4.9, reviews: 540, image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80" },
+    { tag: "NEW", tagColor: "bg-primary-dark", priceTag: "Wholesale", unit: "1L", rating: 4.7, reviews: 320, image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?auto=format&fit=crop&q=80" },
+    { tag: "", tagColor: "", priceTag: "Contractor Rate", unit: "Piece", rating: 4.9, reviews: 210, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80" }
   ];
+
+  const displayProducts = apiProducts?.slice(0, 4).map((p, idx) => ({
+    id: p.id || p._id || idx,
+    name: p.name || p.title || 'Product',
+    description: p.description || 'Premium construction material',
+    price: p.price || p.basePrice || '0.00',
+    unit: p.unit || staticFallbacks[idx % 4].unit,
+    rating: p.rating || staticFallbacks[idx % 4].rating,
+    reviews: p.reviews || staticFallbacks[idx % 4].reviews,
+    image: p.image || p.thumbnail || staticFallbacks[idx % 4].image,
+    tag: staticFallbacks[idx % 4].tag,
+    tagColor: staticFallbacks[idx % 4].tagColor,
+    priceTag: staticFallbacks[idx % 4].priceTag
+  })) || [];
+
+  const renderSkeletons = () => {
+    return Array(4).fill(0).map((_, idx) => (
+      <div key={`skel-${idx}`} className="bg-white rounded-xl shadow-sm border border-customBorder-light overflow-hidden flex flex-col">
+        <div className="h-48 bg-gray-200 animate-pulse"></div>
+        <div className="p-5 flex flex-col flex-1">
+          <div className="flex space-x-2 mb-2">
+            <div className="w-16 h-4 bg-gray-200 animate-pulse rounded"></div>
+            <div className="w-8 h-4 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+          <div className="w-3/4 h-6 bg-gray-200 animate-pulse rounded mb-2"></div>
+          <div className="w-full h-4 bg-gray-200 animate-pulse rounded mb-1"></div>
+          <div className="w-2/3 h-4 bg-gray-200 animate-pulse rounded mb-4"></div>
+          
+          <div className="flex items-end justify-between mb-4">
+            <div className="w-20 h-6 bg-gray-200 animate-pulse rounded"></div>
+            <div className="w-16 h-4 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+          <div className="w-full h-10 bg-gray-200 animate-pulse rounded-md"></div>
+        </div>
+      </div>
+    ));
+  };
 
   return (
     <div className="bg-customBackground-default py-20">
@@ -71,7 +64,7 @@ const FeaturedProducts = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {loading ? renderSkeletons() : displayProducts.map((product) => (
             <div key={product.id} className="bg-white rounded-xl shadow-sm border border-customBorder-light overflow-hidden flex flex-col group">
               {/* Product Image & Tags */}
               <div className="relative h-48 p-4 flex items-center justify-center bg-gray-50 group-hover:bg-gray-100 transition-colors">
