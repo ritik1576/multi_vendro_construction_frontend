@@ -167,7 +167,7 @@ const AdminReports = () => {
           
           {/* Date Filters */}
           <div className="flex items-center p-1 bg-slate-100 rounded-lg overflow-x-auto w-full md:w-auto">
-            {['Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'Custom Range'].map(filter => (
+            {['Last 7 Days', 'Last 30 Days', 'Last 90 Days'].map(filter => (
               <button
                 key={filter}
                 onClick={() => setDateFilter(filter)}
@@ -177,11 +177,7 @@ const AdminReports = () => {
                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                {filter === 'Custom Range' ? (
-                  <span className="flex items-center justify-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" /> Custom
-                  </span>
-                ) : filter}
+                {filter}
               </button>
             ))}
           </div>
