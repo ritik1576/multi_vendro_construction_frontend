@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import { normalizeProductImage } from '../../utils/productImages';
 
@@ -6,6 +6,11 @@ import { useSelector } from 'react-redux';
 
 const FeaturedProducts = () => {
   const { products: apiProducts, loading } = useSelector(state => state.product);
+  const [failedImages, setFailedImages] = useState({});
+
+  const handleImageError = (id) => {
+    setFailedImages(prev => ({ ...prev, [id]: true }));
+  };
 
   const staticFallbacks = [
     { tag: "Bestseller", tagColor: "bg-danger-main", priceTag: "Wholesale", unit: "Bag", rating: 4.8, reviews: 120, image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&q=80" },
@@ -74,8 +79,9 @@ const FeaturedProducts = () => {
                   </span>
                 )}
                 <img 
-                  src={normalizeProductImage(product.image)} 
+                  src={failedImages[product.id] ? normalizeProductImage('') : normalizeProductImage(product.image)} 
                   alt={product.name} 
+                  onError={() => handleImageError(product.id)}
                   className="max-h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
                 />
               </div>

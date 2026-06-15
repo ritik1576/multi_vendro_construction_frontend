@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 
-const PasswordField = ({ label = "Password", name = "password", value, onChange, placeholder = "••••••••", error, showForgotPassword, onForgotPasswordClick }) => {
+const PasswordField = ({ label = "Password", name = "password", value, onChange, placeholder = "••••••••", error, showForgotPassword, onForgotPasswordClick, autoComplete = 'new-password' }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -24,6 +24,7 @@ const PasswordField = ({ label = "Password", name = "password", value, onChange,
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          autoComplete={autoComplete}
           className={`block w-full pl-9 pr-9 py-2 bg-[#f4f6fb] border ${error ? 'border-red-500' : 'border-[#e5e7eb]'} rounded-[6px] text-[13px] text-gray-900 placeholder-gray-400 focus:ring-1 focus:ring-[#EA580C] focus:border-[#EA580C] focus:bg-white transition-colors`}
         />
         <button 

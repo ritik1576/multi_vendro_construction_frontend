@@ -30,6 +30,7 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      setFormData({ email: '', password: '' });
       if (user?.role === 'vendor') {
         navigate('/vendor/dashboard', { replace: true });
       } else {
@@ -145,7 +146,7 @@ const Login = () => {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                 
                 {/* Role Selection Toggle */}
                 <div className="flex p-1 bg-slate-100 rounded-lg mb-6 border border-slate-200">

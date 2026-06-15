@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Search, ShoppingCart, MapPin, User, ChevronDown, Menu, Grid, Wrench, Zap, Droplet, Hammer, Truck, Shield, Lightbulb } from 'lucide-react';
@@ -27,12 +27,24 @@ export default function ProductListingNavbar({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const profileRef = useRef(null);
 
-  const userName = user?.name?.split(' ')[0] || user?.username || 'User Name';
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const displayString = user?.fullName || user?.FullName || user?.name || user?.Name || user?.firstName || user?.customerName || user?.shopName || user?.username || user?.UserName || 'User';
+  const userName = displayString.split(' ')[0];
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/login');
+    navigate('/');
   };
 
   const iconMap = {
@@ -104,25 +116,34 @@ export default function ProductListingNavbar({
         {/* Right: Actions */}
         <div className="flex items-center gap-6 ml-auto min-w-max">
           
+          {/* Cart */}
+          <Link to="/cart" className="flex items-center gap-2 py-2 text-slate-700 hover:text-[#1E3A8A] transition-colors group">
+            <div className="relative">
+              <ShoppingCart className="w-6 h-6" strokeWidth={1.5} />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#F97316] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+            <span className="hidden xl:block text-[14px] font-bold">Cart</span>
+          </Link>
+
           {/* User Profile / Menu */}
           {user ? (
-            <div className="relative group">
+            <div className="relative" ref={profileRef}>
               <button 
                 className="flex items-center gap-2 py-2 hover:text-[#1E3A8A] transition-colors"
-                onMouseEnter={() => setIsProfileOpen(true)}
-                onMouseLeave={() => setIsProfileOpen(false)}
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
               >
-                <User className="w-5 h-5 text-slate-700 group-hover:text-[#1E3A8A]" />
-                <span className="hidden lg:block text-[14px] font-bold text-slate-700">{userName}</span>
-                <ChevronDown className="hidden lg:block w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform" />
+                <User className="w-5 h-5 text-slate-700 hover:text-[#1E3A8A]" />
+                <span className="hidden lg:block text-[14px] font-bold text-slate-700">Hi, {userName}</span>
+                <ChevronDown className={`hidden lg:block w-4 h-4 text-slate-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isProfileOpen && (
                 <div 
                   className="absolute right-0 top-full mt-2 w-[200px] bg-white rounded-md shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-slate-200 py-2 z-[100]"
-                  onMouseEnter={() => setIsProfileOpen(true)}
-                  onMouseLeave={() => setIsProfileOpen(false)}
                 >
                   <Link to="/profile" className="flex items-center px-5 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors" onClick={() => setIsProfileOpen(false)}>
                     My Profile
@@ -145,26 +166,6 @@ export default function ProductListingNavbar({
               Login
             </Link>
           )}
-
-          {/* Orders */}
-          {user && (
-            <Link to="/orders" className="hidden sm:flex items-center gap-2 py-2 text-slate-700 hover:text-[#1E3A8A] transition-colors">
-              <span className="text-[14px] font-bold">Orders</span>
-            </Link>
-          )}
-
-          {/* Cart */}
-          <Link to="/cart" className="flex items-center gap-2 py-2 text-slate-700 hover:text-[#1E3A8A] transition-colors group">
-            <div className="relative">
-              <ShoppingCart className="w-6 h-6" strokeWidth={1.5} />
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-[#F97316] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
-                  {cartCount}
-                </span>
-              )}
-            </div>
-            <span className="hidden xl:block text-[14px] font-bold">Cart</span>
-          </Link>
         </div>
       </div>
 

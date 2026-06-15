@@ -70,11 +70,11 @@ function* handleRemoveCartItem(action) {
     let optimisticCart = null;
     if (currentCart) {
       if (Array.isArray(currentCart)) {
-        optimisticCart = currentCart.filter(item => (item.id || item.cartItemId) !== action.payload);
+        optimisticCart = currentCart.filter(item => (item.id || item.cartItemId || item.cartitemID || item._id) !== action.payload);
       } else if (currentCart.items) {
         optimisticCart = {
           ...currentCart,
-          items: currentCart.items.filter(item => (item.id || item.cartItemId) !== action.payload)
+          items: currentCart.items.filter(item => (item.id || item.cartItemId || item.cartitemID || item._id) !== action.payload)
         };
       }
     }
