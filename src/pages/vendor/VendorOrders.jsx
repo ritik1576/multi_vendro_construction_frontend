@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import { 
   ShoppingCart, Clock, Package, CheckCircle, 
   Search, Filter, Calendar, ChevronDown, 
   MapPin, Box, ChevronLeft, ChevronRight, Eye, Trash2, X
 } from 'lucide-react';
-import { getVendorOrders, deleteVendorOrder, updateOrderStatus, getVendorOrderDetails } from '../../services/vendorApi';
+import { getVendorOrderDetails } from '../../services/vendorApi';
+import { getVendorOrdersRequest, deleteVendorOrderRequest, updateVendorOrderStatusRequest } from '../../redux/vendorActions';
+import toast from 'react-hot-toast';
 
 const VendorOrders = () => {
   const { user } = useSelector((state) => state.auth);
   const vendorId = user?.vendorId;
 
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const { orders = [], loading = {}, error } = useSelector((state) => state.vendor || {});
+  const isOrdersLoading = loading.orders;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -37,7 +39,7 @@ const VendorOrders = () => {
       setOrderDetails(data);
     } catch (err) {
       console.error('Failed to fetch order details:', err);
-      alert('Failed to load order details.');
+      toast.error('Failed to load order details.');
     } finally {
       setDetailsLoading(false);
     }
@@ -48,48 +50,33 @@ const VendorOrders = () => {
     setOrderDetails(null);
   };
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getVendorOrders(vendorId);
-      setOrders(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Failed to fetch orders:', err);
-      setError('Failed to load orders. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchOrders();
-  }, [vendorId]);
+    if (vendorId) {
+      dispatch(getVendorOrdersRequest(vendorId));
+    }
+  }, [dispatch, vendorId]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, dateFilter, sortBy]);
 
-  const handleDelete = async (orderId) => {
-    if (!window.confirm('Are you sure you want to delete this order?')) return;
-    try {
-      await deleteVendorOrder(vendorId, orderId);
-      fetchOrders();
-    } catch (err) {
-      console.error('Failed to delete order:', err);
-      alert('Failed to delete order. Please try again.');
-    }
+  const handleDelete = (orderId) => {
+    toast((t) => (
+      <div>
+        <p className="mb-3 text-sm font-medium">Are you sure you want to delete this order?</p>
+        <div className="flex gap-2 justify-end">
+          <button onClick={() => toast.dismiss(t.id)} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded">Cancel</button>
+          <button onClick={() => {
+            toast.dismiss(t.id);
+            dispatch(deleteVendorOrderRequest(vendorId, orderId));
+          }} className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded">Delete</button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
-  const handleUpdateStatus = async (orderId, status) => {
-    try {
-      await updateOrderStatus(vendorId, orderId, status);
-      fetchOrders();
-      alert(`Order successfully marked as ${status}`);
-    } catch (err) {
-      console.error('Failed to update status:', err);
-      alert('Failed to update order status. Please try again.');
-    }
+  const handleUpdateStatus = (orderId, status) => {
+    dispatch(updateVendorOrderStatusRequest(vendorId, orderId, status));
   };
 
   const pendingCount = orders.filter(o => ['Pending Approval', 'Pending'].includes(o.status || o.orderStatus)).length;
@@ -235,7 +222,7 @@ const VendorOrders = () => {
 
         {/* Orders List */}
         <div className="space-y-4">
-          {loading && (
+          {isOrdersLoading && (
             <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm max-w-2xl mx-auto mt-8">
               <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-blue-50 mb-5">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1E3A8A] border-r-transparent"></div>
@@ -247,7 +234,7 @@ const VendorOrders = () => {
             </div>
           )}
 
-          {!loading && error && (
+          {!isOrdersLoading && error && (
             <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm max-w-2xl mx-auto mt-8">
               <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-red-50 text-red-600 mb-5">
                 <Package className="h-7 w-7" />
@@ -257,7 +244,7 @@ const VendorOrders = () => {
                 {error}
               </p>
               <button 
-                onClick={fetchOrders}
+                onClick={() => dispatch(getVendorOrdersRequest(vendorId, true))}
                 className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1E3A8A] px-5 text-sm font-extrabold text-white hover:bg-[#172554]"
               >
                 Retry
@@ -265,7 +252,7 @@ const VendorOrders = () => {
             </div>
           )}
 
-          {!loading && !error && displayOrders.length === 0 && (
+          {!isOrdersLoading && !error && displayOrders.length === 0 && (
             <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm max-w-2xl mx-auto mt-8">
               <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-orange-50 text-[#F97316] mb-5">
                 <Package className="h-7 w-7" />
@@ -277,7 +264,7 @@ const VendorOrders = () => {
             </div>
           )}
 
-          {!loading && !error && displayOrders.map((order, idx) => (
+          {!isOrdersLoading && !error && displayOrders.map((order, idx) => (
             <div key={order.id || idx} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex flex-col gap-5">
               
               {/* Top Row: Order Number, Date, Status */}

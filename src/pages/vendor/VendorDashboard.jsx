@@ -1,59 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Package, TrendingUp, AlertTriangle, Plus, ShoppingBag, Eye, ArrowRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getVendorOrders, getVendorDashboard } from '../../services/vendorApi';
+import { getVendorDashboardRequest, getVendorOrdersRequest } from '../../redux/vendorActions';
 import VendorLayout from '../../components/vendor/VendorLayout';
 
 const VendorDashboard = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const vendorId = user?.vendorId;
   const userId = user?.userId || user?.id;
 
-  const [orders, setOrders] = useState([]);
-  const [dashboard, setDashboard] = useState(null);
-  const [loadingDashboard, setLoadingDashboard] = useState(true);
-  const [loadingOrders, setLoadingOrders] = useState(true);
-  const [errorDashboard, setErrorDashboard] = useState(null);
+  const { dashboard, orders = [], loading = {}, error: errorDashboard } = useSelector((state) => state.vendor || {});
+  const loadingDashboard = loading.dashboard;
+  const loadingOrders = loading.orders;
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const fetchData = async () => {
-      setLoadingDashboard(true);
-      setLoadingOrders(true);
-      setErrorDashboard(null);
-
-      const [dashboardResult, ordersResult] = await Promise.allSettled([
-        getVendorDashboard(userId),
-        getVendorOrders(vendorId)
-      ]);
-
-      if (!isMounted) return;
-
-      if (dashboardResult.status === 'fulfilled') {
-        setDashboard(dashboardResult.value || null);
-      } else {
-        console.error('Failed to fetch dashboard data:', dashboardResult.reason);
-        setErrorDashboard('Failed to load dashboard metrics.');
-      }
-      setLoadingDashboard(false);
-
-      if (ordersResult.status === 'fulfilled') {
-        const ordersData = ordersResult.value;
-        setOrders(Array.isArray(ordersData) ? ordersData : []);
-      } else {
-        console.error('Failed to fetch orders data:', ordersResult.reason);
-      }
-      setLoadingOrders(false);
-    };
-
-    fetchData();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [vendorId, userId]);
+    if (userId) dispatch(getVendorDashboardRequest(userId));
+    if (vendorId) dispatch(getVendorOrdersRequest(vendorId));
+  }, [dispatch, userId, vendorId]);
 
   const activeOrdersCount = dashboard ? (Number(dashboard.pendingOrders || 0) + Number(dashboard.confirmedOrders || 0) + Number(dashboard.shippedOrders || 0)) : 0;
   const totalRevenue = dashboard?.totalRevenue || 0;

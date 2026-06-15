@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingCart, Tag } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingCart, Tag, Trash2 } from 'lucide-react';
 import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
@@ -55,7 +55,7 @@ function MyCart() {
   const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
   const subtotal = cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
   const discount = cart?.data?.discount || cart?.discount || 0;
-  const deliveryCharge = cart?.data?.deliveryCharge || cart?.deliveryCharge || 0;
+  const deliveryCharge = cartItems.length > 0 ? 99 : 0;
   const grandTotal = subtotal - discount + deliveryCharge;
 
   const decreaseQuantity = (id) => {
@@ -140,13 +140,22 @@ function MyCart() {
                     </div>
 
                     <div className="flex flex-col">
-                      <div className="flex-1">
-                        <span className="inline-block rounded bg-orange-50 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-[#EA580C] mb-2">
-                          {displayCategory}
-                        </span>
-                        <h2 className="text-[17px] font-extrabold text-[#0F172A] leading-tight mb-1">{displayName}</h2>
-                        <p className="text-[13px] font-medium text-slate-500">Vendor: {displayVendor}</p>
-                        {displayUnit && <p className="text-[13px] font-medium text-slate-500">Unit: {displayUnit}</p>}
+                      <div className="flex-1 flex justify-between items-start">
+                        <div>
+                          <span className="inline-block rounded bg-orange-50 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-[#EA580C] mb-2">
+                            {displayCategory}
+                          </span>
+                          <h2 className="text-[17px] font-extrabold text-[#0F172A] leading-tight mb-1">{displayName}</h2>
+                          <p className="text-[13px] font-medium text-slate-500">Vendor: {displayVendor}</p>
+                          {displayUnit && <p className="text-[13px] font-medium text-slate-500">Unit: {displayUnit}</p>}
+                        </div>
+                        <button 
+                          onClick={() => removeFromCart(itemId)}
+                          className="text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors p-2 -mr-2 -mt-2"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
                       </div>
 
                       <div className="mt-4 flex flex-wrap sm:flex-nowrap items-center justify-between border-t border-slate-100 pt-4 gap-4">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, X, Loader2, UploadCloud, Image as ImageIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { normalizeProductImage } from '../../utils/productImages';
 
 const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSubmitting = false }) => {
@@ -86,12 +87,12 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-        alert('Please upload a valid image file (JPG, JPEG, or PNG)');
+      if (!file.type.match('image.*')) {
+        toast.error('Please upload a valid image file (JPG, JPEG, or PNG)');
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should be less than 5MB');
+        toast.error('Image size should be less than 5MB');
         return;
       }
       

@@ -6,6 +6,12 @@ import { getCartRequest } from '../../redux/cartActions';
 import { getCartItemPrice, formatCurrency } from '../../context/cartUtils';
 import { addressService } from '../../services/addressService';
 import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
+import { 
+  getUserAddressesRequest, 
+  createAddressRequest, 
+  updateAddressRequest, 
+  deleteAddressRequest 
+} from '../../redux/addressActions';
 
 const requiredFields = ['name', 'phone', 'line1', 'city', 'state', 'pincode'];
 
@@ -46,53 +52,29 @@ const Checkout = () => {
   const authUser = useSelector((state) => state.auth.user);
   
   const [paymentMethod, setPaymentMethod] = useState('cod');
-  const [addresses, setAddresses] = useState([]);
   const [address, setAddress] = useState(null);
   const [draftAddress, setDraftAddress] = useState(initialAddress);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [addressErrors, setAddressErrors] = useState({});
-  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  const { addresses = [], loading: isLoadingAddresses } = useSelector((state) => state.address || {});
 
   useEffect(() => {
-    const fetchAddresses = async () => {
-      setIsLoadingAddresses(true);
-      try {
-        const userId = authUser?.id || authUser?.userId || authUser?._id || 21;
-        const response = await addressService.getUserAddresses(userId);
-        const fetchedAddresses = Array.isArray(response) ? response : (response.data || []);
-        
-        const mappedAddresses = fetchedAddresses.map(addr => ({
-          id: addr.id,
-          name: addr.fullName,
-          phone: addr.phone,
-          line1: addr.addressLine1,
-          line2: addr.addressLine2 || '',
-          city: addr.city,
-          state: addr.state,
-          pincode: addr.postalCode,
-          country: addr.country || 'India',
-          addressType: addr.addressType || 'Home',
-          isDefault: addr.isDefault
-        }));
-
-        setAddresses(mappedAddresses);
-        
-        if (mappedAddresses.length > 0) {
-          const defaultAddr = mappedAddresses.find(a => a.isDefault) || mappedAddresses[0];
-          setAddress(defaultAddr);
-        }
-      } catch (err) {
-        console.error("Failed to fetch addresses:", err);
-      } finally {
-        setIsLoadingAddresses(false);
-      }
-    };
-
     if (authUser) {
-      fetchAddresses();
+      const userId = authUser?.id || authUser?.userId || authUser?._id || 21;
+      dispatch(getUserAddressesRequest(userId));
     }
-  }, [authUser]);
+  }, [authUser, dispatch]);
+
+  useEffect(() => {
+    if (addresses.length > 0 && !address) {
+      const defaultAddr = addresses.find(a => a.isDefault) || addresses[0];
+      setAddress(defaultAddr);
+    } else if (addresses.length === 0 && address) {
+      setAddress(null);
+    }
+  }, [addresses]);
 
   const cart = useSelector((state) => state.cart.cart);
   
@@ -103,8 +85,8 @@ const Checkout = () => {
   const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
   const subTotal = cart?.data?.totalPrice || cart?.totalPrice || cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
   const discount = cart?.data?.discount || cart?.discount || 0;
-  const deliveryCharge = cart?.data?.deliveryCharge || cart?.deliveryCharge || (cartItems.length > 0 ? 99 : 0);
-  const total = cart?.data?.grandTotal || cart?.grandTotal || (subTotal - discount + deliveryCharge);
+  const deliveryCharge = cartItems.length > 0 ? 99 : 0;
+  const total = subTotal - discount + deliveryCharge;
 
   const isAddressValid = address !== null && Object.keys(validateAddress(address)).length === 0;
   const canPlaceOrder = cartItems.length > 0 && isAddressValid && !isEditingAddress && !isLoadingAddresses;
@@ -132,15 +114,10 @@ const Checkout = () => {
     setIsEditingAddress(true);
   };
 
-  const handleDeleteAddress = async (id) => {
-    try {
-      await addressService.deleteAddress(id);
-      setAddresses(prev => prev.filter(a => a.id !== id));
-      if (address?.id === id) {
-        setAddress(null);
-      }
-    } catch (err) {
-      console.error("Failed to delete address:", err);
+  const handleDeleteAddress = (id) => {
+    dispatch(deleteAddressRequest(id));
+    if (address?.id === id) {
+      setAddress(null);
     }
   };
 
@@ -150,63 +127,35 @@ const Checkout = () => {
     setIsEditingAddress(false);
   };
 
-  const handleSaveAddress = async () => {
+  const handleSaveAddress = () => {
     const errors = validateAddress(draftAddress);
     if (Object.keys(errors).length > 0) {
       setAddressErrors(errors);
       return;
     }
     
-    try {
-      const payload = {
-        userID: authUser?.id || authUser?.userId || authUser?._id || 21,
-        fullName: draftAddress.name,
-        phone: draftAddress.phone,
-        addressLine1: draftAddress.line1,
-        addressLine2: draftAddress.line2 || "",
-        isDefault: true,
-        addressType: draftAddress.addressType.toLowerCase(),
-        postalCode: draftAddress.pincode,
-        country: draftAddress.country,
-        state: draftAddress.state,
-        city: draftAddress.city
-      };
-      
-      let responseData;
-      if (draftAddress.id) {
-        const response = await addressService.updateAddress(draftAddress.id, payload);
-        responseData = response.data || response;
-      } else {
-        const response = await addressService.createAddress(payload);
-        responseData = response.data || response;
-      }
-      
-      const savedAddress = {
-        id: responseData.id || draftAddress.id,
-        name: responseData.fullName,
-        phone: responseData.phone,
-        line1: responseData.addressLine1,
-        line2: responseData.addressLine2 || '',
-        city: responseData.city,
-        state: responseData.state,
-        pincode: responseData.postalCode,
-        country: responseData.country || 'India',
-        addressType: responseData.addressType || 'Home',
-        isDefault: responseData.isDefault
-      };
-      
-      setAddresses(prev => {
-        if (draftAddress.id) {
-          return prev.map(a => a.id === draftAddress.id ? savedAddress : a);
-        }
-        return [...prev, savedAddress];
-      });
-      setAddress(savedAddress);
-      setIsEditingAddress(false);
-      setAddressErrors({});
-    } catch (err) {
-      console.error("Failed to save address:", err);
+    const payload = {
+      userID: authUser?.id || authUser?.userId || authUser?._id || 21,
+      fullName: draftAddress.name,
+      phone: draftAddress.phone,
+      addressLine1: draftAddress.line1,
+      addressLine2: draftAddress.line2 || "",
+      isDefault: true,
+      addressType: draftAddress.addressType.toLowerCase(),
+      postalCode: draftAddress.pincode,
+      country: draftAddress.country,
+      state: draftAddress.state,
+      city: draftAddress.city
+    };
+    
+    if (draftAddress.id) {
+      dispatch(updateAddressRequest(draftAddress.id, payload));
+    } else {
+      dispatch(createAddressRequest(payload));
     }
+    
+    setIsEditingAddress(false);
+    setAddressErrors({});
   };
 
   const handlePlaceOrder = () => {
