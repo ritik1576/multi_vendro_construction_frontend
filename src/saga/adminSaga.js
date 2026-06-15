@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, takeLatest, select } from 'redux-saga/effects';
 import { adminService } from '../services/adminService';
 import {
   FETCH_ADMIN_USERS_REQUEST,
@@ -15,8 +15,16 @@ import {
   fetchAdminOrdersFailure,
 } from '../redux/adminActions';
 
-function* fetchAdminUsers() {
+function* fetchAdminUsers(action) {
   try {
+    const forceRefresh = action?.payload?.forceRefresh;
+    const existingUsers = yield select(state => state.admin.users);
+    
+    if (!forceRefresh && existingUsers && existingUsers.length > 0) {
+      yield put(fetchAdminUsersSuccess(existingUsers));
+      return;
+    }
+
     const response = yield call(adminService.getUsers);
     if (response.success) {
       // Map data immediately in saga so the reducer only holds UI-ready models
@@ -95,8 +103,16 @@ function* fetchAdminUserDetails(action) {
   }
 }
 
-function* fetchAdminVendors() {
+function* fetchAdminVendors(action) {
   try {
+    const forceRefresh = action?.payload?.forceRefresh;
+    const existingVendors = yield select(state => state.admin.vendors);
+    
+    if (!forceRefresh && existingVendors && existingVendors.length > 0) {
+      yield put(fetchAdminVendorsSuccess(existingVendors));
+      return;
+    }
+
     const response = yield call(adminService.getVendors);
     if (response.success) {
       // Map data immediately in saga so the reducer only holds UI-ready models
@@ -126,8 +142,16 @@ function* fetchAdminVendors() {
   }
 }
 
-function* fetchAdminOrders() {
+function* fetchAdminOrders(action) {
   try {
+    const forceRefresh = action?.payload?.forceRefresh;
+    const existingOrders = yield select(state => state.admin.orders);
+    
+    if (!forceRefresh && existingOrders && existingOrders.length > 0) {
+      yield put(fetchAdminOrdersSuccess(existingOrders));
+      return;
+    }
+
     const response = yield call(adminService.getAllOrders);
     if (response.success) {
       // Map API schema to UI expected schema

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { fetchAdminVendorsRequest } from '../../redux/adminActions';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { adminService } from '../../services/adminService';
 import { 
@@ -11,6 +13,7 @@ const AdminVendorDetails = () => {
   const { vendorId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [vendor, setVendor] = useState(null);
   const [showRejectReason, setShowRejectReason] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -24,6 +27,7 @@ const AdminVendorDetails = () => {
       const response = await adminService.approveVendor(vendor.id);
       if (response.success) {
         setVendor(prev => ({ ...prev, approval_status: 'Approved' }));
+        dispatch(fetchAdminVendorsRequest({ forceRefresh: true }));
         setApiMessage({ type: 'success', text: response.message || 'Vendor approved successfully!' });
       } else {
         setApiMessage({ type: 'error', text: response.message || 'Failed to approve vendor.' });
@@ -43,6 +47,7 @@ const AdminVendorDetails = () => {
       if (response.success) {
         setVendor(prev => ({ ...prev, approval_status: 'Rejected' }));
         setShowRejectReason(false);
+        dispatch(fetchAdminVendorsRequest({ forceRefresh: true }));
         setApiMessage({ type: 'success', text: response.message || 'Vendor rejected successfully!' });
       } else {
         setApiMessage({ type: 'error', text: response.message || 'Failed to reject vendor.' });
@@ -61,6 +66,7 @@ const AdminVendorDetails = () => {
       const response = await adminService.rejectVendor(vendor.id, "Admin blocked the vendor.");
       if (response.success) {
         setVendor(prev => ({ ...prev, approval_status: 'Blocked' }));
+        dispatch(fetchAdminVendorsRequest({ forceRefresh: true }));
         setApiMessage({ type: 'success', text: response.message || 'Vendor blocked successfully!' });
       } else {
         setApiMessage({ type: 'error', text: response.message || 'Failed to block vendor.' });
