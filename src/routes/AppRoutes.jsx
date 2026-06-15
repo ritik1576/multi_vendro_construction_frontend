@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 import LandingPage from '../pages/LandingPage';
@@ -57,8 +57,8 @@ const AppRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        <Route path="/products" element={<ProtectedRoute><ProductListing /></ProtectedRoute>} />
-        <Route path="/product/:name" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+        <Route path="/products" element={<ProductListing />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<ProtectedRoute><MyCart /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/order-confirmation" element={<ProtectedRoute><ConfirmOrder /></ProtectedRoute>} />

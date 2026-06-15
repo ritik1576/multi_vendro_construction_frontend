@@ -76,8 +76,14 @@ function* handleLogin(action) {
     // Extract token safely and create a user object with remaining data
     const token = responseData.token || null;
     const { token: _, ...restData } = responseData;
-    const userDetails = responseData.user || restData;
+    let userDetails = responseData.user || restData;
     
+    // Normalize vendorId and userId for frontend components
+    if (role === 'vendor') {
+      userDetails.vendorId = userDetails.vendorId || userDetails.vendor?.id || userDetails.vendor?._id || userDetails._id || userDetails.id;
+      userDetails.userId = userDetails.userId || userDetails.user?.id || userDetails._id || userDetails.id;
+    }
+
     if (role === 'vendor' && userDetails.status === 'pending') {
       yield put(loginFailure('Your vendor account is under review. Please login after admin approval.'));
       return;

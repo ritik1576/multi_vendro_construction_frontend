@@ -3,19 +3,14 @@ import { BACKEND_URL } from '../../services/apiConstants';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductDetailsRequest } from '../../redux/productActions';
-import { ChevronRight, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
-import Navbar from '../../components/landing/Navbar';
+import { 
+  ChevronRight, Minus, Plus, ShoppingCart, Truck, ArrowLeft, 
+  Expand, CheckCircle2, Store, RotateCcw, Box, Droplets, Clock, MapPin
+} from 'lucide-react';
+import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
 import { getCartItemPrice, formatCurrency } from '../../context/cartUtils';
 import { addToCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
 import { getLocalProductImage, fallbackImage } from '../../utils/productImages';
-
-
-
-const statusStyles = {
-  'In Stock': 'bg-emerald-100 text-emerald-700 ring-emerald-200',
-  'Limited Stock': 'bg-yellow-100 text-yellow-800 ring-yellow-200',
-  'Out of Stock': 'bg-red-100 text-red-700 ring-red-200',
-};
 
 function ProductDetailImage({ alt, src }) {
   const [failedSrc, setFailedSrc] = useState(null);
@@ -31,28 +26,18 @@ function ProductDetailImage({ alt, src }) {
   );
 }
 
-function InfoCard({ title, children }) {
-  return (
-    <section className="h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-extrabold uppercase tracking-widest text-slate-500">{title}</h2>
-      <div className="mt-3 text-sm leading-6 text-slate-700">{children}</div>
-    </section>
-  );
-}
-
 function ProductSkeleton() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
-      <Navbar />
+      <ProductListingNavbar />
       <main className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8">
-        <div className="grid gap-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:grid-cols-2">
-          <div className="aspect-[4/3] animate-pulse rounded-2xl bg-slate-100" />
-          <div className="space-y-4">
-            <div className="h-6 w-36 animate-pulse rounded bg-slate-100" />
-            <div className="h-10 w-4/5 animate-pulse rounded bg-slate-100" />
-            <div className="h-5 w-full animate-pulse rounded bg-slate-100" />
-            <div className="h-5 w-2/3 animate-pulse rounded bg-slate-100" />
-            <div className="h-28 w-full animate-pulse rounded bg-slate-100" />
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="aspect-[4/3] animate-pulse rounded-2xl bg-white shadow-sm border border-slate-200" />
+          <div className="space-y-4 pt-4">
+            <div className="h-6 w-36 animate-pulse rounded bg-slate-200" />
+            <div className="h-10 w-4/5 animate-pulse rounded bg-slate-200" />
+            <div className="h-5 w-full animate-pulse rounded bg-slate-200" />
+            <div className="h-40 w-full animate-pulse rounded-2xl bg-white shadow-sm border border-slate-200 mt-6" />
           </div>
         </div>
       </main>
@@ -63,7 +48,7 @@ function ProductSkeleton() {
 function ProductError() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
-      <Navbar />
+      <ProductListingNavbar />
       <main className="mx-auto max-w-4xl px-4 pb-12 pt-10 text-center sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-slate-200 bg-white p-10 shadow-sm">
           <h1 className="text-2xl font-extrabold">Product not found</h1>
@@ -78,21 +63,23 @@ function ProductError() {
 }
 
 function ProductDetail() {
-  const { name: routeName } = useParams();
+  const { id: routeId } = useParams();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState('overview');
+  
   const dispatch = useDispatch();
   const { productDetails: product, loading: isLoading, error } = useSelector((state) => state.product);
   const cart = useSelector((state) => state.cart.cart);
   const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
 
   useEffect(() => {
-    if (routeName) {
-      dispatch(getProductDetailsRequest(routeName));
+    if (routeId) {
+      dispatch(getProductDetailsRequest(routeId));
     }
-  }, [dispatch, routeName]);
+  }, [dispatch, routeId]);
 
-  if (isLoading || !routeName) {
+  if (isLoading || !routeId) {
     return <ProductSkeleton />;
   }
 
@@ -113,12 +100,11 @@ function ProductDetail() {
   const shortDescription = product.shortDescription || 'No short description available';
   const description = product.longDescription || product.description || 'No description available';
   const status = product.status || (product.inStock === false ? 'Out of Stock' : 'In Stock');
-  const unit = product.unit || 'Unit not available';
-  const statusClass = statusStyles[status] || 'bg-slate-100 text-slate-700 ring-slate-200';
-  const specifications = product.specifications || {
-    'SKU': product.sku || 'N/A',
-    'Stock Available': product.quantity ? `${product.quantity} units` : 'Check availability'
-  };
+  const unit = product.unit || 'Unit';
+  
+  const discountVal = hasValidDiscount
+    ? Math.round(((numPrice - numDiscountPrice) / numPrice) * 100)
+    : product.discountPercent;
   
   const cartItem = cartItems.find((item) => {
     const cartName = (item.productName || item.productname || item.name || '').toLowerCase();
@@ -128,15 +114,11 @@ function ProductDetail() {
   const isProductInCart = !!cartItem;
   const displayQuantity = isProductInCart ? (cartItem.quantity || 1) : quantity;
 
-  const productTotal = getCartItemPrice(product) * displayQuantity;
-  const buyNowLabel = `Buy Now ₹${productTotal.toLocaleString('en-IN')}`;
-
   const handleCartAction = () => {
     if (isProductInCart) {
       navigate('/cart');
       return;
     }
-
     dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity }));
   };
 
@@ -174,7 +156,6 @@ function ProductDetail() {
     if (!isProductInCart) {
       dispatch(addToCartRequest({ productname: product.ProductName || product.name, quantity }));
     }
-
     navigate('/cart');
   };
 
@@ -184,116 +165,224 @@ function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
-      <Navbar />
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8">
-        <nav className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-500">
-          <Link className="hover:text-[#F97316]" to="/">Home</Link>
-          <ChevronRight className="h-4 w-4" />
-          <Link className="hover:text-[#F97316]" to="/products">Catalog</Link>
-          <ChevronRight className="h-4 w-4" />
-          <span>{category}</span>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-slate-900">{name}</span>
-        </nav>
-
-        <Link className="mt-5 inline-flex rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-[#1E3A8A] shadow-sm hover:bg-slate-50" to="/products">
-          Back to products
+      <ProductListingNavbar />
+      <main className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 lg:px-8">
+        
+        {/* Back Navigation */}
+        <Link 
+          to="/products" 
+          className="inline-flex items-center gap-2 rounded-full bg-slate-100/80 px-4 py-2.5 text-[13px] font-bold text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all mb-6 group w-max"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          Back to Products
         </Link>
 
-        <section className="mb-10 mt-6 grid auto-rows-auto gap-8 rounded-2xl border border-slate-200 bg-white p-5 pb-7 shadow-xl shadow-slate-200/70 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] lg:p-8 lg:pb-10">
-          <div className="flex aspect-[4/3] min-h-0 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-50 p-6 shadow-inner">
-            <ProductDetailImage alt={name} src={resolveImageUrl(product)} />
+        {/* Top Layout */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] items-start">
+          
+          {/* Image Column */}
+          <div className="relative aspect-[4/3] w-full flex items-center justify-center rounded-[16px] border border-slate-200 bg-[#F8FAFC] p-0 overflow-hidden shadow-sm h-full max-h-[600px]">
+            <button className="absolute top-3 right-3 p-1.5 rounded-full border border-slate-200 text-slate-500 hover:bg-white transition-colors bg-white/80 backdrop-blur-sm z-10 shadow-sm">
+              <Expand className="h-4 w-4" />
+            </button>
+            <div className="w-full h-full flex items-center justify-center scale-[1.15]">
+              <ProductDetailImage alt={name} src={resolveImageUrl(product)} />
+            </div>
           </div>
 
-          <div className="flex min-w-0 flex-col">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-[#F97316]">
-                {category}
-              </span>
-              <span className={`rounded-full px-3 py-1 text-xs font-extrabold ring-1 ${statusClass}`}>
-                {status}
-              </span>
-            </div>
+          {/* Product Info Column (Unified Card) */}
+          <div className="flex flex-col rounded-[16px] border border-slate-200 bg-white p-6 md:p-8 shadow-sm h-full justify-between max-h-[600px] overflow-y-auto hide-scrollbar">
+            
+            <div>
+              {/* Title & Short Desc */}
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2 text-[11px] text-[#EA580C] font-bold uppercase tracking-wider">
+                  {category}
+                </div>
+                <h1 className="text-2xl font-extrabold leading-tight text-[#0F172A] sm:text-[32px] mb-2">
+                  {name}
+                </h1>
+                <p className="text-[14px] leading-relaxed text-slate-500">
+                  {shortDescription}
+                </p>
+              </div>
 
-            <h1 className="mt-5 break-words text-3xl font-extrabold leading-tight tracking-tight text-[#0F172A] md:text-4xl">
-              {name}
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{shortDescription}</p>
+              <hr className="border-slate-100 mb-5" />
 
-            <div className="mt-7 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div className="flex flex-wrap items-end gap-3">
-                <span className="text-3xl font-extrabold text-[#1E3A8A] sm:text-4xl">{discountedPrice}</span>
-                {hasValidDiscount && price !== discountedPrice && <span className="pb-1 text-base font-bold text-slate-400 line-through">{price}</span>}
-                {(() => {
-                  const discountVal = hasValidDiscount
-                    ? Math.round(((numPrice - numDiscountPrice) / numPrice) * 100)
-                    : product.discountPercent;
-                  return discountVal ? (
-                    <span className="mb-1 rounded-md bg-orange-100 px-2 py-1 text-xs font-extrabold text-[#F97316]">
+              {/* Price & Stock */}
+              <div className="mb-5">
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-[32px] font-extrabold text-[#0F172A] leading-none tracking-tight">
+                    {discountedPrice}
+                  </span>
+                  {hasValidDiscount && price !== discountedPrice && (
+                    <span className="text-lg font-medium text-slate-400 line-through">
+                      {price}
+                    </span>
+                  )}
+                  {discountVal ? (
+                    <span className="inline-flex items-center rounded-sm bg-red-50 px-2 py-0.5 text-[12px] font-bold text-red-600 border border-red-100">
                       {discountVal}% OFF
                     </span>
-                  ) : null;
-                })()}
+                  ) : null}
+                </div>
+                <p className="text-[12px] text-slate-500 mb-3">
+                  Inclusive of all taxes. Sold per <span className="font-bold text-slate-700">{unit}</span>.
+                </p>
+                
+                <div className="flex items-center gap-2">
+                  {status === 'In Stock' ? (
+                    <span className="inline-flex items-center gap-1.5 text-[13px] font-bold text-emerald-700">
+                      <CheckCircle2 className="h-4 w-4" />
+                      In Stock
+                    </span>
+                  ) : (
+                    <span className="text-[13px] font-bold text-red-600">
+                      Out of Stock
+                    </span>
+                  )}
+                </div>
               </div>
-              <p className="mt-2 text-sm font-bold text-slate-500">per {unit}</p>
-            </div>
 
-            <div className="mt-5">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs font-extrabold uppercase tracking-widest text-slate-500">Vendor</p>
-                <p className="mt-1 text-base font-bold text-[#0F172A]">{vendor}</p>
-              </div>
-            </div>
-
-
-
-            <div className={`mt-6 grid gap-3 ${isProductInCart ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
-              {isProductInCart ? (
-                <>
-                  <div className="flex h-12 items-center justify-between overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition-colors focus-within:border-[#1E3A8A] hover:bg-white">
-                    <button className="grid h-full w-12 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" onClick={handleDecreaseQuantity} type="button">
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="min-w-12 text-center text-base font-extrabold">{displayQuantity}</span>
-                    <button className="grid h-full w-12 place-items-center text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" onClick={handleIncreaseQuantity} type="button">
-                      <Plus className="h-4 w-4" />
-                    </button>
+              {/* Vendor Profile */}
+              <div className="flex items-center gap-3 py-4 mb-5 border-y border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
+                  <Store className="h-4 w-4" />
+                </div>
+                <div className="flex flex-col">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Sold By</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[14px] font-bold text-[#0F172A]">{vendor}</span>
+                    <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 ml-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Verified
+                    </span>
                   </div>
-                  <button className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-4 text-sm font-extrabold text-white hover:bg-[#172554]" onClick={() => navigate('/cart')} type="button">
-                    <ShoppingCart className="h-4 w-4" />
-                    Go to Cart
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buy Box */}
+            <div className="mt-2">
+              {/* Shipping info small */}
+              <div className="flex flex-col gap-2 text-[12px] text-slate-600 mb-5">
+                 <div className="flex items-center gap-2">
+                   <Truck className="h-4 w-4 text-slate-400" />
+                   <span>Ships in 24 hrs from <strong>Mumbai Hub</strong></span>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <RotateCcw className="h-4 w-4 text-slate-400" />
+                   <span><strong>7 Day</strong> Return Policy</span>
+                 </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
+                {/* Qty Selector */}
+                <div className="flex items-center h-12 w-full sm:w-32 bg-white border border-slate-300 rounded-lg overflow-hidden shadow-sm shrink-0">
+                  <button onClick={handleDecreaseQuantity} className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
+                    <Minus className="h-4 w-4" />
                   </button>
-                </>
-              ) : (
-                <button className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] px-4 text-sm font-extrabold text-white hover:bg-[#172554]" onClick={handleCartAction} type="button">
-                  <ShoppingCart className="h-4 w-4" />
-                  Add to Cart
-                </button>
-              )}
-              <button className="min-h-12 rounded-lg bg-[#F97316] px-4 text-sm font-extrabold text-white hover:bg-orange-600" onClick={handleBuyNow} type="button">
-                {buyNowLabel}
-              </button>
+                  <span className="flex-1 text-center text-[14px] font-bold text-[#0F172A] border-x border-slate-200 h-full flex items-center justify-center bg-slate-50/50">{displayQuantity}</span>
+                  <button onClick={handleIncreaseQuantity} className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Add/Buy Buttons */}
+                <div className="flex flex-1 gap-3 w-full">
+                  <button 
+                    onClick={handleCartAction} 
+                    className={`flex-1 flex items-center justify-center h-12 rounded-lg bg-[#1E3A8A] text-white font-bold text-[14px] gap-2 transition-colors hover:bg-[#172554] shadow-sm`}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    {isProductInCart ? 'Go to Cart' : 'Add to Cart'}
+                  </button>
+                  <button 
+                    onClick={handleBuyNow} 
+                    className="flex-1 flex items-center justify-center h-12 rounded-lg bg-[#EA580C] text-white font-bold text-[14px] transition-colors hover:bg-[#C2410C] shadow-sm"
+                  >
+                    Buy Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Bottom Details Section */}
+        <div className="mt-6 rounded-[16px] border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="p-6 md:p-8">
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Product Description */}
+              <div>
+                <h3 className="text-[15px] font-bold text-[#0F172A] mb-3">Product Description</h3>
+                <div className="text-[13px] leading-relaxed text-slate-600 space-y-3">
+                  <p>{description}</p>
+                  <p>
+                    The {unit} packaging is ideal for large-scale procurement, offering significant efficiency 
+                    and a long-lasting, high-quality finish for professional use.
+                  </p>
+                </div>
+              </div>
+
+              {/* Tech Specs */}
+              <div>
+                <h3 className="text-[15px] font-bold text-[#0F172A] mb-3">Technical Specifications</h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
+                    <Box className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Coverage</p>
+                      <p className="text-[13px] font-medium text-slate-700 mt-0.5">140-150 sq.ft/L</p>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
+                    <Clock className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Drying Time</p>
+                      <p className="text-[13px] font-medium text-slate-700 mt-0.5">30 Mins (Surface)</p>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
+                    <Box className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Recoatability</p>
+                      <p className="text-[13px] font-medium text-slate-700 mt-0.5">4-6 Hours</p>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
+                    <Droplets className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Dilution</p>
+                      <p className="text-[13px] font-medium text-slate-700 mt-0.5">40-45% with Water</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          <InfoCard title="Description">{description}</InfoCard>
-
-          <InfoCard title="Vendor Information">{vendor}</InfoCard>
-          <InfoCard title="Price Details">
-            {discountedPrice} {unit !== 'Unit not available' ? `/ ${unit}` : ''}
-            {(() => {
-              const discountVal = hasValidDiscount
-                ? Math.round(((numPrice - numDiscountPrice) / numPrice) * 100)
-                : product.discountPercent;
-              return discountVal ? ` with ${discountVal}% discount` : '';
-            })()}
-          </InfoCard>
-          <InfoCard title="Availability Status">{status}</InfoCard>
-
-        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-100 border-t border-slate-200 py-4 mt-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-1">
+            <span className="text-[14px] font-bold tracking-tight text-[#1E3A8A]">Infra</span>
+            <span className="text-[14px] font-bold tracking-tight text-[#EA580C]">Mart</span>
+            <span className="text-[10px] text-slate-500 ml-2">© 2024 InfraMart Industrial Solutions. All rights reserved.</span>
+          </div>
+          <div className="flex gap-5 text-[11px] font-medium text-slate-500">
+            <Link to="#" className="hover:text-slate-800 transition-colors">About Us</Link>
+            <Link to="#" className="hover:text-slate-800 transition-colors">Shipping Policy</Link>
+            <Link to="#" className="hover:text-slate-800 transition-colors">Terms</Link>
+            <Link to="#" className="hover:text-slate-800 transition-colors">Contact Support</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export const API_ENDPOINTS = {
   },
   PRODUCTS: {
     GET_ALL: '/products',
-    GET_BY_NAME: '/products/{name}',
+    GET_BY_ID: '/products/{id}',
     SEARCH: '/products/search',
     BLOCK_PRODUCT: '/products/{id}/block',
     GET_BLOCKED: '/products/blocked',

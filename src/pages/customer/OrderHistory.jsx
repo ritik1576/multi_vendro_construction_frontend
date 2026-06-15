@@ -1,149 +1,193 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrdersRequest } from '../../redux/orderActions';
-import Navbar from '../../components/landing/Navbar';
-import { formatCurrency } from '../../context/cartUtils';
-
-const badgeClass = (status) => {
-  switch (status) {
-    case 'Delivered':
-      return 'bg-emerald-100 text-emerald-700';
-    case 'Out for Delivery':
-      return 'bg-sky-100 text-sky-700';
-    case 'Confirmed':
-      return 'bg-indigo-100 text-indigo-700';
-    case 'Packed':
-      return 'bg-orange-100 text-orange-700';
-    case 'Vendor Confirmation Pending':
-      return 'bg-yellow-100 text-yellow-800';
-    default:
-      return 'bg-slate-100 text-slate-700';
-  }
-};
+import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
+import { Package, ArrowLeft } from 'lucide-react';
+import OrderHeader from '../../components/customer/orders/OrderHeader';
+import OrderFilters from '../../components/customer/orders/OrderFilters';
+import OrderCard from '../../components/customer/orders/OrderCard';
 
 const OrderHistory = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { orders = [], loading, error } = useSelector((state) => state.order);
   const { user } = useSelector((state) => state.auth);
 
-useEffect(() => {
-  const userId = user?.id || user?.userId || user?._id || 21;
+  const [filters, setFilters] = useState({
+    statuses: [],
+    dateRanges: []
+  });
 
-  if (userId) {
-    dispatch(getOrdersRequest(userId));
-  }
-}, [dispatch, user]);
+  useEffect(() => {
+    const userId = user?.id || user?.userId || user?._id || 21;
+    if (userId) {
+      dispatch(getOrdersRequest(userId));
+    }
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    const hideLinksByText = (text) => {
+      const allLinks = document.querySelectorAll('nav a');
+      const linkElements = [];
+      allLinks.forEach((link) => {
+        if (link.textContent.trim() === text) {
+          link.style.display = 'none';
+          linkElements.push(link);
+        }
+      });
+      return linkElements;
+    };
+    
+    const hiddenLinks = [
+      ...hideLinksByText('Categories'),
+      ...hideLinksByText('Bulk Orders'),
+      ...hideLinksByText('Verified Sellers'),
+    ];
+    
+    return () => {
+      hiddenLinks.forEach((link) => link.style.display = '');
+    };
+  }, []);
+
+  const handleOrderClick = (orderId) => {
+    navigate(`/orders/${orderId}`);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ statuses: [], dateRanges: [] });
+  };
+
+  const filteredOrders = useMemo(() => {
+    let result = [...orders];
+
+    // Status Filter
+    if (filters.statuses.length > 0) {
+      result = result.filter(order => {
+        const status = String(order.orderStatus || order.status || order.displayStatus || '').toLowerCase();
+        return filters.statuses.some(fStatus => status.includes(fStatus.toLowerCase()));
+      });
+    }
+
+    // Date Filter
+    if (filters.dateRanges.length > 0) {
+      const now = new Date();
+      result = result.filter(order => {
+        const orderDate = new Date(order.placedAt || order.createdAt || order.date || 0);
+        const diffTime = Math.abs(now - orderDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const orderYear = orderDate.getFullYear();
+        
+        return filters.dateRanges.some(range => {
+          if (range === '30_days') return diffDays <= 30;
+          if (range === '6_months') return diffDays <= 180;
+          if (range === '2024') return orderYear === 2024;
+          if (range === '2023') return orderYear === 2023;
+          if (range === 'older') return orderYear < 2023;
+          return false;
+        });
+      });
+    }
+
+    // Sort descending
+    return result.sort((a, b) => {
+      const dateA = new Date(a.placedAt || a.createdAt || a.date || 0);
+      const dateB = new Date(b.placedAt || b.createdAt || b.date || 0);
+      return dateB - dateA;
+    });
+  }, [orders, filters]);
 
   const hasOrders = !loading && !error && orders.length > 0;
   const showEmpty = !loading && !error && orders.length === 0;
   const showError = !loading && Boolean(error);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <Navbar />
-      <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-        <div className="mb-6 overflow-hidden rounded-[1.75rem] bg-[#0F172A] px-6 py-8 text-white shadow-sm sm:px-8 sm:py-10">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-300">InfraMart</p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Order History</h1>
-              <p className="mt-3 max-w-2xl text-sm text-slate-200">
-                Review past procurement orders and open details for status, totals, and next steps.
-              </p>
-            </div>
-            <nav className="text-sm text-slate-200/90" aria-label="Breadcrumb">
-              <ol className="flex flex-wrap items-center gap-2">
-                <li>
-                  <Link to="/" className="font-medium text-orange-300 hover:text-white">Home</Link>
-                </li>
-                <li>/</li>
-                <li className="font-semibold">Orders</li>
-              </ol>
-            </nav>
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A] flex flex-col">
+      <ProductListingNavbar />
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Top Navigation */}
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/products" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#0F172A] transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Continue Shopping
+          </Link>
+        </div>
+
+        {/* Header Hero */}
+        <OrderHeader />
+
+        {/* Loading & Errors */}
+        {loading && (
+          <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[#1E3A8A] border-r-transparent mb-4"></div>
+            <p className="text-sm font-bold text-slate-600">Loading your orders...</p>
           </div>
-        </div>
+        )}
 
-        <Link
-          to="/products"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-[#1E3A8A] hover:bg-slate-50"
-        >
-          ← Back to Products
-        </Link>
+        {showError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+            <p className="text-lg font-bold text-red-800">Unable to load orders</p>
+            <p className="mt-2 text-sm font-medium text-red-600">Please try again later or contact support.</p>
+          </div>
+        )}
 
-        <div className="space-y-6">
-          {loading && (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
-              <p className="text-sm font-medium text-slate-600">Loading orders...</p>
-            </div>
-          )}
+        {showEmpty && (
+          <div className="rounded-xl border border-slate-200 bg-white p-16 text-center shadow-sm">
+            <Package className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+            <h2 className="text-lg font-extrabold text-[#0F172A]">No active orders</h2>
+            <p className="mt-2 text-sm font-medium text-slate-500 max-w-sm mx-auto">
+              You haven't placed any procurement orders yet. Browse our catalog to start building your inventory.
+            </p>
+            <Link
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-[#1E3A8A] px-6 text-sm font-extrabold text-white hover:bg-[#172554] transition-colors shadow-sm"
+              to="/products"
+            >
+              Browse Products
+            </Link>
+          </div>
+        )}
 
-          {showError && (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="text-lg font-semibold text-[#0F172A]">Unable to load orders</p>
-              <p className="mt-2 text-sm text-slate-600">Please try again later. If the issue persists, refresh the page or check back soon.</p>
-            </div>
-          )}
+        {/* Main Layout: Filters + Cards */}
+        {hasOrders && (
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            
+            {/* Sidebar Filters */}
+            <OrderFilters 
+              filters={filters} 
+              onFilterChange={setFilters} 
+              onClearFilters={handleClearFilters} 
+            />
 
-          {showEmpty && (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
-              <h2 className="text-xl font-extrabold text-[#0F172A]">No orders yet</h2>
-              <p className="mt-2 text-sm text-slate-600">Start by browsing and adding items to your cart.</p>
-              <Link
-                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1E3A8A] px-5 text-sm font-extrabold text-white hover:bg-[#172554]"
-                to="/products"
-              >
-                Continue Shopping
-              </Link>
-            </div>
-          )}
-
-          {hasOrders && orders.map((order) => {
-            const orderId = order.id || order._id;
-            const orderDate = order.date || (order.createdAt
-              ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-              : 'Unknown date');
-            const orderTotal = order.totalAmount || order.total || 0;
-            const itemsCount = order.itemCount || order.itemsCount || (Array.isArray(order.items) ? order.items.length : Number(order.items || 0));
-            const vendorName = order.vendorName || order.vendor || 'Vendor';
-            const orderStatus = order.displayStatus || order.orderStatus || order.status || 'Processing';
-
-            return (
-              <div key={orderId} className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
-                <div className="grid gap-6 p-6 md:grid-cols-[1.8fr_0.9fr_0.9fr]">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
-                      <span>{orderDate}</span>
-                    </div>
-                    <p className="text-xl font-semibold text-[#0F172A]">{vendorName}</p>
-                    <p className="text-sm text-slate-500">Review order details and status</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Total</p>
-                    <p className="text-2xl font-semibold text-[#1E3A8A]">{formatCurrency(orderTotal)}</p>
-                    <p className="text-sm text-slate-500">{itemsCount} items</p>
-                  </div>
-
-                  <div className="flex flex-col items-start justify-between gap-4 text-right md:items-end">
-                    <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${badgeClass(orderStatus)}`}>
-                      {orderStatus}
-                    </span>
-                    <Link
-                      to={`/orders/${orderId}`}
-                      className="inline-flex h-12 items-center justify-center rounded-full bg-[#1E3A8A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#152e63]"
-                    >
-                      View Details
-                    </Link>
-                  </div>
+            {/* Order Cards List */}
+            <div className="flex-1 w-full space-y-4">
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map(order => (
+                  <OrderCard 
+                    key={order.id || order._id} 
+                    order={order} 
+                    onClick={handleOrderClick} 
+                  />
+                ))
+              ) : (
+                <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                  <p className="text-sm font-bold text-slate-600">No orders match your selected filters.</p>
+                  <button 
+                    onClick={handleClearFilters}
+                    className="mt-4 text-[#F97316] font-bold text-sm hover:underline"
+                  >
+                    Clear Filters
+                  </button>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              )}
+            </div>
+            
+          </div>
+        )}
+      </main>
     </div>
   );
 };
 
 export default OrderHistory;
+

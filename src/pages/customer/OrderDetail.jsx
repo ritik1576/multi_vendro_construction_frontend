@@ -2,22 +2,11 @@ import { useMemo, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrderDetailsRequest } from '../../redux/orderActions';
-import { ChevronRight, Clock, MapPin, CreditCard, ArrowLeft, Package } from 'lucide-react';
+import { ChevronLeft, MapPin, CreditCard, Package, ArrowLeft, ArrowRight, Store } from 'lucide-react';
 
-import Navbar from '../../components/landing/Navbar';
+import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
 import OrderStatusProgress from '../../components/customer/OrderStatusProgress';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
-
-function DetailBlock({ title, children }) {
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-extrabold uppercase tracking-widest text-slate-500">
-        {title}
-      </h2>
-      <div className="mt-4 text-sm leading-6 text-slate-700">{children}</div>
-    </section>
-  );
-}
 
 function OrderDetail() {
   const { orderId } = useParams();
@@ -57,248 +46,219 @@ function OrderDetail() {
     };
   }, []);
 
-  // Use real order data from API
   const displayOrder = currentOrder;
   
   const cartItems = displayOrder?.items || [];
   const deliveryCharge = displayOrder?.amount?.delivery ?? ((cartItems.length > 0) ? (displayOrder?.shippingCharge ?? 99) : 0);
   const subtotal = displayOrder?.amount?.itemsSubtotal ?? displayOrder?.subtotal ?? cartItems.reduce((sum, item) => sum + (item.price || getCartItemPrice(item)) * (item.quantity || 1), 0);
   const grandTotal = displayOrder?.amount?.totalAmount ?? displayOrder?.totalAmount ?? (subtotal + deliveryCharge);
-  const orderStatus = displayOrder?.displayStatus || displayOrder?.orderStatus || displayOrder?.status || 'Processing';
+  const orderStatus = displayOrder?.displayStatus || displayOrder?.orderStatus || displayOrder?.status || 'Pending';
+
+  const getStepIndex = (status) => {
+    const s = String(status).toLowerCase();
+    if (s.includes('pending')) return 0;
+    if (s.includes('confirmed')) return 1;
+    if (s.includes('shipped')) return 2;
+    if (s.includes('delivered')) return 3;
+    return 0;
+  };
+  
+  const isCancelled = String(orderStatus).toLowerCase().includes('cancelled');
+  const currentStep = getStepIndex(orderStatus);
 
   const vendors = useMemo(
     () => Array.from(new Set(cartItems.map((item) => item.vendorName || item.vendor).filter(Boolean))),
     [cartItems]
   );
 
-  const displayVendorName = displayOrder?.vendorName || vendors[0] || 'Order';
+  const displayVendorName = displayOrder?.vendorName || vendors[0] || 'InfraMart Verified Supplier';
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
-      <Navbar />
+      <ProductListingNavbar />
 
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8">
-        <nav className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-500">
-          <Link className="hover:text-[#F97316]" to="/">
-            Home
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+        
+        {/* Compact Top Navigation */}
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          <Link to="/orders" className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+            <ArrowLeft className="h-4 w-4 text-slate-500" />
+            Back to Orders
           </Link>
-          <ChevronRight className="h-4 w-4" />
-          <Link className="hover:text-[#F97316]" to="/orders">
-            Orders
+          <Link to="/products" className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1E3A8A] hover:bg-[#152e63] px-4 py-2 text-sm font-bold text-white transition-colors shadow-sm">
+            <Package className="h-4 w-4 opacity-75" />
+            Browse Products
           </Link>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-slate-900">Order Detail</span>
-        </nav>
+        </div>
 
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-extrabold uppercase tracking-widest text-[#F97316]">
-                Order Detail
-              </p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">
-                {displayVendorName}
-              </h1>
-              <p className="mt-2 text-sm text-slate-600">
-                Review order items, delivery information, payment status, and vendor progress.
-              </p>
-            </div>
-
-            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-yellow-100 px-4 py-2 text-sm font-extrabold text-yellow-800">
-              <Clock className="h-4 w-4" />
-              {orderStatus}
-            </div>
+        {loading && <p className="text-center text-slate-500 py-10">Loading order details...</p>}
+        {error && (
+          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-lg font-bold text-[#0F172A]">Unable to load order details</p>
+            <p className="mt-2 text-sm text-slate-500">Please check the order ID or try again later.</p>
           </div>
-        </section>
+        )}
+        {!loading && !error && !displayOrder && (
+          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-lg font-bold text-[#0F172A]">Order not found</p>
+            <p className="mt-2 text-sm text-slate-500">This order is not available.</p>
+          </div>
+        )}
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <section className="grid gap-6">
-            {loading && <p className="text-center text-slate-500">Loading order details...</p>}
-            {error && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-                <p className="text-lg font-semibold text-[#0F172A]">Unable to load order details</p>
-                <p className="mt-2 text-sm text-slate-600">Please check the order ID or try again later.</p>
-              </div>
-            )}
-            {!loading && !error && !displayOrder && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-                <p className="text-lg font-semibold text-[#0F172A]">Order not found</p>
-                <p className="mt-2 text-sm text-slate-600">This order is not available.</p>
-              </div>
-            )}
-            {!loading && displayOrder && (
-              <>
-            <DetailBlock title="Ordered Items">
-              {cartItems.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 p-5 text-center">
-                  <p className="font-bold text-slate-700">
-                    No items in this order.
-                  </p>
-                  <Link
-                    className="mt-4 inline-flex rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-extrabold text-white"
-                    to="/products"
-                  >
-                    Continue Shopping
-                  </Link>
+        {!loading && displayOrder && (
+          <>
+            {/* Order Header Card */}
+            <div className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-2xl font-extrabold text-[#0F172A]">
+                    Order #{displayOrder?.id || displayOrder?._id || displayOrder?.orderId || orderId}
+                  </h1>
+                  <span className={`inline-flex items-center rounded bg-blue-50 px-2.5 py-0.5 text-[11px] font-extrabold tracking-wider uppercase ${isCancelled ? 'text-red-700 bg-red-50' : 'text-[#1E3A8A]'}`}>
+                    {orderStatus}
+                  </span>
                 </div>
-              ) : (
-                <div className="grid gap-4">
-                  {cartItems.map((item) => {
-                    const itemPrice = item.price || getCartItemPrice(item);
+                <p className="text-[13px] font-medium text-slate-500">
+                  Placed on {displayOrder?.createdAt ? new Date(displayOrder.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+              </div>
+            </div>
 
-                    return (
-                      <div
-                        className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-[1fr_auto]"
-                        key={item.id}
-                      >
-                        <div>
-                          <h3 className="text-base font-extrabold text-[#0F172A]">
-                            {item.productName || item.name || 'Product name not available'}
-                          </h3>
-                          <p className="mt-1 text-sm font-semibold text-slate-500">
-                            Vendor: {item.vendorName || item.vendor || 'Vendor not available'}
-                          </p>
-                          <p className="mt-1 text-sm text-slate-500">
-                            Qty {item.quantity} x {formatCurrency(itemPrice)} /{' '}
-                            {item.unitLabel || item.unit || 'unit'}
-                          </p>
-                        </div>
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+              
+              {/* LEFT COLUMN: SINGLE COMPACT CARD */}
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden h-fit">
+                
+                {/* 1. Ordered Items Section */}
+                <div className="p-5 border-b border-slate-100">
+                  <h2 className="text-[12px] font-extrabold uppercase tracking-widest text-slate-400 mb-4">Order Details</h2>
+                  {cartItems.length === 0 ? (
+                    <p className="text-sm text-slate-500">No items found.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {cartItems.map((item) => {
+                        const itemPrice = item.price || getCartItemPrice(item);
+                        return (
+                          <div key={item.id} className="flex items-start gap-4">
+                            {/* Product Thumbnail */}
+                            <div className="h-16 w-16 shrink-0 rounded bg-slate-100 flex items-center justify-center border border-slate-200">
+                              <Package className="h-6 w-6 text-slate-400" />
+                            </div>
+                            
+                            {/* Product Info */}
+                            <div className="flex-1 min-w-0 pt-0.5">
+                              <h3 className="text-[14px] font-bold text-[#0F172A] truncate">
+                                {item.productName || item.name || 'Product name not available'}
+                              </h3>
+                              <p className="text-[13px] text-slate-500 mt-1">
+                                Qty: {item.quantity} × {formatCurrency(itemPrice)}
+                              </p>
+                            </div>
+                            
+                            {/* Total Price */}
+                            <div className="text-right pt-0.5">
+                              <p className="text-[14px] font-extrabold text-[#0F172A]">
+                                {formatCurrency(itemPrice * item.quantity)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
-                        <div className="text-left sm:text-right">
-                          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                            Total
-                          </p>
-                          <p className="mt-1 text-lg font-extrabold text-[#1E3A8A]">
-                            {formatCurrency(itemPrice * item.quantity)}
-                          </p>
-                        </div>
+                {/* 2. Logistics Section (Address & Payment side-by-side) */}
+                <div className="p-5 border-b border-slate-100 bg-slate-50/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Delivery Address */}
+                    <div className="flex gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100">
+                        <MapPin className="h-4 w-4 text-[#EA580C]" />
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </DetailBlock>
+                      <div>
+                        <h3 className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Delivery Address</h3>
+                        <p className="text-[13px] font-bold text-[#0F172A]">
+                          {displayOrder?.deliveryAddress?.contactName || displayOrder?.deliveryAddress?.name || 'Ravi Kumar'}
+                        </p>
+                        <p className="text-[13px] text-slate-600 mt-0.5 leading-relaxed">
+                          {displayOrder?.deliveryAddress?.addressLine || displayOrder?.deliveryAddress?.line1 || 'Plot 22, Metro City Towers'}
+                          <br />
+                          {displayOrder?.deliveryAddress?.cityStatePincode || `${displayOrder?.deliveryAddress?.city || 'Bengaluru'}, ${displayOrder?.deliveryAddress?.state || 'Karnataka'} ${displayOrder?.deliveryAddress?.pincode || '560038'}`}
+                        </p>
+                      </div>
+                    </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <DetailBlock title="Delivery Address">
-                <div className="flex gap-3">
-                  <MapPin className="mt-1 h-5 w-5 shrink-0 text-[#F97316]" />
-                  <div>
-                    <p className="font-extrabold text-[#0F172A]">
-                      {displayOrder?.deliveryAddress?.contactName || displayOrder?.deliveryAddress?.name || 'Delivery Address'}
-                    </p>
-                    <p className="mt-1">
-                      {displayOrder?.deliveryAddress?.addressLine || displayOrder?.deliveryAddress?.address || 'Address not available'}
-                    </p>
-                    {displayOrder?.deliveryAddress?.cityStatePincode ? (
-                      <p className="mt-1">{displayOrder.deliveryAddress.cityStatePincode}</p>
-                    ) : (
-                      <p className="mt-1">
-                        {displayOrder?.deliveryAddress?.city}, {displayOrder?.deliveryAddress?.state} {displayOrder?.deliveryAddress?.pincode}
-                      </p>
-                    )}
-                    {(displayOrder?.deliveryAddress?.contactPhone || displayOrder?.deliveryAddress?.phone) && (
-                      <p className="mt-1">Contact: {displayOrder.deliveryAddress.contactPhone || displayOrder.deliveryAddress.phone}</p>
-                    )}
+                    {/* Payment Method */}
+                    <div className="flex gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                        <CreditCard className="h-4 w-4 text-[#1E3A8A]" />
+                      </div>
+                      <div>
+                        <h3 className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Payment Method</h3>
+                        <p className="text-[13px] font-bold text-[#0F172A]">
+                          {displayOrder?.paymentMethod?.method || displayOrder?.paymentMethod || 'Cash on Delivery'}
+                        </p>
+                        <p className="text-[13px] text-slate-600 mt-0.5">
+                          {displayOrder?.paymentMethod === 'online' ? 'Paid Online' : 'Pay at your doorstep'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </DetailBlock>
 
-              <DetailBlock title="Payment Method">
-                <p className="font-extrabold text-[#0F172A]">
-                  {displayOrder?.paymentMethod?.method || displayOrder?.paymentMethod || 'Payment Method'}
-                </p>
-                <p className="mt-1">
-                  {displayOrder?.paymentMethod?.description || (displayOrder?.paymentMethod === 'COD' 
-                    ? 'Pay on delivery' 
-                    : displayOrder?.paymentMethod === 'UPI'
-                    ? 'Pay via UPI'
-                    : displayOrder?.paymentMethod === 'Card'
-                    ? 'Pay via Credit/Debit Card'
-                    : displayOrder?.paymentMethod === 'Net Banking'
-                    ? 'Pay via Net Banking'
-                    : 'Payment settlement after vendor confirmation.')}
-                </p>
-              </DetailBlock>
-            </div>
-
-            <DetailBlock title="Vendor Information">
-              {vendors.length === 0 ? (
-                <p>Vendor details will appear after items are added.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {vendors.map((vendor) => (
-                    <span
-                      className="rounded-full bg-orange-50 px-3 py-1 text-xs font-extrabold text-[#F97316]"
-                      key={vendor}
-                    >
-                      {vendor}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </DetailBlock>
-            </>
-            )}
-          </section>
-
-          <aside className="grid h-fit gap-6 lg:sticky lg:top-24">
-            {displayOrder && (
-              <>
-            <DetailBlock title="Total Amount">
-              <div className="grid gap-3">
-                <div className="flex justify-between gap-4">
-                  <span className="font-semibold text-slate-500">
-                    Items subtotal
-                  </span>
-                  <span className="font-extrabold text-slate-900">
-                    {formatCurrency(subtotal)}
-                  </span>
+                {/* 3. Vendor Information */}
+                <div className="p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
+                      <Store className="h-5 w-5 text-slate-500" />
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-bold text-[#0F172A]">{displayVendorName}</p>
+                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Verified Supplier</p>
+                    </div>
+                  </div>
+                  <button className="text-[12px] font-bold text-[#1E3A8A] hover:underline">View Store</button>
                 </div>
 
-                <div className="flex justify-between gap-4">
-                  <span className="font-semibold text-slate-500">Delivery</span>
-                  <span className="font-extrabold text-slate-900">
-                    {deliveryCharge ? formatCurrency(deliveryCharge) : 'Free'}
-                  </span>
-                </div>
-
-                <div className="mt-2 flex justify-between gap-4 border-t border-slate-200 pt-4">
-                  <span className="font-extrabold text-slate-900">
-                    Total amount
-                  </span>
-                  <span className="text-2xl font-extrabold text-[#1E3A8A]">
-                    {formatCurrency(grandTotal)}
-                  </span>
-                </div>
               </div>
-            </DetailBlock>
 
-            <OrderStatusProgress currentStep={2} />
-            </>
-            )}
+              {/* RIGHT COLUMN: SIDEBAR */}
+              <aside className="space-y-6 lg:sticky lg:top-24 h-fit">
+                
+                {/* Order Summary Card */}
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <h2 className="text-[12px] font-extrabold uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-100 pb-3">
+                    Order Summary
+                  </h2>
+                  <div className="space-y-3 text-[13px] text-slate-600">
+                    <div className="flex justify-between">
+                      <span>Items Subtotal</span>
+                      <span className="font-bold text-[#0F172A]">{formatCurrency(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Delivery Fee</span>
+                      <span className="font-bold text-[#0F172A]">{deliveryCharge ? formatCurrency(deliveryCharge) : 'Free'}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 border-t border-slate-100 pt-4 flex items-center justify-between">
+                    <span className="text-[14px] font-extrabold text-[#0F172A]">Total Amount</span>
+                    <span className="text-[18px] font-extrabold text-[#EA580C]">{formatCurrency(grandTotal)}</span>
+                  </div>
+                </div>
 
-            <div className="grid gap-3">
-              <Link
-                to="/orders"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Orders
-              </Link>
-              <Link
-                to="/products"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#1E3A8A] hover:bg-slate-50"
-              >
-                <Package className="h-4 w-4" />
-                Browse Products
-              </Link>
+                {/* Order Tracking Timeline */}
+                <OrderStatusProgress currentStep={currentStep} isCancelled={isCancelled} />
+                
+              </aside>
+
             </div>
-          </aside>
-        </div>
+          </>
+        )}
       </main>
     </div>
   );
 }
 
 export default OrderDetail;
+

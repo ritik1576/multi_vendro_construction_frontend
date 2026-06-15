@@ -5,6 +5,7 @@ import { productService } from '../../services/productService';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import ProductForm from '../../components/vendor/ProductForm';
 import { Edit2, ArrowLeft, Image as ImageIcon, Package, Tag, Hash, Box, FileText, AlignLeft, Trash2 } from 'lucide-react';
+import { normalizeProductImage } from '../../utils/productImages';
 
 const EditProduct = () => {
   const { productId } = useParams();
@@ -134,7 +135,7 @@ const EditProduct = () => {
                 {/* Image Card */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center aspect-square">
                   {productData.image ? (
-                    <img src={productData.image} alt={productData.name} className="w-full h-full object-contain rounded-xl" />
+                    <img src={normalizeProductImage(productData.image)} alt={productData.name} className="w-full h-full object-contain rounded-xl" />
                   ) : (
                     <div className="flex flex-col items-center text-slate-300">
                       <ImageIcon className="w-16 h-16 mb-2 text-slate-200" />

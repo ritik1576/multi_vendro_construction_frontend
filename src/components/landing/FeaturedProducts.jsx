@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
+import { normalizeProductImage } from '../../utils/productImages';
 
 import { useSelector } from 'react-redux';
 
@@ -73,7 +74,7 @@ const FeaturedProducts = () => {
                   </span>
                 )}
                 <img 
-                  src={product.image} 
+                  src={normalizeProductImage(product.image)} 
                   alt={product.name} 
                   className="max-h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
                 />
