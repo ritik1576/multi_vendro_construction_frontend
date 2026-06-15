@@ -4,6 +4,7 @@ import {
   UPDATE_CART_ITEM_REQUEST, UPDATE_CART_ITEM_SUCCESS, UPDATE_CART_ITEM_FAILURE,
   REMOVE_CART_ITEM_REQUEST, REMOVE_CART_ITEM_SUCCESS, REMOVE_CART_ITEM_FAILURE
 } from './cartActions';
+import { LOGOUT } from './authActions';
 
 const initialState = {
   cart: null,
@@ -36,6 +37,9 @@ const cartReducer = (state = initialState, action) => {
     case UPDATE_CART_ITEM_FAILURE:
     case REMOVE_CART_ITEM_FAILURE:
       return { ...state, actionLoading: false, actionError: action.payload };
+
+    case LOGOUT:
+      return initialState;
 
     default:
       return state;

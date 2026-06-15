@@ -3,10 +3,12 @@ import { ShoppingCart, Star } from 'lucide-react';
 import { normalizeProductImage } from '../../utils/productImages';
 
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const FeaturedProducts = () => {
   const { products: apiProducts, loading } = useSelector(state => state.product);
   const [failedImages, setFailedImages] = useState({});
+  const navigate = useNavigate();
 
   const handleImageError = (id) => {
     setFailedImages(prev => ({ ...prev, [id]: true }));
@@ -125,7 +127,10 @@ const FeaturedProducts = () => {
                   <span className="text-[10px] font-bold text-secondary-main uppercase tracking-wide">{product.priceTag}</span>
                 </div>
 
-                <button className="w-full flex items-center justify-center gap-2 bg-primary-dark hover:bg-[#111827] text-white py-2.5 rounded-md font-medium transition-colors">
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="w-full flex items-center justify-center gap-2 bg-primary-dark hover:bg-[#111827] text-white py-2.5 rounded-md font-medium transition-colors"
+                >
                   <ShoppingCart className="h-4 w-4" />
                   Add to Cart
                 </button>
