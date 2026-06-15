@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductsRequest } from '../../redux/productActions';
 import { productService } from '../../services/productService';
+import { getLocalProductImage, normalizeCustomerImage } from '../../utils/productImages';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { 
   Search, ChevronDown, Package, ShieldBan, Filter, ArrowUpRight, 
@@ -93,7 +94,9 @@ const AdminProductManagement = () => {
       status: currentStatus,
       displayStatus: derivedStatus,
       description: p.description || 'No detailed description available for this product.',
-      images: p.images?.length > 0 ? p.images : [{ url: p.image || p.thumbnail || 'https://placehold.co/150x150/e2e8f0/94a3b8?text=No+Image' }]
+      images: p.images?.length > 0 
+        ? p.images.map(img => ({ url: normalizeCustomerImage(img?.url || img) })) 
+        : [{ url: getLocalProductImage(p) }]
     };
   };
 

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 import LandingPage from '../pages/LandingPage';
@@ -36,6 +36,25 @@ import AdminLogin from '../pages/admin/auth/AdminLogin';
 import AdminForgotPassword from '../pages/admin/auth/AdminForgotPassword';
 import AdminResetPassword from '../pages/admin/auth/AdminResetPassword';
 
+const RootRoute = () => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+  if (!isAuthenticated) {
+    return <LandingPage />;
+  }
+
+  // If vendor
+  if (user?.vendorId || user?.role === 'vendor') {
+    if (user?.status === 'approved') {
+      return <Navigate to="/vendor/dashboard" replace />;
+    }
+    return <Navigate to="/vendor/approval-status" replace />;
+  }
+
+  // If customer
+  return <Navigate to="/products" replace />;
+};
+
 const AdminProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
   const location = useLocation();
@@ -51,7 +70,7 @@ const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<RootRoute />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -66,11 +85,12 @@ const AppRoutes = () => {
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
 
         {/* Vendor Routes */}
-        <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
-        <Route path="/vendor/orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
-        <Route path="/vendor/products/add" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
-        <Route path="/vendor/products/edit/:productId" element={<ProtectedRoute><EditProduct /></ProtectedRoute>} />
-        <Route path="/vendor/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+        <Route path="/vendor/approval-status" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
+        <Route path="/vendor/dashboard" element={<VendorRoute><VendorDashboard /></VendorRoute>} />
+        <Route path="/vendor/orders" element={<VendorRoute><VendorOrders /></VendorRoute>} />
+        <Route path="/vendor/products/add" element={<VendorRoute><AddProduct /></VendorRoute>} />
+        <Route path="/vendor/products/edit/:productId" element={<VendorRoute><EditProduct /></VendorRoute>} />
+        <Route path="/vendor/inventory" element={<VendorRoute><Inventory /></VendorRoute>} />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
