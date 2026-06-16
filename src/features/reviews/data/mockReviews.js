@@ -1,0 +1,62 @@
+export const mockReviews = [
+  {
+    id: 'r1',
+    productId: '1',
+    productName: 'UltraTech Cement 50kg',
+    userId: 'u1',
+    customerName: 'Rahul Verma',
+    vendorId: 'v1',
+    vendorName: 'ABC Constructions',
+    rating: 5,
+    review: 'The cement bags were delivered in perfect condition. Setting time is exactly as specified. Very satisfied with the purchase.',
+    status: 'approved',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    isVerifiedPurchase: true,
+    orderId: 'ORD-12345'
+  },
+  {
+    id: 'r2',
+    productId: '1',
+    productName: 'UltraTech Cement 50kg',
+    userId: 'u2',
+    customerName: 'Sneha Patel',
+    vendorId: 'v1',
+    vendorName: 'ABC Constructions',
+    rating: 4,
+    review: 'Good quality, but one bag had a minor tear. Otherwise, no issues.',
+    status: 'approved',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    isVerifiedPurchase: true,
+    orderId: 'ORD-12346'
+  },
+  {
+    id: 'r3',
+    productId: '2',
+    productName: 'TMT Steel Bars 12mm',
+    userId: 'u3',
+    customerName: 'Amit Singh',
+    vendorId: 'v2',
+    vendorName: 'SteelWorks India',
+    rating: 5,
+    review: 'Using these for my current project. The tensile strength is great. Highly recommended for heavy construction.',
+    status: 'approved',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
+    isVerifiedPurchase: true,
+    orderId: 'ORD-12347'
+  },
+  {
+    id: 'r4',
+    productId: '2',
+    productName: 'TMT Steel Bars 12mm',
+    userId: 'u4',
+    customerName: 'Priya Sharma',
+    vendorId: 'v2',
+    vendorName: 'SteelWorks India',
+    rating: 2,
+    review: 'The product is fine but the delivery was delayed by 3 days, holding up my project.',
+    status: 'pending',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    isVerifiedPurchase: true,
+    orderId: 'ORD-12348'
+  }
+];

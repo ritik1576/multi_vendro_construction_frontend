@@ -36,6 +36,13 @@ import AdminLogin from '../pages/admin/auth/AdminLogin';
 import AdminForgotPassword from '../pages/admin/auth/AdminForgotPassword';
 import AdminResetPassword from '../pages/admin/auth/AdminResetPassword';
 
+// Notifications
+import { NotificationsPage } from '../features/notifications/pages/NotificationsPage';
+
+// Reviews
+import VendorReviews from '../features/reviews/pages/VendorReviews';
+import AdminReviews from '../features/reviews/pages/AdminReviews';
+
 const RootRoute = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
@@ -66,6 +73,21 @@ const AdminProtectedRoute = ({ children }) => {
   return children;
 };
 
+const VendorBaseRoute = ({ children }) => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!user?.vendorId && user?.role !== 'vendor') {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
 const AppRoutes = () => {
   return (
     <Router>
@@ -83,14 +105,17 @@ const AppRoutes = () => {
         <Route path="/order-confirmation" element={<ProtectedRoute><ConfirmOrder /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationsPage role="customer" /></ProtectedRoute>} />
 
         {/* Vendor Routes */}
-        <Route path="/vendor/approval-status" element={<ProtectedRoute><VendorApprovalStatus /></ProtectedRoute>} />
+        <Route path="/vendor/approval-status" element={<VendorBaseRoute><VendorApprovalStatus /></VendorBaseRoute>} />
         <Route path="/vendor/dashboard" element={<VendorRoute><VendorDashboard /></VendorRoute>} />
         <Route path="/vendor/orders" element={<VendorRoute><VendorOrders /></VendorRoute>} />
         <Route path="/vendor/products/add" element={<VendorRoute><AddProduct /></VendorRoute>} />
         <Route path="/vendor/products/edit/:productId" element={<VendorRoute><EditProduct /></VendorRoute>} />
         <Route path="/vendor/inventory" element={<VendorRoute><Inventory /></VendorRoute>} />
+        <Route path="/vendor/notifications" element={<VendorRoute><NotificationsPage role="vendor" /></VendorRoute>} />
+        <Route path="/vendor/reviews" element={<VendorRoute><VendorReviews /></VendorRoute>} />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -105,6 +130,8 @@ const AppRoutes = () => {
         <Route path="/admin/products" element={<AdminProtectedRoute><AdminProductManagement /></AdminProtectedRoute>} />
         <Route path="/admin/orders" element={<AdminProtectedRoute><AdminOrderManagement /></AdminProtectedRoute>} />
         <Route path="/admin/reports" element={<AdminProtectedRoute><AdminReports /></AdminProtectedRoute>} />
+        <Route path="/admin/notifications" element={<AdminProtectedRoute><NotificationsPage role="admin" /></AdminProtectedRoute>} />
+        <Route path="/admin/reviews" element={<AdminProtectedRoute><AdminReviews /></AdminProtectedRoute>} />
       </Routes>
     </Router>
   );

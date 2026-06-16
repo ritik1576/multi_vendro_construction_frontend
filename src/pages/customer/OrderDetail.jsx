@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrderDetailsRequest } from '../../redux/orderActions';
@@ -7,11 +7,20 @@ import { ChevronLeft, MapPin, CreditCard, Package, ArrowLeft, ArrowRight, Store 
 import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
 import OrderStatusProgress from '../../components/customer/OrderStatusProgress';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
+import { useReviews } from '../../features/reviews/hooks/useReviews';
+import { ReviewForm } from '../../features/reviews/components/ReviewForm';
+import { Star } from 'lucide-react';
 
 function OrderDetail() {
   const { orderId } = useParams();
   const dispatch = useDispatch();
   const { orderDetails: currentOrder, loading, error } = useSelector((state) => state.order);
+  const { user } = useSelector((state) => state.auth);
+
+  const [reviewModalData, setReviewModalData] = useState(null);
+  const [newlyReviewed, setNewlyReviewed] = useState({});
+  const [toastMessage, setToastMessage] = useState(null);
+  const { addReview, hasUserReviewedOrder } = useReviews();
 
   useEffect(() => {
     if (orderId) {
@@ -72,6 +81,53 @@ function OrderDetail() {
   );
 
   const displayVendorName = displayOrder?.vendorName || vendors[0] || 'InfraMart Verified Supplier';
+
+  const handleReviewClick = (item) => {
+    const userId = user?.id || user?.userId || user?._id || 'u1';
+    const currOrderId = displayOrder?.id || displayOrder?._id || displayOrder?.orderId || orderId;
+    
+    let productId = '';
+    if (typeof item === 'string') {
+      productId = item;
+    } else if (item) {
+      productId = item.productId || item.product_id || item.product?.id || item.product?._id || item.id || item._id || item.item_id;
+    }
+    
+    if (!productId) {
+      productId = currOrderId || `prod_${Date.now()}`;
+    }
+
+    if (newlyReviewed[`${currOrderId}_${productId}`] || hasUserReviewedOrder(userId, currOrderId, productId)) {
+      setToastMessage("You have already reviewed this item.");
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    setReviewModalData({
+      orderId: currOrderId,
+      productId,
+      vendorId: item?.vendorId || displayOrder?.vendorId || 'v1',
+      customerName: user?.fullName || user?.name || 'Customer',
+      productName: typeof item === 'string' ? `Product ${item}` : (item?.productName || item?.name || `Order #${currOrderId}`)
+    });
+  };
+
+  const handleReviewSubmit = async (reviewData) => {
+    const userId = user?.id || user?.userId || user?._id || 'u1';
+    await addReview({
+      ...reviewData,
+      orderId: reviewModalData.orderId,
+      vendorId: reviewModalData.vendorId,
+      userId,
+      customerName: reviewModalData.customerName,
+      productName: reviewModalData.productName,
+      isVerifiedPurchase: true
+    });
+    setNewlyReviewed(prev => ({ ...prev, [`${reviewModalData.orderId}_${reviewModalData.productId}`]: true }));
+    setReviewModalData(null);
+    setToastMessage('Review submitted successfully!');
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-[#0F172A]">
@@ -155,11 +211,40 @@ function OrderDetail() {
                               </p>
                             </div>
                             
-                            {/* Total Price */}
-                            <div className="text-right pt-0.5">
+                            {/* Total Price & Action */}
+                            <div className="text-right pt-0.5 flex flex-col items-end gap-2">
                               <p className="text-[14px] font-extrabold text-[#0F172A]">
                                 {formatCurrency(itemPrice * item.quantity)}
                               </p>
+                              {String(orderStatus).toLowerCase().includes('delivered') && (() => {
+                                const userId = user?.id || user?.userId || user?._id || 'u1';
+                                const currOrderId = displayOrder?.id || displayOrder?._id || displayOrder?.orderId || orderId;
+                                
+                                let pId = '';
+                                if (typeof item === 'string') {
+                                  pId = item;
+                                } else if (item) {
+                                  pId = item.productId || item.product_id || item.product?.id || item.product?._id || item.id || item._id || item.item_id;
+                                }
+                                if (!pId) pId = currOrderId || '1';
+                                
+                                const isReviewed = newlyReviewed[`${currOrderId}_${pId}`] || hasUserReviewedOrder(userId, currOrderId, pId);
+                                
+                                return isReviewed ? (
+                                  <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1 mt-1 bg-emerald-50 px-2 py-1 rounded">
+                                    <Star className="w-3 h-3 fill-current" />
+                                    Review Submitted
+                                  </span>
+                                ) : (
+                                  <button 
+                                    onClick={() => handleReviewClick(item)}
+                                    className="text-[11px] font-bold text-[#1E3A8A] hover:text-[#0F172A] transition-colors flex items-center gap-1 mt-1 bg-blue-50 px-2 py-1 rounded"
+                                  >
+                                    <Star className="w-3 h-3" />
+                                    Rate & Review
+                                  </button>
+                                );
+                              })()}
                             </div>
                           </div>
                         );
@@ -256,9 +341,23 @@ function OrderDetail() {
           </>
         )}
       </main>
+
+      {/* Modals and Toasts */}
+      {reviewModalData && (
+        <ReviewForm 
+          productId={reviewModalData.productId}
+          onClose={() => setReviewModalData(null)}
+          onSubmit={handleReviewSubmit}
+        />
+      )}
+
+      {toastMessage && (
+        <div className="fixed bottom-4 right-4 z-50 bg-slate-800 text-white px-6 py-3 rounded shadow-lg text-sm font-medium animate-fade-in-up">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }
 
 export default OrderDetail;
-

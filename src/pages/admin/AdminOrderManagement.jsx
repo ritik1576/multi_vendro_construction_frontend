@@ -7,6 +7,54 @@ import {
   Building2, Mail, Phone, FileText, MapPin, CreditCard, Loader2
 } from 'lucide-react';
 import { fetchAdminOrdersRequest } from '../../redux/adminActions';
+import { useReviews } from '../../features/reviews/hooks/useReviews';
+import { RatingStars } from '../../features/reviews/components/RatingStars';
+
+// --- Helper Component for Ordered Items with Review ---
+const AdminOrderItemWithReview = ({ item, order }) => {
+  const pId = item?.productId || item?.product_id || item?.product?.id || item?.id || '1';
+  const { reviews, isLoading } = useReviews({ productId: pId });
+  
+  const oId = order?.id || order?._id || order?.orderId;
+  const review = reviews?.find(r => r.orderId === oId || r.productId === pId); // simplified matching
+  
+  return (
+    <div className="p-4 flex flex-col gap-4">
+      <div className="flex gap-4">
+        <div className="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden bg-white shrink-0">
+          <img src={item.thumbnail} alt={item.name} className="w-full h-full object-cover" onError={(e) => { e.target.onerror=null; e.target.src='https://placehold.co/150x150/e2e8f0/94a3b8?text=Item'; }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-extrabold text-slate-900 line-clamp-2 leading-snug">{item.name}</h4>
+          <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">SKU: {item.sku}</span>
+        </div>
+        <div className="text-right shrink-0">
+          <span className="block text-xs font-bold text-slate-500">${item.price?.toFixed(2)} × {item.qty}</span>
+          <span className="block text-sm font-extrabold text-slate-900 mt-1">${(item.price * item.qty)?.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+        </div>
+      </div>
+      
+      {/* Review Block */}
+      <div className="ml-16 bg-slate-50 rounded border border-slate-100 p-3">
+        <h5 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Customer Review</h5>
+        {isLoading ? (
+          <div className="animate-pulse h-4 bg-slate-200 rounded w-1/3"></div>
+        ) : review ? (
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <RatingStars rating={review.rating} size="sm" />
+              <span className="text-[11px] font-bold text-slate-600">{review.customerName || review.userName || 'Customer'}</span>
+              <span className="text-[10px] font-medium text-slate-400">&bull; {new Date(review.createdAt || Date.now()).toLocaleDateString()}</span>
+            </div>
+            <p className="text-xs font-medium text-slate-700 italic">"{review.review || review.comment}"</p>
+          </div>
+        ) : (
+          <p className="text-xs font-bold text-slate-500 italic">No review submitted</p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 // --- MOCK DATA ---
 const mockOrders = [
@@ -476,19 +524,7 @@ const AdminOrderManagement = () => {
                 </div>
                 <div className="divide-y divide-slate-100">
                   {selectedOrder.items.map(item => (
-                    <div key={item.id} className="p-4 flex gap-4">
-                      <div className="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden bg-white shrink-0">
-                        <img src={item.thumbnail} alt={item.name} className="w-full h-full object-cover" onError={(e) => { e.target.onerror=null; e.target.src='https://placehold.co/150x150/e2e8f0/94a3b8?text=Item'; }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-extrabold text-slate-900 line-clamp-2 leading-snug">{item.name}</h4>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">SKU: {item.sku}</span>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="block text-xs font-bold text-slate-500">${item.price.toFixed(2)} × {item.qty}</span>
-                        <span className="block text-sm font-extrabold text-slate-900 mt-1">${(item.price * item.qty).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-                      </div>
-                    </div>
+                    <AdminOrderItemWithReview key={item.id} item={item} order={selectedOrder} />
                   ))}
                 </div>
               </div>
