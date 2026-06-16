@@ -2,6 +2,7 @@ import { Bell } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../redux/authActions';
+import { NotificationDropdown } from '../../features/notifications/components/NotificationDropdown';
 const VendorNavbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -30,13 +31,7 @@ const VendorNavbar = () => {
 
           {/* Actions */}
           <div className="flex items-center space-x-2 ml-auto">
-            <button className="text-slate-500 hover:text-[#1E3A8A] p-2 rounded-md hover:bg-blue-50 transition-colors relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-1.5 top-1.5 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F97316] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F97316]"></span>
-              </span>
-            </button>
+            <NotificationDropdown role="vendor" />
             
             <div className="hidden md:flex items-center space-x-4 ml-2 pl-4 border-l border-slate-200">
               <span className="text-[13px] font-extrabold text-[#0F172A]">

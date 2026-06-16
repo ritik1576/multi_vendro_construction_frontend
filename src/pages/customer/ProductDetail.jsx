@@ -11,6 +11,7 @@ import ProductListingNavbar from '../../components/customer/catalog/ProductListi
 import { getCartItemPrice, formatCurrency } from '../../context/cartUtils';
 import { addToCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
 import { getLocalProductImage, fallbackImage } from '../../utils/productImages';
+import { ProductReviews } from '../../features/reviews/pages/ProductReviews';
 
 function ProductDetailImage({ alt, src }) {
   const [failedSrc, setFailedSrc] = useState(null);
@@ -349,6 +350,8 @@ function ProductDetail() {
               </div>
             </div>
           </div>
+          
+          <ProductReviews productId={product.id || product._id || id} />
         </div>
 
       </main>

@@ -2,6 +2,7 @@ import { Bell } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../redux/authActions';
+import { NotificationDropdown } from '../../features/notifications/components/NotificationDropdown';
 
 const AdminNavbar = () => {
   const dispatch = useDispatch();
@@ -31,13 +32,7 @@ const AdminNavbar = () => {
 
           {/* Actions */}
           <div className="flex items-center space-x-4 md:space-x-4 ml-auto">
-            <button className="text-slate-500 hover:text-[#1E3A8A] p-2 rounded-md hover:bg-slate-50 transition-colors relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-1 top-1 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EF4444] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EF4444]"></span>
-              </span>
-            </button>
+            <NotificationDropdown role="admin" />
             
             <div className="hidden md:flex items-center space-x-2 ml-2 pl-4 border-l border-slate-200">
               <span className="text-sm font-bold text-slate-700 mr-2">

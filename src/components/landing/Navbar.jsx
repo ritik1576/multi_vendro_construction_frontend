@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/authActions';
 import SearchDropdown from '../customer/catalog/SearchDropdown';
+import { NotificationDropdown } from '../../features/notifications/components/NotificationDropdown';
 
 const Navbar = ({ searchTerm, onSearchChange }) => {
   const location = useLocation();
@@ -74,9 +75,9 @@ const Navbar = ({ searchTerm, onSearchChange }) => {
                     </span>
                   )}
                 </Link>
-                <button className="text-customText-secondary hover:text-primary-main hidden sm:block p-2 rounded-md hover:bg-orange-50 transition-colors">
-                  <Bell className="h-5 w-5" />
-                </button>
+                <div className="hidden sm:block">
+                  <NotificationDropdown role="customer" />
+                </div>
               </>
             )}
             

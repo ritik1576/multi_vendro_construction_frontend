@@ -9,6 +9,7 @@ import {
 import { formatCurrency } from '../../../context/cartUtils';
 import { Minus, Plus, Image as ImageIcon } from 'lucide-react';
 import { getLocalProductImage } from '../../../utils/productImages';
+import ProductCardRating from './ProductCardRating';
 
 function ProductImage({ alt, src }) {
   const [failedSrc, setFailedSrc] = useState(null);
@@ -115,7 +116,7 @@ export default function ProductCardCompact({ product, viewMode = 'grid' }) {
     <article
       onClick={openProduct}
       className={`group flex overflow-hidden bg-white rounded shadow-[0_1px_4px_rgba(0,0,0,0.05)] border border-slate-100 hover:shadow-md transition-all duration-200 cursor-pointer ${
-        isListView ? 'flex-row h-32' : 'flex-col h-[340px]'
+        isListView ? 'flex-row h-32' : 'flex-col h-full'
       }`}
     >
       {/* Image Container */}
@@ -137,6 +138,8 @@ export default function ProductCardCompact({ product, viewMode = 'grid' }) {
         <h3 className="text-[14px] font-medium tracking-tight text-slate-800 leading-snug group-hover:text-[#1E3A8A] transition-colors line-clamp-2 h-10">
           {productName}
         </h3>
+        
+        <ProductCardRating productId={product?.id || product?._id || product?.productId || product?.ProductName || product?.name} />
         
         {/* Price Row */}
         <div className="mt-2 flex items-center gap-2 flex-wrap">

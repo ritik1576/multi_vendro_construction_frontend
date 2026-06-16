@@ -7,6 +7,8 @@ import { Package, ArrowLeft } from 'lucide-react';
 import OrderHeader from '../../components/customer/orders/OrderHeader';
 import OrderFilters from '../../components/customer/orders/OrderFilters';
 import OrderCard from '../../components/customer/orders/OrderCard';
+import { ReviewForm } from '../../features/reviews/components/ReviewForm';
+import { useReviews } from '../../features/reviews/hooks/useReviews';
 
 const OrderHistory = () => {
   const dispatch = useDispatch();
@@ -18,6 +20,11 @@ const OrderHistory = () => {
     statuses: [],
     dateRanges: []
   });
+
+  const [reviewModalData, setReviewModalData] = useState(null);
+  const [newlyReviewed, setNewlyReviewed] = useState({});
+  const [toastMessage, setToastMessage] = useState(null);
+  const { addReview, hasUserReviewedOrder } = useReviews();
 
   useEffect(() => {
     const userId = user?.id || user?.userId || user?._id || 21;
@@ -56,6 +63,53 @@ const OrderHistory = () => {
 
   const handleClearFilters = () => {
     setFilters({ statuses: [], dateRanges: [] });
+  };
+
+  const handleReviewClick = (order, product) => {
+    const userId = user?.id || user?.userId || user?._id || 'u1';
+    const orderId = order.id || order._id;
+    
+    let productId = '';
+    if (typeof product === 'string') {
+      productId = product;
+    } else if (product) {
+      productId = product.productId || product.product_id || product.product?.id || product.product?._id || product.id || product._id || product.item_id;
+    }
+    
+    if (!productId) {
+      productId = orderId || `prod_${Date.now()}`; // Fallback to ensure submission works
+    }
+
+    if (newlyReviewed[`${orderId}_${productId}`] || hasUserReviewedOrder(userId, orderId, productId)) {
+      setToastMessage("You have already reviewed this item.");
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    setReviewModalData({
+      orderId,
+      productId,
+      vendorId: product?.vendorId || order.vendorId || 'v1',
+      customerName: user?.fullName || user?.name || 'Customer',
+      productName: typeof product === 'string' ? `Product ${product}` : (product?.productName || product?.name || `Order #${orderId}`)
+    });
+  };
+
+  const handleReviewSubmit = async (reviewData) => {
+    const userId = user?.id || user?.userId || user?._id || 'u1';
+    await addReview({
+      ...reviewData,
+      orderId: reviewModalData.orderId,
+      vendorId: reviewModalData.vendorId,
+      userId,
+      customerName: reviewModalData.customerName,
+      productName: reviewModalData.productName,
+      isVerifiedPurchase: true
+    });
+    setNewlyReviewed(prev => ({ ...prev, [`${reviewModalData.orderId}_${reviewModalData.productId}`]: true }));
+    setReviewModalData(null);
+    setToastMessage('Review submitted successfully!');
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const filteredOrders = useMemo(() => {
@@ -162,13 +216,33 @@ const OrderHistory = () => {
             {/* Order Cards List */}
             <div className="flex-1 w-full space-y-4">
               {filteredOrders.length > 0 ? (
-                filteredOrders.map(order => (
-                  <OrderCard 
-                    key={order.id || order._id} 
-                    order={order} 
-                    onClick={handleOrderClick} 
-                  />
-                ))
+                filteredOrders.map(order => {
+                  const items = Array.isArray(order.items) ? order.items : [];
+                  const firstItem = items[0] || {};
+                  const product = firstItem.product || firstItem;
+                  const userId = user?.id || user?.userId || user?._id || 'u1';
+                  
+                  let pId = '';
+                  if (typeof product === 'string') {
+                    pId = product;
+                  } else if (product) {
+                    pId = product.productId || product.product_id || product.product?.id || product.product?._id || product.id || product._id || product.item_id;
+                  }
+                  if (!pId) pId = order.id || order._id || '1';
+                  
+                  const oId = order.id || order._id;
+                  const isReviewed = newlyReviewed[`${oId}_${pId}`] || hasUserReviewedOrder(userId, oId, pId);
+                  
+                  return (
+                    <OrderCard 
+                      key={order.id || order._id} 
+                      order={order} 
+                      onClick={handleOrderClick} 
+                      onReview={handleReviewClick}
+                      hasReviewed={isReviewed}
+                    />
+                  );
+                })
               ) : (
                 <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
                   <p className="text-sm font-bold text-slate-600">No orders match your selected filters.</p>
@@ -185,6 +259,25 @@ const OrderHistory = () => {
           </div>
         )}
       </main>
+
+      {reviewModalData && (
+        <ReviewForm 
+          productId={reviewModalData.productId}
+          onClose={() => setReviewModalData(null)}
+          onSubmit={(data) => handleReviewSubmit({
+            productId: data.productId,
+            rating: data.rating,
+            review: data.review.trim(),
+          })}
+        />
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-4 right-4 z-50 bg-slate-800 text-white px-6 py-3 rounded shadow-lg text-sm font-medium animate-fade-in-up">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 };

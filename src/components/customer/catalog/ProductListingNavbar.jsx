@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Search, ShoppingCart, MapPin, User, ChevronDown, Menu, Grid, Wrench, Zap, Droplet, Hammer, Truck, Shield, Lightbulb } from 'lucide-react';
 import { logout } from '../../../redux/authActions';
 import SearchDropdown from './SearchDropdown';
+import { NotificationDropdown } from '../../../features/notifications/components/NotificationDropdown';
 
 export default function ProductListingNavbar({ 
   searchTerm, 
@@ -114,8 +115,15 @@ export default function ProductListingNavbar({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-6 ml-auto min-w-max">
+        <div className="flex items-center gap-4 sm:gap-6 ml-auto min-w-max">
           
+          {/* Notifications */}
+          {user && (
+            <div className="hidden sm:block mt-1">
+              <NotificationDropdown role="customer" />
+            </div>
+          )}
+
           {/* Cart */}
           <Link to="/cart" className="flex items-center gap-2 py-2 text-slate-700 hover:text-[#1E3A8A] transition-colors group">
             <div className="relative">
