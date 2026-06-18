@@ -65,7 +65,7 @@ const vendorReducer = (state = initialState, action) => {
       return { ...state, loading: { ...state.loading, orders: false }, error: action.payload };
 
     case UPDATE_VENDOR_ORDER_STATUS_REQUEST:
-      return { ...state, loading: { ...state.loading, updateOrder: true }, error: null };
+      return { ...state, loading: { ...state.loading, updateOrder: true }, statusUpdateError: null };
     case UPDATE_VENDOR_ORDER_STATUS_SUCCESS:
       return { 
         ...state, 
@@ -77,10 +77,10 @@ const vendorReducer = (state = initialState, action) => {
         )
       };
     case UPDATE_VENDOR_ORDER_STATUS_FAILURE:
-      return { ...state, loading: { ...state.loading, updateOrder: false }, error: action.payload };
+      return { ...state, loading: { ...state.loading, updateOrder: false }, statusUpdateError: action.payload };
 
     case DELETE_VENDOR_ORDER_REQUEST:
-      return { ...state, loading: { ...state.loading, updateOrder: true }, error: null };
+      return { ...state, loading: { ...state.loading, updateOrder: true }, deleteError: null };
     case DELETE_VENDOR_ORDER_SUCCESS:
       return { 
         ...state, 
@@ -88,7 +88,7 @@ const vendorReducer = (state = initialState, action) => {
         orders: state.orders.filter(order => order.id !== action.payload && order._id !== action.payload)
       };
     case DELETE_VENDOR_ORDER_FAILURE:
-      return { ...state, loading: { ...state.loading, updateOrder: false }, error: action.payload };
+      return { ...state, loading: { ...state.loading, updateOrder: false }, deleteError: action.payload };
 
     default:
       return state;

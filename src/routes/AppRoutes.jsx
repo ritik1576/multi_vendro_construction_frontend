@@ -43,6 +43,10 @@ import { NotificationsPage } from '../features/notifications/pages/Notifications
 import VendorReviews from '../features/reviews/pages/VendorReviews';
 import AdminReviews from '../features/reviews/pages/AdminReviews';
 
+// Coupons
+import AdminCoupons from '../features/coupons/pages/AdminCoupons';
+import VendorCoupons from '../features/coupons/pages/VendorCoupons';
+
 const RootRoute = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
@@ -132,6 +136,7 @@ const AppRoutes = () => {
         <Route path="/admin/reports" element={<AdminProtectedRoute><AdminReports /></AdminProtectedRoute>} />
         <Route path="/admin/notifications" element={<AdminProtectedRoute><NotificationsPage role="admin" /></AdminProtectedRoute>} />
         <Route path="/admin/reviews" element={<AdminProtectedRoute><AdminReviews /></AdminProtectedRoute>} />
+        <Route path="/admin/coupons" element={<AdminProtectedRoute><AdminCoupons /></AdminProtectedRoute>} />
       </Routes>
     </Router>
   );

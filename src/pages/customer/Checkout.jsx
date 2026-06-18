@@ -83,10 +83,21 @@ const Checkout = () => {
   }, [dispatch]);
 
   const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
-  const subTotal = cart?.data?.totalPrice || cart?.totalPrice || cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
-  const discount = cart?.data?.discount || cart?.discount || 0;
+  const subTotal = cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
   const deliveryCharge = cartItems.length > 0 ? 99 : 0;
-  const total = subTotal - discount + deliveryCharge;
+  
+  let appliedCouponData = null;
+  try {
+    const rawCoupon = localStorage.getItem('appliedCoupon');
+    if (rawCoupon) {
+      appliedCouponData = JSON.parse(rawCoupon);
+    }
+  } catch (e) {
+    console.error("Failed to parse appliedCoupon", e);
+  }
+
+  const discount = appliedCouponData ? appliedCouponData.discountAmount : 0;
+  const total = appliedCouponData ? appliedCouponData.finalAmount : (subTotal + deliveryCharge);
 
   const isAddressValid = address !== null && Object.keys(validateAddress(address)).length === 0;
   const canPlaceOrder = cartItems.length > 0 && isAddressValid && !isEditingAddress && !isLoadingAddresses;
@@ -172,6 +183,10 @@ const Checkout = () => {
         quantity: item.quantity || 1
       }))
     };
+    
+    if (appliedCouponData?.code) {
+      orderPayload.couponCode = appliedCouponData.code;
+    }
 
     dispatch(placeOrderRequest(orderPayload));
     
@@ -473,7 +488,7 @@ const Checkout = () => {
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between">
-                    <span>Discount on MRP <span className="text-[10px] text-[#C2410C] font-bold cursor-pointer hover:underline ml-1">Know More</span></span>
+                    <span>Coupon Discount <span className="text-[10px] text-[#C2410C] font-bold cursor-pointer hover:underline ml-1">Code: {appliedCouponData?.code}</span></span>
                     <span className="font-semibold text-emerald-600">-{formatCurrency(discount)}</span>
                   </div>
                 )}

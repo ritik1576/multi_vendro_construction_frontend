@@ -10,6 +10,38 @@ import { getVendorOrderDetails } from '../../services/vendorApi';
 import { getVendorOrdersRequest, deleteVendorOrderRequest, updateVendorOrderStatusRequest } from '../../redux/vendorActions';
 import toast from 'react-hot-toast';
 
+const ALLOWED_ORDER_ACTIONS = {
+  'pending approval': [
+    { label: 'Approve', actionStatus: 'confirmed', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
+    { label: 'Reject', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
+  ],
+  'pending': [
+    { label: 'Approve', actionStatus: 'confirmed', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
+    { label: 'Reject', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
+  ],
+  'confirmed': [
+    { label: 'Mark Packed', actionStatus: 'packed', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
+    { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
+  ],
+  'processing': [
+    { label: 'Mark Packed', actionStatus: 'packed', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
+    { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
+  ],
+  'packed': [
+    { label: 'Mark Shipped', actionStatus: 'shipped', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
+    { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
+  ],
+  'shipped': [
+    { label: 'Out for Delivery', actionStatus: 'outfordelivery', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
+    { label: 'Mark Delivered', actionStatus: 'delivered', style: 'bg-[#EA580C] hover:bg-[#C2410C] text-white' },
+    { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
+  ],
+  'outfordelivery': [
+    { label: 'Mark Delivered', actionStatus: 'delivered', style: 'bg-[#EA580C] hover:bg-[#C2410C] text-white' },
+    { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
+  ]
+};
+
 const VendorOrders = () => {
   const { user } = useSelector((state) => state.auth);
   const vendorId = user?.vendorId;
@@ -313,25 +345,19 @@ const VendorOrders = () => {
               <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 {(() => {
                   const s = (order.status || '').toLowerCase();
-                  if (s === 'pending approval' || s === 'pending') {
-                    return (
-                      <>
-                        <button onClick={() => handleUpdateStatus(order.id, 'confirmed')} className="px-5 py-2.5 bg-[#1E3A8A] hover:bg-[#172554] text-white text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Approve</button>
-                        <button onClick={() => handleUpdateStatus(order.id, 'cancelled')} className="px-5 py-2.5 border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300 text-[13px] font-extrabold rounded-lg transition-colors active:scale-95">Reject</button>
-                      </>
-                    );
-                  }
-                  if (s === 'confirmed' || s === 'processing') {
-                    return (
-                      <button onClick={() => handleUpdateStatus(order.id, 'shipped')} className="px-5 py-2.5 bg-[#1E3A8A] hover:bg-[#172554] text-white text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Mark Shipped</button>
-                    );
-                  }
-                  if (s === 'shipped') {
-                    return (
-                      <button onClick={() => handleUpdateStatus(order.id, 'delivered')} className="px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Mark Delivered</button>
-                    );
-                  }
-                  return null;
+                  const isUpdating = loading.updateOrder;
+                  const availableActions = ALLOWED_ORDER_ACTIONS[s] || [];
+
+                  return availableActions.map((action, idx) => (
+                    <button
+                      key={idx}
+                      disabled={isUpdating}
+                      onClick={() => handleUpdateStatus(order.id, action.actionStatus)}
+                      className={`px-5 py-2.5 text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95 disabled:opacity-50 ${action.style}`}
+                    >
+                      {action.label}
+                    </button>
+                  ));
                 })()}
                 <button 
                   onClick={() => fetchOrderDetails(order.id)}
@@ -556,25 +582,22 @@ const VendorOrders = () => {
             <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex gap-3">
               {(() => {
                   const s = (orderDetails?.orderStatus || orderDetails?.status || '').toLowerCase();
-                  if (s === 'pending approval' || s === 'pending') {
-                    return (
-                      <>
-                        <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'confirmed'); closeDrawer(); }} className="flex-1 py-2.5 bg-[#1E3A8A] hover:bg-[#172554] text-white text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Approve</button>
-                        <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'cancelled'); closeDrawer(); }} className="flex-1 py-2.5 border border-red-200 bg-white text-red-600 hover:bg-red-50 text-[13px] font-extrabold rounded-lg transition-colors active:scale-95">Reject</button>
-                      </>
-                    );
-                  }
-                  if (s === 'confirmed' || s === 'processing') {
-                    return (
-                      <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'shipped'); closeDrawer(); }} className="flex-1 py-2.5 bg-[#1E3A8A] hover:bg-[#172554] text-white text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Mark Shipped</button>
-                    );
-                  }
-                  if (s === 'shipped') {
-                    return (
-                      <button onClick={() => { handleUpdateStatus(orderDetails.orderId || orderDetails.id, 'delivered'); closeDrawer(); }} className="flex-1 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95">Mark Delivered</button>
-                    );
-                  }
-                  return null;
+                  const isUpdating = loading.updateOrder;
+                  const availableActions = ALLOWED_ORDER_ACTIONS[s] || [];
+
+                  return availableActions.map((action, idx) => (
+                    <button
+                      key={idx}
+                      disabled={isUpdating}
+                      onClick={() => {
+                        handleUpdateStatus(orderDetails.orderId || orderDetails.id, action.actionStatus);
+                        closeDrawer();
+                      }}
+                      className={`flex-1 py-2.5 text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95 disabled:opacity-50 ${action.style}`}
+                    >
+                      {action.label}
+                    </button>
+                  ));
               })()}
               <button 
                 onClick={closeDrawer}
