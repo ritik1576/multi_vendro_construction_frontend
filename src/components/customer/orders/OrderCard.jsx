@@ -3,6 +3,7 @@ import { Share2 } from 'lucide-react';
 import { formatCurrency } from '../../../context/cartUtils';
 import StatusBadge from './StatusBadge';
 import { getLocalProductImage } from '../../../utils/productImages';
+import { getOrderApiId, getDisplayOrderNumber } from '../../../utils/orderHelpers';
 
 function ProductImage({ alt, src }) {
   const [failedSrc, setFailedSrc] = useState(null);
@@ -23,19 +24,8 @@ function ProductImage({ alt, src }) {
 }
 
 const OrderCard = ({ order, onClick, onReview, hasReviewed }) => {
-  const isDisplayOrderNumber = (value) => typeof value === "string" && value.startsWith("INF-");
-
-  const apiOrderId =
-    order._id ||
-    order.order_id ||
-    order.orderUuid ||
-    order.uuid ||
-    (!isDisplayOrderNumber(order.id) ? order.id : null);
-
-  const displayOrderId =
-    order.orderNumber ||
-    order.orderNo ||
-    order.id;
+  const apiOrderId = getOrderApiId(order);
+  const displayOrderId = getDisplayOrderNumber(order);
 
   const displayId = String(displayOrderId || apiOrderId).slice(-10).toUpperCase();
   const orderTotal = order.totalAmount || order.total || 0;

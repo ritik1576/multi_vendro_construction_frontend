@@ -9,6 +9,7 @@ import OrderFilters from '../../components/customer/orders/OrderFilters';
 import OrderCard from '../../components/customer/orders/OrderCard';
 import { ReviewForm } from '../../features/reviews/components/ReviewForm';
 import { useReviews } from '../../features/reviews/hooks/useReviews';
+import { getOrderApiId, getDisplayOrderNumber } from '../../utils/orderHelpers';
 
 const OrderHistory = () => {
   const dispatch = useDispatch();
@@ -67,14 +68,8 @@ const OrderHistory = () => {
 
   const handleReviewClick = (order, product) => {
     const userId = user?.id || user?.userId || user?._id || 'u1';
-    const isDisplayOrderNumber = (value) => typeof value === "string" && value.startsWith("INF-");
 
-    const apiOrderId =
-      order._id ||
-      order.order_id ||
-      order.orderUuid ||
-      order.uuid ||
-      (!isDisplayOrderNumber(order.id) ? order.id : null) || order._id;
+    const apiOrderId = getOrderApiId(order) || order._id;
     
     let productId = '';
     if (typeof product === 'string') {
@@ -238,29 +233,8 @@ const OrderHistory = () => {
                     pId = product.productId || product.product_id || product.product?.id || product.product?._id || product.id || product._id || product.item_id;
                   }
                   
-                  console.log("FULL ORDER OBJECT:", order);
-                  console.log("API ID candidates:", {
-                    _id: order._id,
-                    id: order.id,
-                    orderId: order.orderId,
-                    order_id: order.order_id,
-                    uuid: order.uuid,
-                    orderUuid: order.orderUuid
-                  });
-
-                  const isDisplayOrderNumber = (value) => typeof value === "string" && value.startsWith("INF-");
-
-                  const apiOrderId =
-                    order._id ||
-                    order.order_id ||
-                    order.orderUuid ||
-                    order.uuid ||
-                    (!isDisplayOrderNumber(order.id) ? order.id : null);
-
-                  const displayOrderId =
-                    order.orderNumber ||
-                    order.orderNo ||
-                    order.id;
+                  const apiOrderId = getOrderApiId(order);
+                  const displayOrderId = getDisplayOrderNumber(order);
 
                   if (!pId) pId = apiOrderId || '1';
                   

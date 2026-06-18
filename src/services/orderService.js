@@ -17,7 +17,7 @@ export const orderService = {
   
   getOrderById: async (id) => {
     if (typeof id === "string" && id.startsWith("INF-")) {
-      throw new Error("Invalid order id for API. Display order number was passed instead of backend order id.");
+      throw new Error("Invalid API order id: display order number was passed.");
     }
     const response = await api.get(API_ENDPOINTS.ORDERS.GET_BY_ID.replace('{id}', id), { headers: getAuthHeaders() });
     return response.data;

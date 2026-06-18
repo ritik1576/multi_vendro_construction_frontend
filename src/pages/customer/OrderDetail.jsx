@@ -10,10 +10,13 @@ import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
 import { useReviews } from '../../features/reviews/hooks/useReviews';
 import { ReviewForm } from '../../features/reviews/components/ReviewForm';
 import { Star } from 'lucide-react';
+import { getOrderApiId, getDisplayOrderNumber } from '../../utils/orderHelpers';
+import { useNavigate } from 'react-router-dom';
 
 function OrderDetail() {
   const { orderId } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { orderDetails: currentOrder, loading, error } = useSelector((state) => state.order);
   const { user } = useSelector((state) => state.auth);
 
@@ -24,9 +27,13 @@ function OrderDetail() {
 
   useEffect(() => {
     if (orderId) {
+      if (typeof orderId === 'string' && orderId.startsWith('INF-')) {
+        navigate('/orders', { replace: true });
+        return;
+      }
       dispatch(getOrderDetailsRequest(orderId));
     }
-  }, [dispatch, orderId]);
+  }, [dispatch, orderId, navigate]);
 
   useEffect(() => {
     // Hide specific nav links on order detail page
@@ -56,19 +63,9 @@ function OrderDetail() {
   }, []);
 
   const displayOrder = currentOrder;
-  const isDisplayOrderNumber = (value) => typeof value === "string" && value.startsWith("INF-");
 
-  const apiOrderId =
-    displayOrder?._id ||
-    displayOrder?.order_id ||
-    displayOrder?.orderUuid ||
-    displayOrder?.uuid ||
-    (!isDisplayOrderNumber(displayOrder?.id) ? displayOrder?.id : null) || orderId;
-
-  const displayOrderId =
-    displayOrder?.orderNumber ||
-    displayOrder?.orderNo ||
-    displayOrder?.id;
+  const apiOrderId = getOrderApiId(displayOrder) || orderId;
+  const displayOrderId = getDisplayOrderNumber(displayOrder);
   
   const cartItems = displayOrder?.items || [];
   const deliveryCharge = displayOrder?.amount?.delivery ?? ((cartItems.length > 0) ? (displayOrder?.shippingCharge ?? 99) : 0);
@@ -97,7 +94,7 @@ function OrderDetail() {
 
   const handleReviewClick = (item) => {
     const userId = user?.id || user?.userId || user?._id || 'u1';
-    const currOrderId = displayOrder?.id || displayOrder?._id || displayOrder?.orderId || orderId;
+    const currOrderId = apiOrderId;
     
     let productId = '';
     if (typeof item === 'string') {
@@ -183,7 +180,7 @@ function OrderDetail() {
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h1 className="text-2xl font-extrabold text-[#0F172A]">
-                    Order #{displayOrder?.id || displayOrder?._id || displayOrder?.orderId || orderId}
+                    Order #{displayOrderId || apiOrderId}
                   </h1>
                   <span className={`inline-flex items-center rounded bg-blue-50 px-2.5 py-0.5 text-[11px] font-extrabold tracking-wider uppercase ${isCancelled ? 'text-red-700 bg-red-50' : 'text-[#1E3A8A]'}`}>
                     {orderStatus}
@@ -233,7 +230,7 @@ function OrderDetail() {
                               </p>
                               {String(orderStatus).toLowerCase().includes('delivered') && (() => {
                                 const userId = user?.id || user?.userId || user?._id || 'u1';
-                                const currOrderId = displayOrder?.id || displayOrder?._id || displayOrder?.orderId || orderId;
+                                const currOrderId = apiOrderId;
                                 
                                 let pId = '';
                                 if (typeof item === 'string') {
