@@ -14,3 +14,19 @@ export const deleteReviewApi = async (id) => {
   const response = await api.delete(`/reviews/${id}`);
   return response.data;
 };
+
+// Admin APIs
+export const getAdminReviewsApi = async () => {
+  const response = await api.get('/admin/reviews');
+  return response.data;
+};
+
+export const deleteAdminReviewApi = async (id) => {
+  const response = await api.delete(`/admin/reviews/${id}`);
+  return response.data;
+};
+
+export const updateAdminReviewStatusApi = async (id, status) => {
+  const response = await api.put(`/admin/reviews/${id}/status`, { status });
+  return response.data;
+};

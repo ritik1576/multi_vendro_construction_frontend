@@ -56,6 +56,19 @@ function OrderDetail() {
   }, []);
 
   const displayOrder = currentOrder;
+  const isDisplayOrderNumber = (value) => typeof value === "string" && value.startsWith("INF-");
+
+  const apiOrderId =
+    displayOrder?._id ||
+    displayOrder?.order_id ||
+    displayOrder?.orderUuid ||
+    displayOrder?.uuid ||
+    (!isDisplayOrderNumber(displayOrder?.id) ? displayOrder?.id : null) || orderId;
+
+  const displayOrderId =
+    displayOrder?.orderNumber ||
+    displayOrder?.orderNo ||
+    displayOrder?.id;
   
   const cartItems = displayOrder?.items || [];
   const deliveryCharge = displayOrder?.amount?.delivery ?? ((cartItems.length > 0) ? (displayOrder?.shippingCharge ?? 99) : 0);
@@ -97,7 +110,9 @@ function OrderDetail() {
       productId = currOrderId || `prod_${Date.now()}`;
     }
 
-    if (newlyReviewed[`${currOrderId}_${productId}`] || hasUserReviewedOrder(userId, currOrderId, productId)) {
+    const isReviewedBackend = (typeof item === 'object' && item?.hasReviewed) || displayOrder?.hasReviewed;
+
+    if (isReviewedBackend || newlyReviewed[`${currOrderId}_${productId}`] || hasUserReviewedOrder(userId, currOrderId, productId)) {
       setToastMessage("You have already reviewed this item.");
       setTimeout(() => setToastMessage(null), 3000);
       return;
@@ -228,7 +243,9 @@ function OrderDetail() {
                                 }
                                 if (!pId) pId = currOrderId || '1';
                                 
-                                const isReviewed = newlyReviewed[`${currOrderId}_${pId}`] || hasUserReviewedOrder(userId, currOrderId, pId);
+                                const isReviewedBackend = (typeof item === 'object' && item?.hasReviewed) || displayOrder?.hasReviewed;
+                                const isReviewedLocal = newlyReviewed[`${currOrderId}_${pId}`] || hasUserReviewedOrder(userId, currOrderId, pId);
+                                const isReviewed = isReviewedBackend || isReviewedLocal;
                                 
                                 return isReviewed ? (
                                   <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1 mt-1 bg-emerald-50 px-2 py-1 rounded">

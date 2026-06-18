@@ -23,8 +23,21 @@ function ProductImage({ alt, src }) {
 }
 
 const OrderCard = ({ order, onClick, onReview, hasReviewed }) => {
-  const orderId = order.id || order._id;
-  const displayId = String(orderId).slice(-10).toUpperCase();
+  const isDisplayOrderNumber = (value) => typeof value === "string" && value.startsWith("INF-");
+
+  const apiOrderId =
+    order._id ||
+    order.order_id ||
+    order.orderUuid ||
+    order.uuid ||
+    (!isDisplayOrderNumber(order.id) ? order.id : null);
+
+  const displayOrderId =
+    order.orderNumber ||
+    order.orderNo ||
+    order.id;
+
+  const displayId = String(displayOrderId || apiOrderId).slice(-10).toUpperCase();
   const orderTotal = order.totalAmount || order.total || 0;
   const orderStatus = order.displayStatus || order.orderStatus || order.status || 'Processing';
   
@@ -63,7 +76,13 @@ const OrderCard = ({ order, onClick, onReview, hasReviewed }) => {
 
   return (
     <div 
-      onClick={() => onClick(orderId)}
+      onClick={() => {
+        if (!apiOrderId) {
+          console.error("Order API ID missing", order);
+          return;
+        }
+        onClick(apiOrderId);
+      }}
       className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden group flex flex-col"
     >
       {/* Top Bar */}

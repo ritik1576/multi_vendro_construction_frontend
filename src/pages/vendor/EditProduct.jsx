@@ -7,6 +7,9 @@ import ProductForm from '../../components/vendor/ProductForm';
 import { Edit2, ArrowLeft, Image as ImageIcon, Package, Tag, Hash, Box, FileText, AlignLeft, Trash2 } from 'lucide-react';
 import { normalizeProductImage } from '../../utils/productImages';
 import toast from 'react-hot-toast';
+import { useReviews } from '../../features/reviews/hooks/useReviews';
+import { ReviewSummary } from '../../features/reviews/components/ReviewSummary';
+import { ReviewList } from '../../features/reviews/components/ReviewList';
 
 const EditProduct = () => {
   const { productId } = useParams();
@@ -16,6 +19,8 @@ const EditProduct = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useSelector(state => state.auth);
+
+  const { reviews, averageRating, totalReviews, ratingBreakdown, isLoading: reviewsLoading } = useReviews({ productId, vendorId: user?.vendorId, role: 'vendor' });
 
   // Initialize with empty/fallback data, then update from router state
   const [productData, setProductData] = useState({
@@ -234,6 +239,37 @@ const EditProduct = () => {
                   </div>
                 </div>
 
+              </div>
+            </div>
+
+            {/* Product Reviews Section (Read-Only) */}
+            <div className="mt-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Customer Reviews</h3>
+              </div>
+              <div className="p-6">
+                {reviewsLoading ? (
+                  <p className="text-sm font-medium text-slate-500">Loading reviews...</p>
+                ) : totalReviews > 0 ? (
+                  <div className="flex flex-col gap-6">
+                    <div className="w-full lg:w-1/3 shrink-0">
+                      <ReviewSummary 
+                        averageRating={averageRating} 
+                        totalReviews={totalReviews} 
+                        breakdown={ratingBreakdown} 
+                      />
+                    </div>
+                    <div className="w-full border-t border-slate-100 pt-6">
+                      <ReviewList 
+                        reviews={reviews} 
+                        role="vendor" 
+                        readOnly={true}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm font-medium text-slate-500 italic">No reviews yet for this product.</p>
+                )}
               </div>
             </div>
           </div>

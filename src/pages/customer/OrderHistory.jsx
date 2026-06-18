@@ -67,7 +67,14 @@ const OrderHistory = () => {
 
   const handleReviewClick = (order, product) => {
     const userId = user?.id || user?.userId || user?._id || 'u1';
-    const orderId = order.id || order._id;
+    const isDisplayOrderNumber = (value) => typeof value === "string" && value.startsWith("INF-");
+
+    const apiOrderId =
+      order._id ||
+      order.order_id ||
+      order.orderUuid ||
+      order.uuid ||
+      (!isDisplayOrderNumber(order.id) ? order.id : null) || order._id;
     
     let productId = '';
     if (typeof product === 'string') {
@@ -77,21 +84,23 @@ const OrderHistory = () => {
     }
     
     if (!productId) {
-      productId = orderId || `prod_${Date.now()}`; // Fallback to ensure submission works
+      productId = apiOrderId || `prod_${Date.now()}`; // Fallback to ensure submission works
     }
 
-    if (newlyReviewed[`${orderId}_${productId}`] || hasUserReviewedOrder(userId, orderId, productId)) {
+    const isReviewedBackend = (typeof product === 'object' && product?.hasReviewed) || order?.hasReviewed;
+    
+    if (isReviewedBackend || newlyReviewed[`${apiOrderId}_${productId}`] || hasUserReviewedOrder(userId, apiOrderId, productId)) {
       setToastMessage("You have already reviewed this item.");
       setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
     setReviewModalData({
-      orderId,
+      orderId: apiOrderId,
       productId,
       vendorId: product?.vendorId || order.vendorId || 'v1',
       customerName: user?.fullName || user?.name || 'Customer',
-      productName: typeof product === 'string' ? `Product ${product}` : (product?.productName || product?.name || `Order #${orderId}`)
+      productName: typeof product === 'string' ? `Product ${product}` : (product?.productName || product?.name || `Order #${apiOrderId}`)
     });
   };
 
@@ -228,10 +237,37 @@ const OrderHistory = () => {
                   } else if (product) {
                     pId = product.productId || product.product_id || product.product?.id || product.product?._id || product.id || product._id || product.item_id;
                   }
-                  if (!pId) pId = order.id || order._id || '1';
                   
-                  const oId = order.id || order._id;
-                  const isReviewed = newlyReviewed[`${oId}_${pId}`] || hasUserReviewedOrder(userId, oId, pId);
+                  console.log("FULL ORDER OBJECT:", order);
+                  console.log("API ID candidates:", {
+                    _id: order._id,
+                    id: order.id,
+                    orderId: order.orderId,
+                    order_id: order.order_id,
+                    uuid: order.uuid,
+                    orderUuid: order.orderUuid
+                  });
+
+                  const isDisplayOrderNumber = (value) => typeof value === "string" && value.startsWith("INF-");
+
+                  const apiOrderId =
+                    order._id ||
+                    order.order_id ||
+                    order.orderUuid ||
+                    order.uuid ||
+                    (!isDisplayOrderNumber(order.id) ? order.id : null);
+
+                  const displayOrderId =
+                    order.orderNumber ||
+                    order.orderNo ||
+                    order.id;
+
+                  if (!pId) pId = apiOrderId || '1';
+                  
+                  // Use backend fields if available, otherwise fallback
+                  const isReviewedBackend = product?.hasReviewed === true || order?.hasReviewed === true;
+                  const isReviewedLocal = newlyReviewed[`${apiOrderId}_${pId}`] || hasUserReviewedOrder(userId, apiOrderId, pId);
+                  const isReviewed = isReviewedBackend || isReviewedLocal;
                   
                   return (
                     <OrderCard 
