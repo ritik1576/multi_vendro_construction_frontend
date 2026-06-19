@@ -44,6 +44,7 @@ export const deleteVendorOrder = async (vendorId, orderId) => {
 
 export const updateOrderStatus = async (vendorId, orderId, status) => {
   if (!vendorId) throw new Error('Vendor ID is required');
-  const response = await api.put(`/vendor/${vendorId}/orders/${orderId}/status`, { status }, { headers: getAuthHeaders() });
+  const safeStatus = (status || '').toString().toLowerCase().trim();
+  const response = await api.put(`/vendor/${vendorId}/orders/${orderId}/status`, { status: safeStatus }, { headers: getAuthHeaders() });
   return response.data?.data || response.data;
 };

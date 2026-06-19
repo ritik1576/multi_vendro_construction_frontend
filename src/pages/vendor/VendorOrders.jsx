@@ -107,8 +107,19 @@ const VendorOrders = () => {
     ), { duration: Infinity });
   };
 
-  const handleUpdateStatus = (orderId, status) => {
-    dispatch(updateVendorOrderStatusRequest(vendorId, orderId, status));
+  const handleUpdateStatus = (orderId, requestedStatus, currentStatus) => {
+    if (loading.updateOrder === orderId) return; // Prevent double click
+    
+    const s = (currentStatus || '').toLowerCase();
+    const allowed = ALLOWED_ORDER_ACTIONS[s] || [];
+    
+    const isValidTransition = allowed.some(action => action.actionStatus === requestedStatus);
+    if (!isValidTransition) {
+      toast.error('Invalid status transition requested');
+      return;
+    }
+    
+    dispatch(updateVendorOrderStatusRequest(vendorId, orderId, requestedStatus));
   };
 
   const pendingCount = orders.filter(o => ['Pending Approval', 'Pending'].includes(o.status || o.orderStatus)).length;
@@ -125,15 +136,16 @@ const VendorOrders = () => {
   const formatAmount = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
 
   const filteredOrders = orders.map(o => ({
-    id: o.orderId || o.id || o._id,
-    displayId: o.orderNumber || o.orderId || o.id || o._id || '',
+    ...o,
+    apiOrderId: o.id || o.orderId || o._id,
+    displayId: o.orderNumber || o.displayOrderId || o.orderNo || o.orderId || o.id || o._id || '',
     date: o.placedAt ? new Date(o.placedAt).toLocaleDateString() : (o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '')),
     time: o.placedAt ? new Date(o.placedAt).toLocaleTimeString() : (o.time || (o.createdAt ? new Date(o.createdAt).toLocaleTimeString() : '')),
     customer: o.customer?.fullName || o.customerName || o.customer || '',
     location: o.deliveryAddress?.city || o.deliveryAddress?.state || o.location || o.shippingAddress?.city || '',
     items: o.itemsSummary || (Array.isArray(o.items) ? `${o.items.length} items` : ''),
     total: formatAmount(o.totalAmount || o.amount || o.total || 0),
-    status: o.orderStatus || o.status || ''
+    status: o.orderStatus || o.status || o.displayStatus || ''
   })).filter(o => {
     const s = searchTerm.toLowerCase();
     const matchesSearch = !s || o.displayId?.toLowerCase().includes(s) || o.customer?.toLowerCase().includes(s);
@@ -297,7 +309,7 @@ const VendorOrders = () => {
           )}
 
           {!isOrdersLoading && !error && displayOrders.map((order, idx) => (
-            <div key={order.id || idx} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex flex-col gap-5">
+            <div key={order.apiOrderId || idx} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex flex-col gap-5">
               
               {/* Top Row: Order Number, Date, Status */}
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
@@ -345,14 +357,14 @@ const VendorOrders = () => {
               <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 {(() => {
                   const s = (order.status || '').toLowerCase();
-                  const isUpdating = loading.updateOrder;
+                  const isUpdating = loading.updateOrder === order.apiOrderId;
                   const availableActions = ALLOWED_ORDER_ACTIONS[s] || [];
 
                   return availableActions.map((action, idx) => (
                     <button
                       key={idx}
                       disabled={isUpdating}
-                      onClick={() => handleUpdateStatus(order.id, action.actionStatus)}
+                      onClick={() => handleUpdateStatus(order.apiOrderId, action.actionStatus, s)}
                       className={`px-5 py-2.5 text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95 disabled:opacity-50 ${action.style}`}
                     >
                       {action.label}
@@ -360,14 +372,14 @@ const VendorOrders = () => {
                   ));
                 })()}
                 <button 
-                  onClick={() => fetchOrderDetails(order.id)}
+                  onClick={() => fetchOrderDetails(order.apiOrderId)}
                   className="flex items-center justify-center gap-2 px-5 py-2.5 border border-slate-200 bg-white hover:border-[#1E3A8A] text-slate-700 hover:text-[#1E3A8A] text-[13px] font-extrabold rounded-lg shadow-sm transition-colors"
                 >
                   <Eye className="w-4 h-4 text-slate-400" />
                   View Details
                 </button>
                 <button 
-                  onClick={() => handleDelete(order.id)}
+                  onClick={() => handleDelete(order.apiOrderId)}
                   className="p-2.5 border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition-colors"
                   title="Delete Order"
                 >
@@ -581,8 +593,9 @@ const VendorOrders = () => {
             {/* Footer */}
             <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex gap-3">
               {(() => {
-                  const s = (orderDetails?.orderStatus || orderDetails?.status || '').toLowerCase();
-                  const isUpdating = loading.updateOrder;
+                  const s = (orderDetails?.orderStatus || orderDetails?.status || orderDetails?.displayStatus || '').toLowerCase();
+                  const currentApiOrderId = orderDetails?.id || orderDetails?.orderId || orderDetails?._id;
+                  const isUpdating = loading.updateOrder === currentApiOrderId;
                   const availableActions = ALLOWED_ORDER_ACTIONS[s] || [];
 
                   return availableActions.map((action, idx) => (
@@ -590,7 +603,7 @@ const VendorOrders = () => {
                       key={idx}
                       disabled={isUpdating}
                       onClick={() => {
-                        handleUpdateStatus(orderDetails.orderId || orderDetails.id, action.actionStatus);
+                        handleUpdateStatus(currentApiOrderId, action.actionStatus, s);
                         closeDrawer();
                       }}
                       className={`flex-1 py-2.5 text-[13px] font-extrabold rounded-lg shadow-sm transition-colors active:scale-95 disabled:opacity-50 ${action.style}`}
