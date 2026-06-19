@@ -3,13 +3,15 @@ import VendorNavbar from './VendorNavbar';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, PlusSquare, ShoppingCart, 
-  Archive, LineChart, IndianRupee, Undo2, Ticket, Settings, Menu, X 
+  Archive, LineChart, IndianRupee, Undo2, Ticket, Settings, Menu, X, User, ShieldCheck 
 } from 'lucide-react';
 
 const sidebarItems = [
   { name: 'Dashboard', path: '/vendor/dashboard', icon: LayoutDashboard },
   { name: 'Orders', path: '/vendor/orders', icon: ShoppingCart },
   { name: 'Inventory', path: '/vendor/inventory', icon: Archive },
+  { name: 'Profile', path: '/vendor/profile', icon: User },
+  { name: 'KYC Verification', path: '/vendor/kyc', icon: ShieldCheck },
 ];
 
 const VendorLayout = ({ children }) => {

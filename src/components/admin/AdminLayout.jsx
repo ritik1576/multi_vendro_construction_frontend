@@ -3,7 +3,7 @@ import AdminNavbar from './AdminNavbar';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, UserCheck, Package, 
-  ShoppingCart, BarChart3, Settings, Menu, X, MessageSquare, Ticket
+  ShoppingCart, BarChart3, Settings, Menu, X, MessageSquare, Ticket, User, FileCheck 
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -15,6 +15,8 @@ const sidebarItems = [
   { name: 'Reviews', path: '/admin/reviews', icon: MessageSquare },
   { name: 'Coupons', path: '/admin/coupons', icon: Ticket },
   { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
+  { name: 'Profile', path: '/admin/profile', icon: User },
+  { name: 'Vendor KYC', path: '/admin/vendor-kyc', icon: FileCheck },
 ];
 
 const AdminLayout = ({ children }) => {

@@ -47,6 +47,15 @@ import AdminReviews from '../features/reviews/pages/AdminReviews';
 import AdminCoupons from '../features/coupons/pages/AdminCoupons';
 import VendorCoupons from '../features/coupons/pages/VendorCoupons';
 
+// Profile Pages
+import CustomerProfile from '../features/profile/pages/CustomerProfile';
+import VendorProfile from '../features/profile/pages/VendorProfile';
+import AdminProfile from '../features/profile/pages/AdminProfile';
+
+// KYC Pages
+import VendorKyc from '../features/profile/pages/VendorKyc';
+import AdminVendorKyc from '../features/profile/pages/AdminVendorKyc';
+
 const RootRoute = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
@@ -110,6 +119,7 @@ const AppRoutes = () => {
         <Route path="/orders" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage role="customer" /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
 
         {/* Vendor Routes */}
         <Route path="/vendor/approval-status" element={<VendorBaseRoute><VendorApprovalStatus /></VendorBaseRoute>} />
@@ -120,6 +130,8 @@ const AppRoutes = () => {
         <Route path="/vendor/inventory" element={<VendorRoute><Inventory /></VendorRoute>} />
         <Route path="/vendor/notifications" element={<VendorRoute><NotificationsPage role="vendor" /></VendorRoute>} />
         <Route path="/vendor/reviews" element={<VendorRoute><VendorReviews /></VendorRoute>} />
+        <Route path="/vendor/profile" element={<VendorRoute><VendorProfile /></VendorRoute>} />
+        <Route path="/vendor/kyc" element={<VendorRoute><VendorKyc /></VendorRoute>} />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -137,6 +149,8 @@ const AppRoutes = () => {
         <Route path="/admin/notifications" element={<AdminProtectedRoute><NotificationsPage role="admin" /></AdminProtectedRoute>} />
         <Route path="/admin/reviews" element={<AdminProtectedRoute><AdminReviews /></AdminProtectedRoute>} />
         <Route path="/admin/coupons" element={<AdminProtectedRoute><AdminCoupons /></AdminProtectedRoute>} />
+        <Route path="/admin/profile" element={<AdminProtectedRoute><AdminProfile /></AdminProtectedRoute>} />
+        <Route path="/admin/vendor-kyc" element={<AdminProtectedRoute><AdminVendorKyc /></AdminProtectedRoute>} />
       </Routes>
     </Router>
   );
