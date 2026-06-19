@@ -16,7 +16,6 @@ const sidebarItems = [
   { name: 'Coupons', path: '/admin/coupons', icon: Ticket },
   { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
   { name: 'Profile', path: '/admin/profile', icon: User },
-  { name: 'Vendor KYC', path: '/admin/vendor-kyc', icon: FileCheck },
 ];
 
 const AdminLayout = ({ children }) => {

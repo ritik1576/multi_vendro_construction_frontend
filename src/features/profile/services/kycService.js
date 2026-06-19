@@ -6,33 +6,33 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-// Uses multipart/form-data for files. Axios automatically sets the correct Content-Type 
-// when FormData is passed, so we do not explicitly set it.
-const getMultipartHeaders = () => {
-  return getAuthHeaders();
-};
 
-export const getVendorKycApi = async (vendorId) => {
+
+export const getVendorKycStatusApi = async (vendorId, customToken = null) => {
   if (!vendorId) throw new Error('Vendor ID is required');
-  const response = await api.get(`/vendors/${vendorId}/kyc`, { headers: getAuthHeaders() });
+  const headers = customToken ? { Authorization: `Bearer ${customToken}` } : getAuthHeaders();
+  const response = await api.get(`/vendor/kyc/status?vendorId=${vendorId}`, { headers });
   return response.data?.data || response.data;
 };
 
-export const submitVendorKycApi = async (vendorId, formData) => {
-  if (!vendorId) throw new Error('Vendor ID is required');
-  const response = await api.post(`/vendors/${vendorId}/kyc`, formData, { headers: getMultipartHeaders() });
+export const getVendorKycDetailsApi = async (vendorId) => {
+  const response = await api.get(`/admin/vendor-kyc/${vendorId}`);
   return response.data?.data || response.data;
 };
 
-
-
-export const getAdminVendorKycApi = async () => {
-  const response = await api.get('/admin/kyc', { headers: getAuthHeaders() });
+export const submitVendorKycApi = async (formData) => {
+  const response = await api.post(`/vendor/kyc`, formData, { headers: { ...getAuthHeaders() } });
   return response.data?.data || response.data;
 };
 
-export const updateKycStatusApi = async (vendorId, payload) => {
+export const approveVendorKycApi = async (vendorId) => {
   if (!vendorId) throw new Error('Vendor ID is required');
-  const response = await api.put(`/admin/kyc/${vendorId}/status`, payload, { headers: getAuthHeaders() });
+  const response = await api.put(`/admin/vendors/${vendorId}/approve`, {}, { headers: getAuthHeaders() });
+  return response.data?.data || response.data;
+};
+
+export const rejectVendorKycApi = async (vendorId) => {
+  if (!vendorId) throw new Error('Vendor ID is required');
+  const response = await api.put(`/admin/vendors/${vendorId}/reject`, {}, { headers: getAuthHeaders() });
   return response.data?.data || response.data;
 };

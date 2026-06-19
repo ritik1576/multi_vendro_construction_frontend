@@ -54,7 +54,6 @@ import AdminProfile from '../features/profile/pages/AdminProfile';
 
 // KYC Pages
 import VendorKyc from '../features/profile/pages/VendorKyc';
-import AdminVendorKyc from '../features/profile/pages/AdminVendorKyc';
 
 const RootRoute = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
@@ -150,7 +149,6 @@ const AppRoutes = () => {
         <Route path="/admin/reviews" element={<AdminProtectedRoute><AdminReviews /></AdminProtectedRoute>} />
         <Route path="/admin/coupons" element={<AdminProtectedRoute><AdminCoupons /></AdminProtectedRoute>} />
         <Route path="/admin/profile" element={<AdminProtectedRoute><AdminProfile /></AdminProtectedRoute>} />
-        <Route path="/admin/vendor-kyc" element={<AdminProtectedRoute><AdminVendorKyc /></AdminProtectedRoute>} />
       </Routes>
     </Router>
   );

@@ -17,6 +17,7 @@ import {
   resetPasswordFailure
 } from '../redux/authActions';
 import authService from '../services/authService';
+import { getVendorKycStatusApi } from '../features/profile/services/kycService';
 import toast from 'react-hot-toast';
 
 function* handleRegister(action) {
@@ -34,9 +35,11 @@ function* handleRegister(action) {
     }
     
     if (action.payload.isVendor) {
+      const vendorId = responseData.vendorId || responseData.user?.id || responseData.user?._id || responseData._id || responseData.id;
       yield put(registerSuccess({ 
         isVendor: true, 
-        message: 'Registration submitted successfully. Your account is under review and requires admin approval before login.' 
+        vendorId,
+        message: 'Registration successful. Please complete your KYC verification.' 
       }));
     } else {
       // The backend register doesn't return a token, so we auto-login to get one
@@ -94,11 +97,31 @@ function* handleLogin(action) {
     if (role === 'vendor') {
       userDetails.vendorId = userDetails.vendorId || userDetails.vendor?.id || userDetails.vendor?._id || userDetails._id || userDetails.id;
       userDetails.userId = userDetails.userId || userDetails.user?.id || userDetails._id || userDetails.id;
-    }
-
-    if (role === 'vendor' && userDetails.status === 'pending') {
-      yield put(loginFailure('Your vendor account is under review. Please login after admin approval.'));
-      return;
+      
+      try {
+        const statusResponse = yield call(getVendorKycStatusApi, userDetails.vendorId, token);
+        const kycStatus = statusResponse?.kycStatus;
+        const vendorStatus = statusResponse?.vendorStatus;
+        
+        if (!kycStatus) {
+           userDetails.needsKyc = true;
+        } else if (kycStatus === 'Rejected' || vendorStatus === 'Rejected') {
+           yield put(loginFailure('Your vendor account or KYC was rejected. Please contact InfraMart support.'));
+           return;
+        } else if (kycStatus === 'UnderReview' && vendorStatus === 'Pending') {
+           yield put(loginFailure('Your KYC is under review. Dashboard access will be available after admin approval.'));
+           return;
+        } else if (kycStatus === 'Approved' && vendorStatus === 'Pending') {
+           yield put(loginFailure('Your vendor account is awaiting admin approval.'));
+           return;
+        }
+      } catch (err) {
+        if (err.response?.status === 404) {
+          userDetails.needsKyc = true;
+        } else {
+          userDetails.needsKyc = true;
+        }
+      }
     }
 
     yield put(loginSuccess({ user: userDetails, token }));

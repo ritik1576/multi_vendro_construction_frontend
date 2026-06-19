@@ -3,35 +3,35 @@
 export const validateKycField = (name, value) => {
   let error = '';
   switch (name) {
-    case 'businessLegalName':
+    case 'BusinessLegalName':
       if (!value || value.trim().length < 3) error = 'Business Legal Name must be at least 3 characters.';
       break;
-    case 'bankAccountHolderName':
+    case 'BankAccountName':
       if (!value || value.trim().length < 3) error = 'Bank Account Holder Name must be at least 3 characters.';
       break;
-    case 'gstNumber':
+    case 'GstNumber':
       if (value && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim())) {
         error = 'Invalid GST Number format.';
       }
       break;
-    case 'panNumber':
+    case 'PanNumber':
       if (!value) {
         error = 'PAN Number is required.';
       } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value.trim())) {
         error = 'Invalid PAN Number format.';
       }
       break;
-    case 'businessAddress':
+    case 'BusinessAddress':
       if (!value || value.trim().length < 10) error = 'Business Address must be at least 10 characters.';
       break;
-    case 'bankAccountNumber':
+    case 'BankAccountNumber':
       if (!value) {
         error = 'Bank Account Number is required.';
       } else if (!/^\d{9,18}$/.test(value.trim())) {
         error = 'Bank Account Number must be between 9 and 18 digits.';
       }
       break;
-    case 'ifscCode':
+    case 'IFSC':
       if (!value) {
         error = 'IFSC Code is required.';
       } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value.trim())) {
@@ -54,16 +54,16 @@ export const validateFile = (name, file) => {
   const isImage = file.type.startsWith('image/');
 
   switch (name) {
-    case 'aadhaarCard':
+    case 'AadhaarPdf':
       if (!isPdf) return 'Aadhaar Card must be a PDF.';
       break;
-    case 'gstCertificate':
+    case 'GstCertificateUpload':
       if (!isPdf && !isImage) return 'GST Certificate must be PDF or image.';
       break;
-    case 'panCard':
+    case 'PanCardUpload':
       if (!isImage) return 'PAN Card must be an image.';
       break;
-    case 'bankStatement':
+    case 'BankStatementUpload':
       if (!isPdf && !isImage) return 'Bank Statement must be PDF or image.';
       break;
     default:
@@ -74,11 +74,11 @@ export const validateFile = (name, file) => {
 
 export const calculateCompletionPercentage = (formData, fileData) => {
   const textFields = [
-    'businessLegalName', 'bankAccountHolderName', 'panNumber', 
-    'businessAddress', 'bankAccountNumber', 'ifscCode' // gstNumber is optional
+    'BusinessLegalName', 'BankAccountName', 'PanNumber', 
+    'BusinessAddress', 'BankAccountNumber', 'IFSC' // GstNumber is optional
   ];
   
-  const fileFields = ['aadhaarCard', 'panCard', 'bankStatement']; // gstCertificate is conditional/optional based on gstNumber but let's count required files.
+  const fileFields = ['AadhaarPdf', 'PanCardUpload', 'BankStatementUpload'];
   
   const totalFields = textFields.length + fileFields.length;
   let filledFields = 0;

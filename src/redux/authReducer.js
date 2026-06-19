@@ -25,6 +25,7 @@ const initialState = {
   isLoading: false,
   error: null,
   successMessage: null,
+  pendingVendorId: null,
 };
 
 const authReducer = (state = initialState, action) => {
@@ -62,6 +63,7 @@ const authReducer = (state = initialState, action) => {
           error: null,
           successMessage: action.payload.message,
           registrationSuccess: true,
+          pendingVendorId: action.payload.vendorId,
         };
       }
       return {

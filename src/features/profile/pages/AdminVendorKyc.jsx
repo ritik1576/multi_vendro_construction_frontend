@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import KycStatusBadge from '../components/KycStatusBadge';
 import { FileCheck, Search, Eye, CheckCircle, XCircle } from 'lucide-react';
-import { getAdminVendorKycApi } from '../services/kycService';
+import { approveVendorKycApi, rejectVendorKycApi } from '../services/kycService';
 import toast from 'react-hot-toast';
 
 const AdminVendorKyc = () => {
@@ -13,18 +13,38 @@ const AdminVendorKyc = () => {
     const fetchKycList = async () => {
       try {
         setLoading(true);
-        // await getAdminVendorKycApi(); // Real API call
         // Using empty array to simulate Scaffold without fake data
         setKycRequests([]); 
       } catch (error) {
         console.error('Failed to fetch KYC requests:', error);
-        // Optional: toast.error('Failed to fetch KYC requests');
       } finally {
         setLoading(false);
       }
     };
     fetchKycList();
   }, []);
+
+  const handleApprove = async (vendorId) => {
+    try {
+      await approveVendorKycApi(vendorId);
+      toast.success('Vendor KYC Approved');
+      // Refetch list logic would go here
+    } catch (error) {
+      toast.error('Failed to approve KYC');
+      console.error(error);
+    }
+  };
+
+  const handleReject = async (vendorId) => {
+    try {
+      await rejectVendorKycApi(vendorId);
+      toast.success('Vendor KYC Rejected');
+      // Refetch list logic would go here
+    } catch (error) {
+      toast.error('Failed to reject KYC');
+      console.error(error);
+    }
+  };
 
   return (
     <AdminLayout>
@@ -54,7 +74,7 @@ const AdminVendorKyc = () => {
           <div className="flex gap-2 w-full sm:w-auto">
              <select className="w-full sm:w-auto px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/20">
                <option value="all">All Statuses</option>
-               <option value="pending">Pending</option>
+               <option value="pending">Under Review</option>
                <option value="approved">Approved</option>
                <option value="rejected">Rejected</option>
              </select>
@@ -100,10 +120,10 @@ const AdminVendorKyc = () => {
                   kycRequests.map((req) => (
                     <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-6 py-4 text-[14px] font-extrabold text-[#0F172A]">{req.vendorName}</td>
-                      <td className="px-6 py-4 text-[13px] font-bold text-slate-700">{req.businessLegalName}</td>
-                      <td className="px-6 py-4 text-[13px] font-mono text-slate-600">{req.gstNumber || '-'}</td>
-                      <td className="px-6 py-4 text-[13px] font-mono text-slate-600">{req.panNumber}</td>
-                      <td className="px-6 py-4"><KycStatusBadge status={req.status} /></td>
+                      <td className="px-6 py-4 text-[13px] font-bold text-slate-700">{req.BusinessLegalName}</td>
+                      <td className="px-6 py-4 text-[13px] font-mono text-slate-600">{req.GstNumber || '-'}</td>
+                      <td className="px-6 py-4 text-[13px] font-mono text-slate-600">{req.PanNumber}</td>
+                      <td className="px-6 py-4"><KycStatusBadge status={req.kycStatus === 'UnderReview' ? 'pending' : req.kycStatus.toLowerCase()} /></td>
                       <td className="px-6 py-4 text-[13px] font-medium text-slate-500">
                         {new Date(req.submittedAt).toLocaleDateString()}
                       </td>
@@ -112,10 +132,18 @@ const AdminVendorKyc = () => {
                           <button className="p-1.5 text-slate-400 hover:text-[#1E3A8A] hover:bg-blue-50 rounded transition-colors" title="View Details">
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="Approve">
+                          <button 
+                            onClick={() => handleApprove(req.vendorId)}
+                            className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" 
+                            title="Approve"
+                          >
                             <CheckCircle className="w-4 h-4" />
                           </button>
-                          <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Reject">
+                          <button 
+                            onClick={() => handleReject(req.vendorId)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" 
+                            title="Reject"
+                          >
                             <XCircle className="w-4 h-4" />
                           </button>
                         </div>

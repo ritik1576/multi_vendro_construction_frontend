@@ -32,7 +32,11 @@ const Login = () => {
     if (isAuthenticated) {
       setFormData({ email: '', password: '' });
       if (user?.role === 'vendor') {
-        navigate('/vendor/dashboard', { replace: true });
+        if (user?.needsKyc) {
+          navigate('/vendor/kyc', { replace: true });
+        } else {
+          navigate('/vendor/dashboard', { replace: true });
+        }
       } else {
         navigate('/products', { replace: true });
       }

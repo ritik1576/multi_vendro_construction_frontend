@@ -1,11 +1,19 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import VendorLayout from '../../../components/vendor/VendorLayout';
+import Navbar from '../../../components/landing/Navbar';
 import { useVendorKyc } from '../hooks/useVendorKyc';
 import VendorKycForm from '../components/VendorKycForm';
 import KycStatusBadge from '../components/KycStatusBadge';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
 
 const VendorKyc = () => {
+  const pendingVendorId = sessionStorage.getItem('pendingVendorId');
+  const { user } = useSelector((state) => state.auth);
+  const authVendorId = user?.vendorId || user?.id || user?._id || user?.userId;
+  const isOnboarding = Boolean(pendingVendorId) && !authVendorId;
+  const vendorId = isOnboarding ? pendingVendorId : authVendorId;
+
   const {
     formData,
     fileData,
@@ -18,23 +26,26 @@ const VendorKyc = () => {
     handleTextChange,
     handleFileChange,
     handleSubmit
-  } = useVendorKyc();
+  } = useVendorKyc(vendorId, isOnboarding);
+
+  const LayoutWrapper = isOnboarding ? React.Fragment : VendorLayout;
 
   if (fetchLoading) {
     return (
-      <VendorLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="w-8 h-8 border-4 border-[#1E3A8A]/30 border-t-[#1E3A8A] rounded-full animate-spin" />
+      <LayoutWrapper>
+        {isOnboarding && <Navbar />}
+        <div className={`flex items-center justify-center ${isOnboarding ? 'h-[calc(100vh-64px)] bg-[#0A1128]' : 'min-h-[400px]'}`}>
+          <div className="w-8 h-8 border-4 border-[#EA580C]/30 border-t-[#EA580C] rounded-full animate-spin" />
         </div>
-      </VendorLayout>
+      </LayoutWrapper>
     );
   }
 
+  // Form is editable ONLY if status is not_submitted
   const isLocked = status !== 'not_submitted';
 
-  return (
-    <VendorLayout>
-      <div className="max-w-4xl mx-auto pb-10 space-y-6">
+  const content = (
+    <div className={`max-w-4xl mx-auto space-y-6 ${isOnboarding ? 'pt-8' : 'pb-10'}`}>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -91,9 +102,21 @@ const VendorKyc = () => {
             onFileChange={handleFileChange}
             onSubmit={handleSubmit}
           />
-        </div>
       </div>
-    </VendorLayout>
+    </div>
+  );
+
+  return (
+    <LayoutWrapper>
+      {isOnboarding && <Navbar />}
+      {isOnboarding ? (
+        <div className="min-h-[calc(100vh-64px)] bg-[#f8fafc] px-4">
+          {content}
+        </div>
+      ) : (
+        content
+      )}
+    </LayoutWrapper>
   );
 };
 

@@ -11,7 +11,6 @@ const sidebarItems = [
   { name: 'Orders', path: '/vendor/orders', icon: ShoppingCart },
   { name: 'Inventory', path: '/vendor/inventory', icon: Archive },
   { name: 'Profile', path: '/vendor/profile', icon: User },
-  { name: 'KYC Verification', path: '/vendor/kyc', icon: ShieldCheck },
 ];
 
 const VendorLayout = ({ children }) => {

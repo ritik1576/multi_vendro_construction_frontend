@@ -21,60 +21,60 @@ const VendorKycForm = ({
             <label className="block text-sm font-bold text-[#0F172A] mb-1">Business Legal Name *</label>
             <input
               type="text"
-              name="businessLegalName"
-              value={formData.businessLegalName}
+              name="BusinessLegalName"
+              value={formData.BusinessLegalName}
               onChange={onTextChange}
               disabled={disabled || loading}
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 transition-colors disabled:bg-slate-50 disabled:text-slate-500 ${
-                errors.businessLegalName ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
+                errors.BusinessLegalName ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
               }`}
             />
-            {errors.businessLegalName && <p className="mt-1 text-xs font-bold text-red-600">{errors.businessLegalName}</p>}
+            {errors.BusinessLegalName && <p className="mt-1 text-xs font-bold text-red-600">{errors.BusinessLegalName}</p>}
           </div>
 
           <div className="md:col-span-2">
             <label className="block text-sm font-bold text-[#0F172A] mb-1">Business Address *</label>
             <textarea
-              name="businessAddress"
-              value={formData.businessAddress}
+              name="BusinessAddress"
+              value={formData.BusinessAddress}
               onChange={onTextChange}
               disabled={disabled || loading}
               rows={3}
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 transition-colors disabled:bg-slate-50 disabled:text-slate-500 resize-none ${
-                errors.businessAddress ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
+                errors.BusinessAddress ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
               }`}
             />
-            {errors.businessAddress && <p className="mt-1 text-xs font-bold text-red-600">{errors.businessAddress}</p>}
+            {errors.BusinessAddress && <p className="mt-1 text-xs font-bold text-red-600">{errors.BusinessAddress}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-bold text-[#0F172A] mb-1">GST Number (Optional)</label>
             <input
               type="text"
-              name="gstNumber"
-              value={formData.gstNumber}
+              name="GstNumber"
+              value={formData.GstNumber}
               onChange={onTextChange}
               disabled={disabled || loading}
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 transition-colors disabled:bg-slate-50 disabled:text-slate-500 uppercase ${
-                errors.gstNumber ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
+                errors.GstNumber ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
               }`}
             />
-            {errors.gstNumber && <p className="mt-1 text-xs font-bold text-red-600">{errors.gstNumber}</p>}
+            {errors.GstNumber && <p className="mt-1 text-xs font-bold text-red-600">{errors.GstNumber}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-bold text-[#0F172A] mb-1">PAN Number *</label>
             <input
               type="text"
-              name="panNumber"
-              value={formData.panNumber}
+              name="PanNumber"
+              value={formData.PanNumber}
               onChange={onTextChange}
               disabled={disabled || loading}
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 transition-colors disabled:bg-slate-50 disabled:text-slate-500 uppercase ${
-                errors.panNumber ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
+                errors.PanNumber ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
               }`}
             />
-            {errors.panNumber && <p className="mt-1 text-xs font-bold text-red-600">{errors.panNumber}</p>}
+            {errors.PanNumber && <p className="mt-1 text-xs font-bold text-red-600">{errors.PanNumber}</p>}
           </div>
         </div>
       </div>
@@ -89,45 +89,45 @@ const VendorKycForm = ({
             <label className="block text-sm font-bold text-[#0F172A] mb-1">Account Holder Name *</label>
             <input
               type="text"
-              name="bankAccountHolderName"
-              value={formData.bankAccountHolderName}
+              name="BankAccountName"
+              value={formData.BankAccountName}
               onChange={onTextChange}
               disabled={disabled || loading}
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 transition-colors disabled:bg-slate-50 disabled:text-slate-500 ${
-                errors.bankAccountHolderName ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
+                errors.BankAccountName ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
               }`}
             />
-            {errors.bankAccountHolderName && <p className="mt-1 text-xs font-bold text-red-600">{errors.bankAccountHolderName}</p>}
+            {errors.BankAccountName && <p className="mt-1 text-xs font-bold text-red-600">{errors.BankAccountName}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-bold text-[#0F172A] mb-1">Account Number *</label>
             <input
               type="text"
-              name="bankAccountNumber"
-              value={formData.bankAccountNumber}
+              name="BankAccountNumber"
+              value={formData.BankAccountNumber}
               onChange={onTextChange}
               disabled={disabled || loading}
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 transition-colors disabled:bg-slate-50 disabled:text-slate-500 ${
-                errors.bankAccountNumber ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
+                errors.BankAccountNumber ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
               }`}
             />
-            {errors.bankAccountNumber && <p className="mt-1 text-xs font-bold text-red-600">{errors.bankAccountNumber}</p>}
+            {errors.BankAccountNumber && <p className="mt-1 text-xs font-bold text-red-600">{errors.BankAccountNumber}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-bold text-[#0F172A] mb-1">IFSC Code *</label>
             <input
               type="text"
-              name="ifscCode"
-              value={formData.ifscCode}
+              name="IFSC"
+              value={formData.IFSC}
               onChange={onTextChange}
               disabled={disabled || loading}
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 transition-colors disabled:bg-slate-50 disabled:text-slate-500 uppercase ${
-                errors.ifscCode ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
+                errors.IFSC ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20'
               }`}
             />
-            {errors.ifscCode && <p className="mt-1 text-xs font-bold text-red-600">{errors.ifscCode}</p>}
+            {errors.IFSC && <p className="mt-1 text-xs font-bold text-red-600">{errors.IFSC}</p>}
           </div>
         </div>
       </div>
@@ -140,41 +140,41 @@ const VendorKycForm = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DocumentUpload
             label="Aadhaar Card (PDF only) *"
-            name="aadhaarCard"
+            name="AadhaarPdf"
             accept="application/pdf"
-            file={fileData.aadhaarCard}
+            file={fileData.AadhaarPdf}
             onChange={onFileChange}
-            error={errors.aadhaarCard}
+            error={errors.AadhaarPdf}
             disabled={disabled || loading}
           />
 
           <DocumentUpload
             label="PAN Card (Image only) *"
-            name="panCard"
+            name="PanCardUpload"
             accept="image/*"
-            file={fileData.panCard}
+            file={fileData.PanCardUpload}
             onChange={onFileChange}
-            error={errors.panCard}
+            error={errors.PanCardUpload}
             disabled={disabled || loading}
           />
 
           <DocumentUpload
-            label={`GST Certificate (PDF/Image) ${formData.gstNumber ? '*' : ''}`}
-            name="gstCertificate"
+            label={`GST Certificate (PDF/Image) ${formData.GstNumber ? '*' : ''}`}
+            name="GstCertificateUpload"
             accept="application/pdf,image/*"
-            file={fileData.gstCertificate}
+            file={fileData.GstCertificateUpload}
             onChange={onFileChange}
-            error={errors.gstCertificate}
+            error={errors.GstCertificateUpload}
             disabled={disabled || loading}
           />
 
           <DocumentUpload
             label="Bank Statement / Passbook (PDF/Image) *"
-            name="bankStatement"
+            name="BankStatementUpload"
             accept="application/pdf,image/*"
-            file={fileData.bankStatement}
+            file={fileData.BankStatementUpload}
             onChange={onFileChange}
-            error={errors.bankStatement}
+            error={errors.BankStatementUpload}
             disabled={disabled || loading}
           />
         </div>

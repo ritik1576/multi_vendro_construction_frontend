@@ -1,38 +1,38 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
-import { submitVendorKycApi, getVendorKycApi } from '../services/kycService';
+import { submitVendorKycApi, getVendorKycStatusApi } from '../services/kycService';
 import { validateKycField, validateFile, calculateCompletionPercentage } from '../utils/kycValidators';
 
-export const useVendorKyc = () => {
-  const { user } = useSelector((state) => state.auth);
-  const vendorId = user?.vendorId || user?.id || user?._id || user?.userId;
+export const useVendorKyc = (vendorId, isOnboarding) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
-    businessLegalName: '',
-    bankAccountHolderName: '',
-    gstNumber: '',
-    panNumber: '',
-    businessAddress: '',
-    bankAccountNumber: '',
-    ifscCode: ''
+    BusinessLegalName: '',
+    BankAccountName: '',
+    GstNumber: '',
+    PanNumber: '',
+    BusinessAddress: '',
+    BankAccountNumber: '',
+    IFSC: ''
   });
   const [fileData, setFileData] = useState({
-    aadhaarCard: null,
-    gstCertificate: null,
-    panCard: null,
-    bankStatement: null
+    AadhaarPdf: null,
+    GstCertificateUpload: null,
+    PanCardUpload: null,
+    BankStatementUpload: null
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [status, setStatus] = useState('not_submitted'); // not_submitted, pending, approved, rejected
-  const [rejectionReason, setRejectionReason] = useState('');
   const [completionPercentage, setCompletionPercentage] = useState(0);
 
   useEffect(() => {
-    // Re-calculate completion percentage whenever formData or fileData changes
     setCompletionPercentage(calculateCompletionPercentage(formData, fileData));
   }, [formData, fileData]);
 
@@ -43,15 +43,28 @@ export const useVendorKyc = () => {
     }
     setFetchLoading(true);
     try {
-      // Simulate API call or catch real one
-      await getVendorKycApi(vendorId).catch(err => {
-        console.warn('API get KYC failed, using default state:', err);
-      });
-      // If we had real data, we would populate formData and file previews here
-      // and setStatus based on the response.
-      // For now, it stays 'not_submitted'.
+      const response = await getVendorKycStatusApi(vendorId);
+      if (response && response.kycStatus) {
+        // Map backend status to local state
+        switch (response.kycStatus) {
+          case 'UnderReview':
+            setStatus('pending');
+            break;
+          case 'Approved':
+            setStatus('approved');
+            break;
+          case 'Rejected':
+            setStatus('rejected');
+            break;
+          default:
+            setStatus('not_submitted');
+        }
+      } else {
+        setStatus('not_submitted');
+      }
     } catch (error) {
-      console.error('Error fetching KYC:', error);
+      console.warn('API get KYC status failed, assuming not_submitted:', error);
+      setStatus('not_submitted');
     } finally {
       setFetchLoading(false);
     }
@@ -81,16 +94,15 @@ export const useVendorKyc = () => {
       if (error) newErrors[key] = error;
     });
     
-    // Validate required files
-    const fileFields = ['aadhaarCard', 'panCard', 'bankStatement'];
+    const fileFields = ['AadhaarPdf', 'PanCardUpload', 'BankStatementUpload'];
     fileFields.forEach(key => {
       const error = validateFile(key, fileData[key]);
       if (error) newErrors[key] = error;
     });
 
-    if (formData.gstNumber) {
-      const error = validateFile('gstCertificate', fileData.gstCertificate);
-      if (error) newErrors.gstCertificate = error;
+    if (formData.GstNumber) {
+      const error = validateFile('GstCertificateUpload', fileData.GstCertificateUpload);
+      if (error) newErrors.GstCertificateUpload = error;
     }
 
     setErrors(newErrors);
@@ -107,19 +119,26 @@ export const useVendorKyc = () => {
     setLoading(true);
     try {
       const payload = new FormData();
-      Object.keys(formData).forEach(key => payload.append(key, formData[key]));
+      Object.keys(formData).forEach(key => payload.append(key, formData[key] ? String(formData[key]) : ''));
       Object.keys(fileData).forEach(key => {
-        if (fileData[key]) payload.append(key, fileData[key]);
+        if (fileData[key] instanceof File || fileData[key] instanceof Blob) {
+          payload.append(key, fileData[key]);
+        }
       });
-
       if (vendorId) {
-        await submitVendorKycApi(vendorId, payload).catch(err => {
-          console.warn('API submit KYC failed, updating local state only:', err);
-        });
+        payload.append('VendorId', String(vendorId));
       }
+
+      await submitVendorKycApi(payload);
       
-      toast.success('KYC documents submitted successfully.');
-      setStatus('pending');
+      if (isOnboarding) {
+        sessionStorage.removeItem('pendingVendorId');
+        dispatch({ type: 'LOGOUT' });
+        navigate('/login', { state: { successMessage: 'KYC submitted successfully. Please login. Dashboard access will be available after admin approval.' } });
+      } else {
+        toast.success('KYC documents submitted successfully.');
+        await fetchKycData();
+      }
     } catch (error) {
       console.error('Submit KYC error:', error);
       toast.error(error?.response?.data?.message || 'Failed to submit KYC');
@@ -135,7 +154,6 @@ export const useVendorKyc = () => {
     loading,
     fetchLoading,
     status,
-    rejectionReason,
     completionPercentage,
     handleTextChange,
     handleFileChange,
