@@ -1,6 +1,6 @@
 import { ReviewCard } from './ReviewCard';
 
-export const ReviewList = ({ reviews, role, onApprove, onHide, onDelete, currentUserId }) => {
+export const ReviewList = ({ reviews, role, readOnly = false, onApprove, onHide, onDelete, currentUserId }) => {
   return (
     <div className="flex flex-col">
       {reviews.map((review) => (
@@ -12,6 +12,7 @@ export const ReviewList = ({ reviews, role, onApprove, onHide, onDelete, current
           onHide={onHide}
           onDelete={onDelete}
           currentUserId={currentUserId}
+          readOnly={readOnly}
         />
       ))}
     </div>

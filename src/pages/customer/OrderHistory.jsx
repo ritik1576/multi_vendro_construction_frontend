@@ -9,6 +9,7 @@ import OrderFilters from '../../components/customer/orders/OrderFilters';
 import OrderCard from '../../components/customer/orders/OrderCard';
 import { ReviewForm } from '../../features/reviews/components/ReviewForm';
 import { useReviews } from '../../features/reviews/hooks/useReviews';
+import { getOrderApiId, getDisplayOrderNumber } from '../../utils/orderHelpers';
 
 const OrderHistory = () => {
   const dispatch = useDispatch();
@@ -67,7 +68,8 @@ const OrderHistory = () => {
 
   const handleReviewClick = (order, product) => {
     const userId = user?.id || user?.userId || user?._id || 'u1';
-    const orderId = order.id || order._id;
+
+    const apiOrderId = getOrderApiId(order) || order._id;
     
     let productId = '';
     if (typeof product === 'string') {
@@ -77,21 +79,23 @@ const OrderHistory = () => {
     }
     
     if (!productId) {
-      productId = orderId || `prod_${Date.now()}`; // Fallback to ensure submission works
+      productId = apiOrderId || `prod_${Date.now()}`; // Fallback to ensure submission works
     }
 
-    if (newlyReviewed[`${orderId}_${productId}`] || hasUserReviewedOrder(userId, orderId, productId)) {
+    const isReviewedBackend = (typeof product === 'object' && product?.hasReviewed) || order?.hasReviewed;
+    
+    if (isReviewedBackend || newlyReviewed[`${apiOrderId}_${productId}`] || hasUserReviewedOrder(userId, apiOrderId, productId)) {
       setToastMessage("You have already reviewed this item.");
       setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
     setReviewModalData({
-      orderId,
+      orderId: apiOrderId,
       productId,
       vendorId: product?.vendorId || order.vendorId || 'v1',
       customerName: user?.fullName || user?.name || 'Customer',
-      productName: typeof product === 'string' ? `Product ${product}` : (product?.productName || product?.name || `Order #${orderId}`)
+      productName: typeof product === 'string' ? `Product ${product}` : (product?.productName || product?.name || `Order #${apiOrderId}`)
     });
   };
 
@@ -228,10 +232,16 @@ const OrderHistory = () => {
                   } else if (product) {
                     pId = product.productId || product.product_id || product.product?.id || product.product?._id || product.id || product._id || product.item_id;
                   }
-                  if (!pId) pId = order.id || order._id || '1';
                   
-                  const oId = order.id || order._id;
-                  const isReviewed = newlyReviewed[`${oId}_${pId}`] || hasUserReviewedOrder(userId, oId, pId);
+                  const apiOrderId = getOrderApiId(order);
+                  const displayOrderId = getDisplayOrderNumber(order);
+
+                  if (!pId) pId = apiOrderId || '1';
+                  
+                  // Use backend fields if available, otherwise fallback
+                  const isReviewedBackend = product?.hasReviewed === true || order?.hasReviewed === true;
+                  const isReviewedLocal = newlyReviewed[`${apiOrderId}_${pId}`] || hasUserReviewedOrder(userId, apiOrderId, pId);
+                  const isReviewed = isReviewedBackend || isReviewedLocal;
                   
                   return (
                     <OrderCard 

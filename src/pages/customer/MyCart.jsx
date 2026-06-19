@@ -8,6 +8,9 @@ import { BACKEND_URL } from '../../services/apiConstants';
 import { formatCurrency, getCartItemPrice } from '../../context/cartUtils';
 import { getProductsRequest } from '../../redux/productActions';
 import { getLocalProductImage, fallbackImage } from '../../utils/productImages';
+import { CouponInput } from '../../features/coupons/components/CouponInput';
+import { CouponSummary } from '../../features/coupons/components/CouponSummary';
+import { useCoupon } from '../../features/coupons/hooks/useCoupon';
 
 function CartImage({ alt, src }) {
   const [failedSrc, setFailedSrc] = useState(false);
@@ -46,6 +49,19 @@ function MyCart() {
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.cart.cart);
   const { products = [] } = useSelector((state) => state.product);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+
+  const {
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    couponDiscount,
+    finalAmount,
+    couponError,
+    isApplying,
+    applyCoupon,
+    removeCoupon
+  } = useCoupon();
 
   useEffect(() => {
     dispatch(getCartRequest());
@@ -54,9 +70,10 @@ function MyCart() {
 
   const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
   const subtotal = cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
-  const discount = cart?.data?.discount || cart?.discount || 0;
   const deliveryCharge = cartItems.length > 0 ? 99 : 0;
-  const grandTotal = subtotal - discount + deliveryCharge;
+  
+  // Use finalAmount from backend if coupon is applied, else fallback to subtotal + delivery
+  const grandTotal = appliedCoupon && finalAmount !== null ? finalAmount : (subtotal + deliveryCharge);
 
   const decreaseQuantity = (id) => {
     const item = cartItems.find(i => (i.id || i.cartItemId || i.cartitemID || i._id) === id);
@@ -190,24 +207,17 @@ function MyCart() {
 
             <aside className="grid gap-4">
               {/* Coupon Section */}
-              <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1E3A8A]">
-                  <Tag className="h-4 w-4" /> Apply Coupons
-                </h3>
-                <div className="flex">
-                  <input
-                    type="text"
-                    placeholder="Enter Coupon Code"
-                    className="w-full rounded-l-md border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
-                  />
-                  <button className="rounded-r-md bg-blue-50 px-4 py-2 text-xs font-extrabold text-[#1E3A8A] transition hover:bg-blue-100">
-                    APPLY
-                  </button>
-                </div>
-                <p className="mt-2 text-[11px] font-semibold text-slate-500">
-                  <span className="text-[#1E3A8A] cursor-pointer hover:underline">Login</span> to see available offers
-                </p>
-              </div>
+              <CouponInput 
+                couponCode={couponCode}
+                setCouponCode={setCouponCode}
+                appliedCoupon={appliedCoupon}
+                couponError={couponError}
+                isApplying={isApplying}
+                onApply={() => applyCoupon(user?.id || user?.userId || user?._id, subtotal, cartItems)}
+                onRemove={() => removeCoupon(user?.id || user?.userId || user?._id)}
+                isLoggedIn={isAuthenticated}
+                onLoginClick={() => { /* Handle login click, e.g., open modal or navigate */ }}
+              />
 
               {/* Order Summary */}
               <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
@@ -216,16 +226,14 @@ function MyCart() {
                 <div className="grid gap-3 text-sm">
                   <div className="flex justify-between gap-4">
                     <span className="font-medium text-slate-600">Total MRP</span>
-                    <span className="font-extrabold text-[#0F172A]">{formatCurrency(subtotal + discount)}</span>
+                    <span className="font-extrabold text-[#0F172A]">{formatCurrency(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="font-medium text-[#10B981]">Discount on MRP <span className="text-[10px] text-slate-400 font-semibold cursor-pointer hover:underline ml-1">Know More</span></span>
-                    <span className="font-extrabold text-[#10B981]">- {formatCurrency(discount)}</span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="font-medium text-slate-600">Coupon Discount</span>
-                    <span className="font-extrabold text-[#1E3A8A] cursor-pointer hover:underline">Apply Coupon</span>
-                  </div>
+                  
+                  <CouponSummary 
+                    discountAmount={couponDiscount} 
+                    code={appliedCoupon?.code} 
+                  />
+
                   <div className="flex justify-between gap-4">
                     <span className="font-medium text-slate-600">Delivery Charge</span>
                     <span className="font-extrabold text-[#10B981]">{deliveryCharge ? formatCurrency(deliveryCharge) : 'Free'}</span>

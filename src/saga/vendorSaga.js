@@ -1,4 +1,5 @@
 import { call, put, takeLatest, select } from 'redux-saga/effects';
+import toast from 'react-hot-toast';
 import { getVendorDashboard, getVendorStatus, getVendorOrders, updateOrderStatus, deleteVendorOrder } from '../services/vendorApi';
 import {
   GET_VENDOR_DASHBOARD_REQUEST,
@@ -77,9 +78,11 @@ function* handleUpdateVendorOrderStatus(action) {
     const { vendorId, orderId, status } = action.payload;
     yield call(updateOrderStatus, vendorId, orderId, status);
     yield put(updateVendorOrderStatusSuccess(orderId, status));
+    yield put({ type: GET_VENDOR_ORDERS_REQUEST, payload: { vendorId, forceRefresh: true } });
   } catch (error) {
     const message = error.response?.data?.message || error.message || 'Failed to update order status';
     yield put(updateVendorOrderStatusFailure(message));
+    toast.error(message);
   }
 }
 

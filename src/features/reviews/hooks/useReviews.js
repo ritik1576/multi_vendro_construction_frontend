@@ -119,12 +119,7 @@ export const useReviews = ({ productId, vendorId, role } = {}) => {
     }
   }, [fetchReviews]);
 
-  const updateReviewStatus = useCallback(async (id, newStatus) => {
-    const allReviews = getStoredReviews();
-    const updated = allReviews.map(r => r.id === id ? { ...r, status: newStatus } : r);
-    saveStoredReviews(updated);
-    fetchReviews();
-  }, [fetchReviews]);
+
 
   const deleteReview = useCallback(async (id) => {
     try {
@@ -159,7 +154,6 @@ export const useReviews = ({ productId, vendorId, role } = {}) => {
     totalReviews,
     ratingBreakdown,
     addReview,
-    updateReviewStatus,
     deleteReview,
     hasUserReviewedOrder,
     refreshReviews: fetchReviews

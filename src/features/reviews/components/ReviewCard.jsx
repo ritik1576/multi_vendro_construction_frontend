@@ -2,7 +2,7 @@ import { ShieldCheck, User } from 'lucide-react';
 import { RatingStars } from './RatingStars';
 import { formatDate } from '../utils/reviewHelpers';
 
-export const ReviewCard = ({ review: reviewData, role = 'customer', onApprove, onHide, onDelete, currentUserId }) => {
+export const ReviewCard = ({ review: reviewData, role = 'customer', readOnly = false, onApprove, onHide, onDelete, currentUserId }) => {
   const { rating, review, customerName, isVerifiedPurchase, createdAt, status, userId } = reviewData;
   const isOwner = String(currentUserId) === String(userId);
 
@@ -35,7 +35,7 @@ export const ReviewCard = ({ review: reviewData, role = 'customer', onApprove, o
           
           <p className="text-[14px] text-slate-600 leading-relaxed">{review}</p>
           
-          {(role === 'admin' || isOwner) && (
+          {(role === 'admin' || isOwner) && !readOnly && (
             <div className="mt-4 flex items-center gap-3 pt-3 border-t border-slate-100">
               {role === 'admin' && (
                 <span className={`text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded ${

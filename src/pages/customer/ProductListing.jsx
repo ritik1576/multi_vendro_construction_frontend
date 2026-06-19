@@ -6,6 +6,7 @@ import ProductListingNavbar from '../../components/customer/catalog/ProductListi
 import FilterSidebar from '../../components/customer/catalog/FilterSidebar';
 import ProductToolbar from '../../components/customer/catalog/ProductToolbar';
 import ProductGrid from '../../components/customer/catalog/ProductGrid';
+import CustomerCouponStrip from '../../features/coupons/components/CustomerCouponStrip';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -169,9 +170,14 @@ export default function ProductListing() {
           />
         </div>
         
-        <div className="flex flex-1 overflow-hidden pt-[138px]">
-          {/* Left Sidebar */}
-          <FilterSidebar
+        <div className="flex flex-col flex-1 overflow-hidden pt-[138px]">
+          <div className="flex-none">
+            <CustomerCouponStrip />
+          </div>
+          
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left Sidebar */}
+            <FilterSidebar
             categoryOptions={categoryOptions}
             filters={filters}
             onCategoryChange={(category) => setFilterValue('category', category)}
@@ -219,6 +225,7 @@ export default function ProductListing() {
               </div>
             )}
           </main>
+          </div>
         </div>
       </div>
     </ErrorBoundary>
