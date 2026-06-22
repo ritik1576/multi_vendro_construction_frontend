@@ -14,6 +14,7 @@ import Checkout from '../pages/customer/Checkout';
 import ConfirmOrder from '../pages/customer/ConfirmOrder';
 import OrderHistory from '../pages/customer/OrderHistory';
 import OrderDetail from '../pages/customer/OrderDetail';
+import Wallet from '../pages/customer/Wallet';
 import ProtectedRoute from './ProtectedRoute';
 import VendorRoute from './VendorRoute';
 import VendorApprovalStatus from '../pages/vendor/VendorApprovalStatus';
@@ -22,6 +23,7 @@ import AddProduct from '../pages/vendor/AddProduct';
 import EditProduct from '../pages/vendor/EditProduct';
 import Inventory from '../pages/vendor/Inventory';
 import VendorOrders from '../pages/vendor/VendorOrders';
+import VendorWallet from '../pages/vendor/Wallet';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminVendorManagement from '../pages/admin/AdminVendorManagement';
 import AdminVendorDetails from '../pages/admin/AdminVendorDetails';
@@ -117,6 +119,7 @@ const AppRoutes = () => {
         <Route path="/order-confirmation" element={<ProtectedRoute><ConfirmOrder /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage role="customer" /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
 
@@ -127,6 +130,7 @@ const AppRoutes = () => {
         <Route path="/vendor/products/add" element={<VendorRoute><AddProduct /></VendorRoute>} />
         <Route path="/vendor/products/edit/:productId" element={<VendorRoute><EditProduct /></VendorRoute>} />
         <Route path="/vendor/inventory" element={<VendorRoute><Inventory /></VendorRoute>} />
+        <Route path="/vendor/wallet" element={<VendorRoute><VendorWallet /></VendorRoute>} />
         <Route path="/vendor/notifications" element={<VendorRoute><NotificationsPage role="vendor" /></VendorRoute>} />
         <Route path="/vendor/reviews" element={<VendorRoute><VendorReviews /></VendorRoute>} />
         <Route path="/vendor/profile" element={<VendorRoute><VendorProfile /></VendorRoute>} />

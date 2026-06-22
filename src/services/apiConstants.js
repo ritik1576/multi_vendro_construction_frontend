@@ -51,6 +51,12 @@ export const API_ENDPOINTS = {
     REJECT_VENDOR: '/admin/vendors/{id}/reject',
     GET_ALL_ORDERS: '/orders/all-with-items',
   },
+  WALLET: {
+    GET_BALANCE: '/wallet/balance',
+    GET_TRANSACTIONS: '/wallet/transactions',
+    ADD_MONEY: '/wallet/add-money',
+    WITHDRAW_MONEY: '/wallet/withdraw',
+  },
 };
 
 export const BACKEND_URL = 'https://multi-vendro-construction-backend-4.onrender.com';

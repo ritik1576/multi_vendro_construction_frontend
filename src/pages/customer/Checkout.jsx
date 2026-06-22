@@ -12,6 +12,7 @@ import {
   updateAddressRequest, 
   deleteAddressRequest 
 } from '../../redux/addressActions';
+import { getWalletBalanceRequest } from '../../redux/walletActions';
 
 const requiredFields = ['name', 'phone', 'line1', 'city', 'state', 'pincode'];
 
@@ -59,11 +60,13 @@ const Checkout = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const { addresses = [], loading: isLoadingAddresses } = useSelector((state) => state.address || {});
+  const { balanceData } = useSelector((state) => state.wallet || {});
 
   useEffect(() => {
     if (authUser) {
       const userId = authUser?.id || authUser?.userId || authUser?._id || 21;
       dispatch(getUserAddressesRequest(userId));
+      dispatch(getWalletBalanceRequest());
     }
   }, [authUser, dispatch]);
 
@@ -450,10 +453,16 @@ const Checkout = () => {
               <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 mt-6">
                 <h2 className="text-[22px] font-bold text-[#0F172A]">Select Payment Method</h2>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-3">
                 {[
                   { value: 'online', label: 'UPI', subLabel: 'Google Pay, PhonePe, BHIM', disabled: false },
                   { value: 'cod', label: 'Cash on Delivery', subLabel: 'Pay at your doorstep', disabled: false },
+                  { 
+                    value: 'wallet', 
+                    label: 'Wallet', 
+                    subLabel: `Available balance: ₹${balanceData?.availableBalance?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}`, 
+                    disabled: false 
+                  },
                 ].map((option) => (
                   <label
                     key={option.value}

@@ -159,6 +159,9 @@ export default function ProductListingNavbar({
                   <Link to="/orders" className="flex items-center px-5 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors" onClick={() => setIsProfileOpen(false)}>
                     My Orders
                   </Link>
+                  <Link to="/wallet" className="flex items-center px-5 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors" onClick={() => setIsProfileOpen(false)}>
+                    My Wallet
+                  </Link>
                   <div className="h-px bg-slate-100 my-1"></div>
                   <button 
                     onClick={() => { handleLogout(); setIsProfileOpen(false); }}
