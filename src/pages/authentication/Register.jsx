@@ -26,7 +26,7 @@ const Register = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isLoading, isAuthenticated, registrationSuccess, successMessage, error: authError } = useSelector((state) => state.auth);
+  const { user, isLoading, isAuthenticated, registrationSuccess, successMessage, error: authError, pendingVendorId } = useSelector((state) => state.auth);
 
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
@@ -41,10 +41,15 @@ const Register = () => {
       } else {
         navigate('/products', { replace: true });
       }
-    } else if (registrationSuccess && successMessage) {
-      navigate('/login', { replace: true, state: { successMessage } });
+    } else if (registrationSuccess) {
+      if (role === 'Vendor' && pendingVendorId) {
+        sessionStorage.setItem('pendingVendorId', pendingVendorId);
+        navigate('/vendor/kyc', { replace: true });
+      } else if (successMessage) {
+        navigate('/login', { replace: true, state: { successMessage } });
+      }
     }
-  }, [isAuthenticated, user, navigate, registrationSuccess, successMessage]);
+  }, [isAuthenticated, user, navigate, registrationSuccess, successMessage, role, pendingVendorId]);
 
   useEffect(() => {
     // We handle the error directly in the UI now, no more alerts

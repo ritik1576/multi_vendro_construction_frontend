@@ -14,12 +14,16 @@ export const adminService = {
     const response = await api.get(API_ENDPOINTS.ADMIN.GET_USER_DETAILS.replace('{id}', id));
     return response.data;
   },
-  approveVendor: async (id) => {
-    const response = await api.put(API_ENDPOINTS.ADMIN.APPROVE_VENDOR.replace('{id}', id));
+  getVendorKycDetails: async (vendorId) => {
+    const response = await api.get(`/admin/vendor-kyc/${vendorId}`);
+    return response.data?.data || response.data;
+  },
+  approveVendor: async (vendorId) => {
+    const response = await api.put(`/admin/vendors/${vendorId}/approve`);
     return response.data;
   },
-  rejectVendor: async (id, reason) => {
-    const response = await api.put(API_ENDPOINTS.ADMIN.REJECT_VENDOR.replace('{id}', id), { message: reason });
+  rejectVendor: async (vendorId, reason) => {
+    const response = await api.put(`/admin/vendors/${vendorId}/reject`, { message: reason });
     return response.data;
   },
   getAllOrders: async () => {
