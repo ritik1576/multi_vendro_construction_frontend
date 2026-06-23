@@ -180,6 +180,7 @@ const Checkout = () => {
     const orderPayload = {
       userId: authUser?.id || authUser?.userId || authUser?._id || 21,
       addressId: address.id,
+      paymentMethod: paymentMethod === 'wallet' ? 'Wallet' : paymentMethod === 'cod' ? 'COD' : 'Online',
       items: cartItems.map(item => ({
         cartItemId: item.cartItemId || item.id,
         productId: item.productId || item.productID || item.id,

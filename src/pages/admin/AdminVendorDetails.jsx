@@ -329,7 +329,7 @@ const AdminVendorDetails = () => {
         )}
 
         {/* Actions */}
-        {(kycStatus === 'UnderReview' || vendorStatus === 'Pending' || vendorStatus === 'Pending Approval') && !showRejectReason && (
+        {vendorStatus !== 'Rejected' && kycStatus !== 'Rejected' && !showRejectReason && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-end gap-3">
             <button 
               onClick={() => setShowRejectReason(true)}
@@ -337,13 +337,15 @@ const AdminVendorDetails = () => {
             >
               <XCircle className="w-4 h-4" /> Reject Vendor
             </button>
-            <button 
-              onClick={handleApprove}
-              disabled={isProcessing}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors"
-            >
-              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve Vendor
-            </button>
+            {vendorStatus !== 'Approved' && vendorStatus !== 'Verified' && kycStatus !== 'Verified' && (
+              <button 
+                onClick={handleApprove}
+                disabled={isProcessing}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors"
+              >
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve Vendor
+              </button>
+            )}
           </div>
         )}
 

@@ -18,6 +18,10 @@ export const DELETE_VENDOR_ORDER_REQUEST = 'DELETE_VENDOR_ORDER_REQUEST';
 export const DELETE_VENDOR_ORDER_SUCCESS = 'DELETE_VENDOR_ORDER_SUCCESS';
 export const DELETE_VENDOR_ORDER_FAILURE = 'DELETE_VENDOR_ORDER_FAILURE';
 
+export const GET_VENDOR_KYC_STATUS_REQUEST = 'GET_VENDOR_KYC_STATUS_REQUEST';
+export const GET_VENDOR_KYC_STATUS_SUCCESS = 'GET_VENDOR_KYC_STATUS_SUCCESS';
+export const GET_VENDOR_KYC_STATUS_FAILURE = 'GET_VENDOR_KYC_STATUS_FAILURE';
+
 export const getVendorDashboardRequest = (userId, forceRefresh = false) => ({
   type: GET_VENDOR_DASHBOARD_REQUEST,
   payload: { userId, forceRefresh }
@@ -90,5 +94,20 @@ export const deleteVendorOrderSuccess = (orderId) => ({
 
 export const deleteVendorOrderFailure = (error) => ({
   type: DELETE_VENDOR_ORDER_FAILURE,
+  payload: error
+});
+
+export const getVendorKycStatusRequest = (vendorId, forceRefresh = false) => ({
+  type: GET_VENDOR_KYC_STATUS_REQUEST,
+  payload: { vendorId, forceRefresh }
+});
+
+export const getVendorKycStatusSuccess = (data) => ({
+  type: GET_VENDOR_KYC_STATUS_SUCCESS,
+  payload: data
+});
+
+export const getVendorKycStatusFailure = (error) => ({
+  type: GET_VENDOR_KYC_STATUS_FAILURE,
   payload: error
 });

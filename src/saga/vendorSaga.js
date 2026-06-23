@@ -1,6 +1,7 @@
 import { call, put, takeLatest, select } from 'redux-saga/effects';
 import toast from 'react-hot-toast';
 import { getVendorDashboard, getVendorStatus, getVendorOrders, updateOrderStatus, deleteVendorOrder } from '../services/vendorApi';
+import { getVendorKycStatusApi } from '../features/profile/services/kycService';
 import {
   GET_VENDOR_DASHBOARD_REQUEST,
   getVendorDashboardSuccess,
@@ -16,7 +17,10 @@ import {
   updateVendorOrderStatusFailure,
   DELETE_VENDOR_ORDER_REQUEST,
   deleteVendorOrderSuccess,
-  deleteVendorOrderFailure
+  deleteVendorOrderFailure,
+  GET_VENDOR_KYC_STATUS_REQUEST,
+  getVendorKycStatusSuccess,
+  getVendorKycStatusFailure
 } from '../redux/vendorActions';
 
 function* handleGetVendorDashboard(action) {
@@ -97,10 +101,29 @@ function* handleDeleteVendorOrder(action) {
   }
 }
 
+function* handleGetVendorKycStatus(action) {
+  try {
+    const { vendorId, forceRefresh } = action.payload;
+    const existingStatus = yield select(state => state.vendor?.kycStatus);
+    
+    if (!forceRefresh && existingStatus) {
+      yield put(getVendorKycStatusSuccess(existingStatus));
+      return;
+    }
+
+    const response = yield call(getVendorKycStatusApi, vendorId);
+    yield put(getVendorKycStatusSuccess(response));
+  } catch (error) {
+    const message = error.response?.data?.message || error.message || 'Failed to fetch vendor KYC status';
+    yield put(getVendorKycStatusFailure(message));
+  }
+}
+
 export default function* vendorSaga() {
   yield takeLatest(GET_VENDOR_DASHBOARD_REQUEST, handleGetVendorDashboard);
   yield takeLatest(GET_VENDOR_STATUS_REQUEST, handleGetVendorStatus);
   yield takeLatest(GET_VENDOR_ORDERS_REQUEST, handleGetVendorOrders);
   yield takeLatest(UPDATE_VENDOR_ORDER_STATUS_REQUEST, handleUpdateVendorOrderStatus);
   yield takeLatest(DELETE_VENDOR_ORDER_REQUEST, handleDeleteVendorOrder);
+  yield takeLatest(GET_VENDOR_KYC_STATUS_REQUEST, handleGetVendorKycStatus);
 }

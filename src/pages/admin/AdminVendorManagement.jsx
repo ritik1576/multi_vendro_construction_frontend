@@ -50,7 +50,7 @@ const AdminVendorManagement = () => {
   const filteredAndSortedVendors = vendors
     .filter(vendor => {
       // 1. Filter by Active Filter
-      if (activeFilter === 'Pending' && vendor.approval_status !== 'Pending Approval') return false;
+      if (activeFilter === 'Pending' && vendor.approval_status !== 'Pending Approval' && vendor.approval_status !== 'Pending') return false;
       if (activeFilter === 'Approved' && vendor.approval_status !== 'Approved' && vendor.approval_status !== 'Verified') return false;
       
       // 2. Filter by Search Query

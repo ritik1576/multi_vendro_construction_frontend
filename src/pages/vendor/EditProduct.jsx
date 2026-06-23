@@ -61,7 +61,7 @@ const EditProduct = () => {
     }
   }, [location.state]);
 
-  const handleSave = async (payload) => {
+  const handleSave = async (payload, imageFiles) => {
     if (!user?.vendorId) {
       toast.error("Vendor ID not found. Please log in again.");
       return;
@@ -69,7 +69,25 @@ const EditProduct = () => {
 
     setIsSubmitting(true);
     try {
-      await productService.updateProduct(productId, payload);
+      let submissionData;
+      if (imageFiles && imageFiles.length > 0) {
+        submissionData = new FormData();
+        Object.keys(payload).forEach(key => {
+          submissionData.append(key, payload[key]);
+        });
+        
+        imageFiles.forEach(file => {
+          if (file instanceof File) {
+            submissionData.append('images', file);
+          } else if (typeof file === 'string') {
+            submissionData.append('existingImages', file);
+          }
+        });
+      } else {
+        submissionData = payload;
+      }
+
+      await productService.updateProduct(productId, submissionData);
       toast.success('Product updated successfully!');
       navigate('/vendor/inventory');
     } catch (error) {
