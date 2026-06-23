@@ -12,7 +12,7 @@ const AddProduct = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  const handleSave = async (payload, imageFile) => {
+  const handleSave = async (payload, imageFiles) => {
     if (!user?.vendorId) {
       setErrorMsg("Vendor ID not found. Please log in again.");
       return;
@@ -22,13 +22,27 @@ const AddProduct = () => {
     setErrorMsg(null);
     try {
       let finalPayload = { ...payload };
+      let submissionData;
       
-      if (imageFile) {
-        const uploadRes = await productService.uploadImage(imageFile);
-        finalPayload.thumbnail = uploadRes.imageUrl || uploadRes.url || uploadRes.data?.imageUrl || '';
+      if (imageFiles && imageFiles.length > 0) {
+        submissionData = new FormData();
+        Object.keys(finalPayload).forEach(key => {
+          submissionData.append(key, finalPayload[key]);
+        });
+        
+        imageFiles.forEach(file => {
+          if (file instanceof File) {
+            submissionData.append('images', file);
+          } else if (typeof file === 'string') {
+             // In case there's an existing URL, though unlikely in AddProduct
+            submissionData.append('existingImages', file);
+          }
+        });
+      } else {
+        submissionData = finalPayload;
       }
 
-      await productService.addProduct(finalPayload);
+      await productService.addProduct(submissionData);
       toast.success('Product created successfully!');
       navigate('/vendor/inventory');
     } catch (error) {

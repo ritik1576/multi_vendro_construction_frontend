@@ -10,7 +10,7 @@ import {
 import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
 import { getCartItemPrice, formatCurrency } from '../../context/cartUtils';
 import { addToCartRequest, updateCartItemRequest, removeCartItemRequest } from '../../redux/cartActions';
-import { getLocalProductImage, fallbackImage } from '../../utils/productImages';
+import { getLocalProductImage, fallbackImage, normalizeProductImage } from '../../utils/productImages';
 import { ProductReviews } from '../../features/reviews/pages/ProductReviews';
 
 function ProductDetailImage({ alt, src }) {
@@ -71,6 +71,22 @@ function ProductDetail() {
   
   const dispatch = useDispatch();
   const { productDetails: product, detailsLoading: isLoading, detailsError: error } = useSelector((state) => state.product);
+  
+  const productImages =
+    product?.images?.length > 0
+      ? product.images
+      : product?.thumbnail
+        ? [product.thumbnail]
+        : [];
+
+  const [selectedImage, setSelectedImage] = useState("");
+
+  useEffect(() => {
+    if (productImages.length > 0) {
+      setSelectedImage(productImages[0]);
+    }
+  }, [product?.id]);
+
   const cart = useSelector((state) => state.cart.cart);
   const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
 
@@ -176,13 +192,38 @@ function ProductDetail() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] items-start">
           
           {/* Image Column */}
-          <div className="relative w-full h-full flex items-center justify-center rounded-[16px] border border-slate-200 bg-[#F8FAFC] p-6 lg:p-10 overflow-hidden shadow-sm min-h-[350px] lg:min-h-[500px] max-h-[600px]">
-            <button className="absolute top-3 right-3 p-1.5 rounded-full border border-slate-200 text-slate-500 hover:bg-white transition-colors bg-white/80 backdrop-blur-sm z-10 shadow-sm">
-              <Expand className="h-4 w-4" />
-            </button>
-            <div className="w-full h-full flex items-center justify-center">
-              <ProductDetailImage alt={name} src={resolveImageUrl(product)} />
+          <div className="flex flex-col gap-4 w-full h-full max-h-[800px]">
+            <div className="relative w-full flex items-center justify-center rounded-[16px] border border-slate-200 bg-[#F8FAFC] p-6 lg:p-10 overflow-hidden shadow-sm min-h-[350px] lg:min-h-[500px] max-h-[600px]">
+              <button className="absolute top-3 right-3 p-1.5 rounded-full border border-slate-200 text-slate-500 hover:bg-white transition-colors bg-white/80 backdrop-blur-sm z-10 shadow-sm">
+                <Expand className="h-4 w-4" />
+              </button>
+              <div className="w-full h-full flex items-center justify-center">
+                <ProductDetailImage alt={name} src={normalizeProductImage(selectedImage || product?.thumbnail)} />
+              </div>
             </div>
+
+            {/* Thumbnails */}
+            {productImages.length > 1 && (
+              <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
+                {productImages.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(img)}
+                    className={`shrink-0 w-20 h-20 rounded-xl border-2 overflow-hidden transition-all bg-[#F8FAFC] ${
+                      selectedImage === img 
+                        ? 'border-[#1E3A8A] shadow-md opacity-100' 
+                        : 'border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-300'
+                    }`}
+                  >
+                    <img
+                      src={normalizeProductImage(img)}
+                      alt={`${name} thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover mix-blend-multiply"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info Column (Unified Card) */}

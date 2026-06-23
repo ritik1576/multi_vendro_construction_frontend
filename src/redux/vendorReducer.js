@@ -14,15 +14,20 @@ import {
   DELETE_VENDOR_ORDER_REQUEST,
   DELETE_VENDOR_ORDER_SUCCESS,
   DELETE_VENDOR_ORDER_FAILURE,
+  GET_VENDOR_KYC_STATUS_REQUEST,
+  GET_VENDOR_KYC_STATUS_SUCCESS,
+  GET_VENDOR_KYC_STATUS_FAILURE,
 } from './vendorActions';
 
 const initialState = {
   dashboard: null,
   status: null,
+  kycStatus: null,
   orders: [],
   loading: {
     dashboard: false,
     status: false,
+    kycStatus: false,
     orders: false,
     updateOrder: false,
   },
@@ -89,6 +94,17 @@ const vendorReducer = (state = initialState, action) => {
       };
     case DELETE_VENDOR_ORDER_FAILURE:
       return { ...state, loading: { ...state.loading, updateOrder: false }, deleteError: action.payload };
+
+    case GET_VENDOR_KYC_STATUS_REQUEST:
+      return { 
+        ...state, 
+        loading: { ...state.loading, kycStatus: !action.payload.forceRefresh && !state.kycStatus },
+        error: null 
+      };
+    case GET_VENDOR_KYC_STATUS_SUCCESS:
+      return { ...state, loading: { ...state.loading, kycStatus: false }, kycStatus: action.payload };
+    case GET_VENDOR_KYC_STATUS_FAILURE:
+      return { ...state, loading: { ...state.loading, kycStatus: false }, error: action.payload };
 
     default:
       return state;

@@ -47,6 +47,7 @@ import AdminReviews from '../features/reviews/pages/AdminReviews';
 
 // Coupons
 import AdminCoupons from '../features/coupons/pages/AdminCoupons';
+import AdminWallet from '../pages/admin/AdminWallet';
 import VendorCoupons from '../features/coupons/pages/VendorCoupons';
 
 // Profile Pages
@@ -152,6 +153,7 @@ const AppRoutes = () => {
         <Route path="/admin/notifications" element={<AdminProtectedRoute><NotificationsPage role="admin" /></AdminProtectedRoute>} />
         <Route path="/admin/reviews" element={<AdminProtectedRoute><AdminReviews /></AdminProtectedRoute>} />
         <Route path="/admin/coupons" element={<AdminProtectedRoute><AdminCoupons /></AdminProtectedRoute>} />
+        <Route path="/admin/wallet" element={<AdminProtectedRoute><AdminWallet /></AdminProtectedRoute>} />
         <Route path="/admin/profile" element={<AdminProtectedRoute><AdminProfile /></AdminProtectedRoute>} />
       </Routes>
     </Router>

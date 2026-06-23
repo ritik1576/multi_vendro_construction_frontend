@@ -59,11 +59,13 @@ export const productService = {
   // Add new product
   addProduct: async (productData) => {
     try {
+      const isFormData = productData instanceof FormData;
+      const headers = { ...getAuthHeaders() };
+      if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+      }
       const response = await api.post(API_ENDPOINTS.PRODUCTS.ADD_PRODUCT, productData, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders()
-        }
+        headers
       });
       return response.data;
     } catch (error) {
@@ -92,11 +94,13 @@ export const productService = {
   updateProduct: async (id, productData) => {
     try {
       const url = API_ENDPOINTS.PRODUCTS.UPDATE_PRODUCT.replace('{id}', id);
+      const isFormData = productData instanceof FormData;
+      const headers = { ...getAuthHeaders() };
+      if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+      }
       const response = await api.put(url, productData, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders()
-        }
+        headers
       });
       return response.data;
     } catch (error) {
