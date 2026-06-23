@@ -7,6 +7,7 @@ import orderSaga from './orderSaga';
 import adminSaga from './adminSaga';
 import addressSaga from './addressSaga';
 import vendorSaga from './vendorSaga';
+import walletSaga from './walletSaga';
 
 export default function* rootSaga() {
   yield all([
@@ -18,5 +19,6 @@ export default function* rootSaga() {
     adminSaga(),
     addressSaga(),
     vendorSaga(),
+    walletSaga(),
   ]);
 }

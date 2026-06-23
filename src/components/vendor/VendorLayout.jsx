@@ -10,6 +10,7 @@ const sidebarItems = [
   { name: 'Dashboard', path: '/vendor/dashboard', icon: LayoutDashboard },
   { name: 'Orders', path: '/vendor/orders', icon: ShoppingCart },
   { name: 'Inventory', path: '/vendor/inventory', icon: Archive },
+  { name: 'Wallet', path: '/vendor/wallet', icon: IndianRupee },
   { name: 'Profile', path: '/vendor/profile', icon: User },
 ];
 

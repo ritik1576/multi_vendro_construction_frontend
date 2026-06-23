@@ -11,6 +11,8 @@ import addressReducer from './addressReducer';
 import vendorReducer from './vendorReducer';
 import rootSaga from '../saga/rootSaga';
 
+import walletReducer from './walletReducer';
+
 // Create a foolproof storage wrapper to fix Vite CJS interop issues with redux-persist
 const customStorage = {
   getItem: (key) => Promise.resolve(localStorage.getItem(key)),
@@ -33,6 +35,7 @@ const rootReducer = combineReducers({
   admin: adminReducer,
   address: addressReducer,
   vendor: vendorReducer,
+  wallet: walletReducer,
 });
 
 const rootPersistConfig = {
