@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { productService } from '../../services/productService';
+import { PRODUCT_CATEGORIES, normalizeCategory } from '../../constants/productCategories';
 
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,7 +55,7 @@ const Inventory = () => {
 
   const getProductPrice = (product) => Number(product.price || 0);
   const getProductName = (product) => product.name || product.productName || product.ProductName || 'Unnamed Product';
-  const getProductCategory = (product) => product.category || product.categoryName || 'Uncategorized';
+  const getProductCategory = (product) => normalizeCategory(product.category || product.categoryName);
 
   const calculateKPIs = () => {
     let totalValue = 0;
@@ -154,10 +155,9 @@ const Inventory = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option value="All">All Categories</option>
-                <option value="Fasteners">Fasteners</option>
-                <option value="Conductors">Conductors</option>
-                <option value="Pumps">Pumps</option>
-                <option value="Steel">Steel</option>
+                {PRODUCT_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
             </div>

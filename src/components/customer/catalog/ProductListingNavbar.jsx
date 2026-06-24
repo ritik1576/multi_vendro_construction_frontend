@@ -5,6 +5,7 @@ import { Search, ShoppingCart, MapPin, User, ChevronDown, Menu, Grid, Wrench, Za
 import { logout } from '../../../redux/authActions';
 import SearchDropdown from './SearchDropdown';
 import { NotificationDropdown } from '../../../features/notifications/components/NotificationDropdown';
+import { PRODUCT_CATEGORIES } from '../../../constants/productCategories';
 
 export default function ProductListingNavbar({ 
   searchTerm, 
@@ -67,11 +68,7 @@ export default function ProductListingNavbar({
     'Bricks': Grid
   };
 
-  const infraMartCategories = [
-    'All', 'Civil Works', 'Paints', 'Electricals', 'Plumbing', 
-    'Hardware', 'Wood & Ply', 'Glass', 'Lighting', 'Safety Gear', 
-    'Power Tools', 'Machinery', 'Bricks', 'Cement', 'Steel'
-  ];
+  const infraMartCategories = ['All', ...PRODUCT_CATEGORIES];
 
   const categories = infraMartCategories.map(catName => {
     const label = catName === 'All' ? 'For You' : catName;

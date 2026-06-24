@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, X, Loader2 } from 'lucide-react';
 import ProductImageUploader from './ProductImageUploader';
+import { PRODUCT_CATEGORIES, normalizeCategory } from '../../constants/productCategories';
 
 
 const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSubmitting = false }) => {
@@ -31,7 +32,8 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
 
   useEffect(() => {
     if (initialData && mode === 'edit') {
-      setFormData((prev) => ({ ...prev, ...initialData }));
+      const mappedCategory = normalizeCategory(initialData.category);
+      setFormData((prev) => ({ ...prev, ...initialData, category: mappedCategory }));
       if (initialData.thumbnail) {
         setImageFiles([initialData.thumbnail]);
       }
@@ -168,14 +170,9 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
                   className={`${inputBaseClass} ${getErrorClass('category')}`}
                 >
                   <option value="">Select Category</option>
-                  <option value="Cement">Cement</option>
-                  <option value="Steel">Steel</option>
-                  <option value="Plywood">Plywood</option>
-                  <option value="Plumbing">Plumbing</option>
-                  <option value="Electrical">Electrical</option>
-                  <option value="Fasteners">Fasteners</option>
-                  <option value="Conductors">Conductors</option>
-                  <option value="Pumps">Pumps</option>
+                  {PRODUCT_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
               </div>
 

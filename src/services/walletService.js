@@ -23,5 +23,9 @@ export const walletService = {
   withdrawMoney: async (amount) => {
     const response = await api.post(API_ENDPOINTS.WALLET.WITHDRAW_MONEY, { amount: Number(amount) }, { headers: getAuthHeaders() });
     return response.data;
+  },
+  transferFunds: async (TargetUserId, amount) => {
+    const response = await api.post(API_ENDPOINTS.WALLET.TRANSFER_MONEY, { TargetUserId, amount: Number(amount) }, { headers: getAuthHeaders() });
+    return response.data;
   }
 };

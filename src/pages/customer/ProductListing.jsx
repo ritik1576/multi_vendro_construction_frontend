@@ -7,6 +7,7 @@ import FilterSidebar from '../../components/customer/catalog/FilterSidebar';
 import ProductToolbar from '../../components/customer/catalog/ProductToolbar';
 import ProductGrid from '../../components/customer/catalog/ProductGrid';
 import CustomerCouponStrip from '../../features/coupons/components/CustomerCouponStrip';
+import { normalizeCategory } from '../../constants/productCategories';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -120,9 +121,10 @@ export default function ProductListing() {
       filters.discountedOnly;
 
     const filteredList = !hasActiveFilters ? [...products] : products.filter((product) => {
+      const productCategory = normalizeCategory(product?.category);
       const searchableText = [
         product?.name,
-        product?.category,
+        productCategory,
         product?.vendor,
         product?.shortDescription,
         product?.description,
@@ -134,7 +136,7 @@ export default function ProductListing() {
 
       return (
         (!normalizedSearch || searchableText.includes(normalizedSearch)) &&
-        (filters.category === 'All' || product?.category === filters.category) &&
+        (filters.category === 'All' || productCategory === filters.category) &&
         (!filters.vendor || actualVendor === filters.vendor) &&
         (!filters.status || actualStatus === filters.status) &&
         (minPrice === null || productPrice >= minPrice) &&

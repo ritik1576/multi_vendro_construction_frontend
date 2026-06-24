@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
     GET_TRANSACTIONS: '/wallet/transactions',
     ADD_MONEY: '/wallet/add-money',
     WITHDRAW_MONEY: '/wallet/withdraw',
+    TRANSFER_MONEY: '/wallet/transfer',
   },
 };
 
