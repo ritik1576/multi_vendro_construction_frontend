@@ -50,6 +50,7 @@ export const API_ENDPOINTS = {
     APPROVE_VENDOR: '/admin/vendors/{id}/approve',
     REJECT_VENDOR: '/admin/vendors/{id}/reject',
     GET_ALL_ORDERS: '/orders/all-with-items',
+    EMAIL_TEMPLATES: '/admin/email-templates',
   },
   WALLET: {
     GET_BALANCE: '/wallet/balance',

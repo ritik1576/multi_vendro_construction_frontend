@@ -2,8 +2,8 @@ import { useState } from 'react';
 import AdminNavbar from './AdminNavbar';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, Users, UserCheck, Package, 
-  ShoppingCart, BarChart3, Settings, Menu, X, MessageSquare, Ticket, User, FileCheck, Wallet
+  LayoutDashboard, Users, UserCheck, Package,
+  ShoppingCart, BarChart3, Settings, Menu, X, MessageSquare, Ticket, User, FileCheck, Wallet, Mail
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -16,6 +16,7 @@ const sidebarItems = [
   { name: 'Coupons', path: '/admin/coupons', icon: Ticket },
   { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
   { name: 'Wallet', path: '/admin/wallet', icon: Wallet },
+  { name: 'Email Templates', path: '/admin/email-templates', icon: Mail },
   { name: 'Profile', path: '/admin/profile', icon: User },
 ];
 

@@ -50,10 +50,12 @@ import AdminCoupons from '../features/coupons/pages/AdminCoupons';
 import AdminWallet from '../pages/admin/AdminWallet';
 import VendorCoupons from '../features/coupons/pages/VendorCoupons';
 
-// Profile Pages
 import CustomerProfile from '../features/profile/pages/CustomerProfile';
 import VendorProfile from '../features/profile/pages/VendorProfile';
 import AdminProfile from '../features/profile/pages/AdminProfile';
+
+// Email Templates
+import { AdminEmailTemplates } from '../features/emailTemplates';
 
 // KYC Pages
 import VendorKyc from '../features/profile/pages/VendorKyc';
@@ -154,6 +156,7 @@ const AppRoutes = () => {
         <Route path="/admin/reviews" element={<AdminProtectedRoute><AdminReviews /></AdminProtectedRoute>} />
         <Route path="/admin/coupons" element={<AdminProtectedRoute><AdminCoupons /></AdminProtectedRoute>} />
         <Route path="/admin/wallet" element={<AdminProtectedRoute><AdminWallet /></AdminProtectedRoute>} />
+        <Route path="/admin/email-templates" element={<AdminProtectedRoute><AdminEmailTemplates /></AdminProtectedRoute>} />
         <Route path="/admin/profile" element={<AdminProtectedRoute><AdminProfile /></AdminProtectedRoute>} />
       </Routes>
     </Router>
