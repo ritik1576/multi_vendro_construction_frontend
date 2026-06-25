@@ -85,18 +85,25 @@ const Checkout = () => {
     dispatch(getCartRequest());
   }, [dispatch]);
 
-  const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
-  const subTotal = cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
+  const cartData = cart?.data || cart || {};
+  const cartItems = Array.isArray(cartData) ? cartData : (cartData.items || []);
+  
+  const subTotal = cartData.totalPrice || cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
   const deliveryCharge = cartItems.length > 0 ? 99 : 0;
   
   let appliedCouponData = null;
-  try {
-    const rawCoupon = localStorage.getItem('appliedCoupon');
-    if (rawCoupon) {
-      appliedCouponData = JSON.parse(rawCoupon);
+  if (cartData.couponCode) {
+    appliedCouponData = {
+      code: cartData.couponCode,
+      discountAmount: cartData.couponDiscount || 0,
+      finalAmount: cartData.finalAmount || (subTotal - (cartData.couponDiscount || 0) + deliveryCharge)
+    };
+  } else {
+    try {
+      localStorage.removeItem('appliedCoupon');
+    } catch (e) {
+      console.error("Failed to remove appliedCoupon", e);
     }
-  } catch (e) {
-    console.error("Failed to parse appliedCoupon", e);
   }
 
   const discount = appliedCouponData ? appliedCouponData.discountAmount : 0;
