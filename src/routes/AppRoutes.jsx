@@ -52,7 +52,6 @@ import VendorCoupons from '../features/coupons/pages/VendorCoupons';
 
 import CustomerProfile from '../features/profile/pages/CustomerProfile';
 import VendorProfile from '../features/profile/pages/VendorProfile';
-import AdminProfile from '../features/profile/pages/AdminProfile';
 
 // Email Templates
 import { AdminEmailTemplates } from '../features/emailTemplates';
@@ -157,7 +156,7 @@ const AppRoutes = () => {
         <Route path="/admin/coupons" element={<AdminProtectedRoute><AdminCoupons /></AdminProtectedRoute>} />
         <Route path="/admin/wallet" element={<AdminProtectedRoute><AdminWallet /></AdminProtectedRoute>} />
         <Route path="/admin/email-templates" element={<AdminProtectedRoute><AdminEmailTemplates /></AdminProtectedRoute>} />
-        <Route path="/admin/profile" element={<AdminProtectedRoute><AdminProfile /></AdminProtectedRoute>} />
+        <Route path="/admin/profile" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
     </Router>
   );

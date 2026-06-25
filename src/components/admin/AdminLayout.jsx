@@ -17,7 +17,6 @@ const sidebarItems = [
   { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
   { name: 'Wallet', path: '/admin/wallet', icon: Wallet },
   { name: 'Email Templates', path: '/admin/email-templates', icon: Mail },
-  { name: 'Profile', path: '/admin/profile', icon: User },
 ];
 
 const AdminLayout = ({ children }) => {

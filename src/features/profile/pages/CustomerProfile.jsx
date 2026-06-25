@@ -25,12 +25,12 @@ const CustomerProfile = () => {
         <div className="grid grid-cols-1 gap-6">
           <ProfileInfoCard 
             title="Personal Information" 
-            profileData={profileData?.user || profileData} 
+            profileData={profileData} 
             loading={loading} 
           />
 
           <AddressInfoCard 
-            profileData={profileData?.user || profileData} 
+            profileData={profileData} 
             loading={loading} 
           />
           

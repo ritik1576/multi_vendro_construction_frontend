@@ -12,7 +12,7 @@ const AddressInfoCard = ({ profileData, loading }) => {
     );
   }
 
-  const address = profileData?.address || profileData?.deliveryAddress || profileData?.shippingAddress;
+  const address = profileData?.defaultAddress || profileData?.address || profileData?.deliveryAddress || profileData?.shippingAddress;
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -23,12 +23,36 @@ const AddressInfoCard = ({ profileData, loading }) => {
         </h2>
       </div>
       {address ? (
-        <div className="grid grid-cols-1 gap-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
           <div>
-            <p className="text-[14px] font-bold text-[#0F172A]">{formatFallback(address.addressLine || address.line1)}</p>
-            <p className="text-[13px] text-slate-500 mt-1">
-              {formatFallback(address.city)}, {formatFallback(address.state)} {formatFallback(address.pincode)}
-            </p>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">Address Line 1</p>
+            <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(address.addressLine1 || address.addressLine || address.line1)}</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">Address Line 2</p>
+            <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(address.addressLine2 || address.line2)}</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">City</p>
+            <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(address.city)}</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">State</p>
+            <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(address.state)}</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">Country</p>
+            <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(address.country)}</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">Postal Code</p>
+            <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(address.postalCode || address.pincode)}</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">Address Type</p>
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[12px] font-bold text-slate-700 capitalize">
+              {formatFallback(address.addressType)}
+            </span>
           </div>
         </div>
       ) : (
