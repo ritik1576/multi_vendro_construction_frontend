@@ -559,15 +559,6 @@ const AdminOrderManagement = () => {
 
             </div>
 
-            {/* Drawer Footer Actions */}
-            <div className="p-4 bg-white border-t border-slate-200 flex gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-              <button className="flex-1 py-3 px-4 bg-white border border-slate-200 text-[#C2410C] hover:bg-slate-50 text-sm font-extrabold rounded-lg transition-colors shadow-sm">
-                Contact Vendor
-              </button>
-              <button className="flex-1 py-3 px-4 bg-[#C2410C] hover:bg-[#9a330a] text-white text-sm font-extrabold rounded-lg transition-colors shadow-sm">
-                Update Status
-              </button>
-            </div>
           </>
         )}
       </div>
