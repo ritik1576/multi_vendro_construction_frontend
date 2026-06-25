@@ -10,34 +10,36 @@ const CustomerProfile = () => {
   const { user, profileData, loading, error, handleUpdatePassword } = useProfile();
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-slate-50">
       <ProductListingNavbar />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 mb-6">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 mb-8 shadow-sm">
             Failed to load profile data: {error}
           </div>
         )}
 
-        <ProfileHeaderCard user={user || profileData?.user || profileData} roleText="Customer" />
+        <div className="space-y-8">
+          <ProfileHeaderCard user={user || profileData?.user || profileData} roleText="Customer" />
 
-        <div className="grid grid-cols-1 gap-6">
-          <ProfileInfoCard 
-            title="Personal Information" 
-            profileData={profileData} 
-            loading={loading} 
-          />
+          <div className="grid grid-cols-1 gap-8">
+            <ProfileInfoCard 
+              title="Personal Information" 
+              profileData={profileData} 
+              loading={loading} 
+            />
 
-          <AddressInfoCard 
-            profileData={profileData} 
-            loading={loading} 
-          />
-          
-          <SecurityCard 
-            handleUpdatePassword={handleUpdatePassword} 
-            loading={loading} 
-          />
+            <AddressInfoCard 
+              profileData={profileData} 
+              loading={loading} 
+            />
+            
+            <SecurityCard 
+              handleUpdatePassword={handleUpdatePassword} 
+              loading={loading} 
+            />
+          </div>
         </div>
       </main>
     </div>

@@ -1,35 +1,50 @@
 import React from 'react';
+import ProfileCard from './ui/ProfileCard';
+import StatusBadge from './ui/StatusBadge';
+import { Mail, Phone } from 'lucide-react';
+import { formatFallback } from '../utils/profileFormatters';
 
-const ProfileHeaderCard = ({ user, roleText }) => {
+const ProfileHeaderCard = ({ user, vendor, roleText }) => {
   if (!user) return null;
 
-  const initials = (user.fullName || user.name || 'U').substring(0, 2).toUpperCase();
+  // Use shopName for Vendor, otherwise fullName
+  const displayName = vendor?.shopName || vendor?.businessName || user.fullName || user.name || 'User';
+  const initials = displayName.substring(0, 2).toUpperCase();
+
+  const status = vendor?.status || user.status;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center gap-6">
-      <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-2xl shrink-0">
+    <ProfileCard className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8 bg-gradient-to-br from-white to-slate-50 border-none shadow-[0_4px_24px_rgba(0,0,0,0.06)] relative overflow-hidden">
+      {/* Decorative background element */}
+      <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50 pointer-events-none" />
+
+      <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#1E3A8A] text-white rounded-2xl flex items-center justify-center font-extrabold text-3xl shrink-0 shadow-lg relative z-10">
         {initials}
       </div>
-      <div className="flex-1">
-        <h1 className="text-2xl font-extrabold text-[#0F172A] mb-1">
-          {user.fullName || user.name || 'User'}
-        </h1>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[12px] font-bold text-blue-700">
+      
+      <div className="flex-1 relative z-10">
+        <div className="flex flex-wrap items-center gap-3 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A]">
+            {displayName}
+          </h1>
+          {status && <StatusBadge status={status} />}
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-4 text-[13px] font-bold text-slate-500">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-blue-100/50 text-[#1E3A8A]">
             {roleText || user.role || 'User'}
           </span>
-          {user.status && (
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-bold ${
-              user.status.toLowerCase() === 'active' || user.status.toLowerCase() === 'approved'
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-amber-50 text-amber-700'
-            }`}>
-              {user.status}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            <Mail className="w-4 h-4 text-slate-400" />
+            <span>{formatFallback(user.email)}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Phone className="w-4 h-4 text-slate-400" />
+            <span>{formatFallback(user.phone || user.phoneNumber)}</span>
+          </div>
         </div>
       </div>
-    </div>
+    </ProfileCard>
   );
 };
 
