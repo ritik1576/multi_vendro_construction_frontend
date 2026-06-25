@@ -205,7 +205,26 @@ function OrderDetail() {
                   ) : (
                     <div className="space-y-4">
                       {cartItems.map((item) => {
-                        const itemPrice = item.price || getCartItemPrice(item);
+                        const quantity = item.quantity || 1;
+
+                        const backendLineTotal =
+                          item.subtotal ||
+                          item.totalPrice ||
+                          item.lineTotal ||
+                          (cartItems.length === 1 ? subtotal : null);
+
+                        const actualUnitPrice =
+                          item.unitPrice ||
+                          item.orderPrice ||
+                          item.discountPrice ||
+                          item.pricePaid ||
+                          (backendLineTotal ? backendLineTotal / quantity : null) ||
+                          item.price;
+
+                        const actualLineTotal =
+                          backendLineTotal ||
+                          actualUnitPrice * quantity;
+
                         return (
                           <div key={item.id} className="flex items-start gap-4">
                             {/* Product Thumbnail */}
@@ -219,14 +238,14 @@ function OrderDetail() {
                                 {item.productName || item.name || 'Product name not available'}
                               </h3>
                               <p className="text-[13px] text-slate-500 mt-1">
-                                Qty: {item.quantity} × {formatCurrency(itemPrice)}
+                                Qty: {quantity} × {formatCurrency(actualUnitPrice)}
                               </p>
                             </div>
                             
                             {/* Total Price & Action */}
                             <div className="text-right pt-0.5 flex flex-col items-end gap-2">
                               <p className="text-[14px] font-extrabold text-[#0F172A]">
-                                {formatCurrency(itemPrice * item.quantity)}
+                                {formatCurrency(actualLineTotal)}
                               </p>
                               {String(orderStatus).toLowerCase().includes('delivered') && (() => {
                                 const userId = user?.id || user?.userId || user?._id || 'u1';

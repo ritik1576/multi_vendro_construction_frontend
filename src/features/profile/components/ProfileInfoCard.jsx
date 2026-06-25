@@ -1,25 +1,47 @@
-import { Edit2 } from 'lucide-react';
+import React from 'react';
+import { User, Mail, Phone } from 'lucide-react';
+import { formatFallback } from '../utils/profileFormatters';
 
-const ProfileInfoCard = ({ title, icon: Icon, children, onEdit }) => {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="w-5 h-5 text-slate-400" />}
-          <h2 className="text-base font-extrabold text-[#0F172A]">{title}</h2>
+const ProfileInfoCard = ({ title = "Personal Information", profileData, loading }) => {
+  if (loading) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm animate-pulse">
+        <div className="h-6 w-48 bg-slate-200 rounded mb-6"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
+          <div className="h-10 bg-slate-100 rounded"></div>
+          <div className="h-10 bg-slate-100 rounded"></div>
         </div>
-        {onEdit && (
-          <button 
-            onClick={onEdit}
-            className="text-sm font-bold text-[#1E3A8A] hover:text-[#0F172A] flex items-center gap-1 transition-colors"
-          >
-            <Edit2 className="w-4 h-4" />
-            Edit
-          </button>
-        )}
       </div>
-      <div className="p-6">
-        {children}
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+        <User className="w-5 h-5 text-slate-400" />
+        <h2 className="text-[14px] font-extrabold uppercase tracking-widest text-[#0F172A]">
+          {title}
+        </h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+        <div>
+          <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">Full Name</p>
+          <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(profileData?.fullName || profileData?.name)}</p>
+        </div>
+        <div>
+          <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">Email</p>
+          <div className="flex items-center gap-2">
+            <Mail className="w-4 h-4 text-slate-400" />
+            <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(profileData?.email)}</p>
+          </div>
+        </div>
+        <div>
+          <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-1">Phone Number</p>
+          <div className="flex items-center gap-2">
+            <Phone className="w-4 h-4 text-slate-400" />
+            <p className="text-[14px] font-extrabold text-[#0F172A]">{formatFallback(profileData?.phone || profileData?.phoneNumber)}</p>
+          </div>
+        </div>
       </div>
     </div>
   );

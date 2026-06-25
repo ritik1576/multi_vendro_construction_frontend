@@ -17,3 +17,18 @@ export const updatePassword = async (userId, data) => {
   const response = await api.put(`/users/${userId}/password`, data, { headers: getAuthHeaders() });
   return response.data?.data || response.data;
 };
+
+export const getCustomerProfileApi = async () => {
+  const response = await api.get(`/customer/profile`, { headers: getAuthHeaders() });
+  return response.data?.data || response.data;
+};
+
+export const getVendorProfileApi = async () => {
+  const response = await api.get(`/vendor/profile`, { headers: getAuthHeaders() });
+  return response.data?.data || response.data;
+};
+
+export const getAdminProfileApi = async () => {
+  const response = await api.get(`/admin/profile`, { headers: getAuthHeaders() });
+  return response.data?.data || response.data;
+};
