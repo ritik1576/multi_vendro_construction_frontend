@@ -20,23 +20,10 @@ const ALLOWED_ORDER_ACTIONS = {
     { label: 'Reject', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
   ],
   'confirmed': [
-    { label: 'Mark Packed', actionStatus: 'packed', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
-    { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
-  ],
-  'processing': [
-    { label: 'Mark Packed', actionStatus: 'packed', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
-    { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
-  ],
-  'packed': [
     { label: 'Mark Shipped', actionStatus: 'shipped', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
     { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
   ],
   'shipped': [
-    { label: 'Out for Delivery', actionStatus: 'outfordelivery', style: 'bg-[#1E3A8A] hover:bg-[#172554] text-white' },
-    { label: 'Mark Delivered', actionStatus: 'delivered', style: 'bg-[#EA580C] hover:bg-[#C2410C] text-white' },
-    { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
-  ],
-  'outfordelivery': [
     { label: 'Mark Delivered', actionStatus: 'delivered', style: 'bg-[#EA580C] hover:bg-[#C2410C] text-white' },
     { label: 'Cancel', actionStatus: 'cancelled', style: 'border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300' }
   ]
@@ -122,9 +109,9 @@ const VendorOrders = () => {
     dispatch(updateVendorOrderStatusRequest(vendorId, orderId, requestedStatus));
   };
 
-  const pendingCount = orders.filter(o => ['Pending Approval', 'Pending'].includes(o.status || o.orderStatus)).length;
-  const processingCount = orders.filter(o => ['Processing', 'Shipped'].includes(o.status || o.orderStatus)).length;
-  const completedCount = orders.filter(o => ['Completed', 'Delivered'].includes(o.status || o.orderStatus)).length;
+  const pendingCount = orders.filter(o => (o.status || o.orderStatus || '').toLowerCase() === 'pending').length;
+  const processingCount = orders.filter(o => ['confirmed', 'shipped'].includes((o.status || o.orderStatus || '').toLowerCase())).length;
+  const completedCount = orders.filter(o => (o.status || o.orderStatus || '').toLowerCase() === 'delivered').length;
 
   const stats = [
     { title: 'Total Orders', value: orders.length.toString(), helper: 'All time', icon: ShoppingCart, iconBg: 'bg-slate-50', iconColor: 'text-[#0F172A]' },
@@ -162,7 +149,7 @@ const VendorOrders = () => {
     switch((status || '').toLowerCase()) {
       case 'pending approval':
       case 'pending': return 'bg-amber-50 text-amber-600';
-      case 'processing': return 'bg-indigo-50 text-indigo-600';
+      case 'confirmed': return 'bg-indigo-50 text-indigo-600';
       case 'shipped': return 'bg-blue-50 text-blue-600';
       case 'completed':
       case 'delivered': return 'bg-emerald-50 text-emerald-600';
@@ -226,7 +213,8 @@ const VendorOrders = () => {
               >
                 <option>All Status</option>
                 <option>Pending Approval</option>
-                <option>Processing</option>
+                <option>Confirmed</option>
+                <option>Shipped</option>
                 <option>Completed</option>
               </select>
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
