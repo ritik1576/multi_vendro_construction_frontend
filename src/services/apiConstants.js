@@ -27,7 +27,7 @@ export const API_ENDPOINTS = {
     DELETE_PRODUCT: '/products/{id}',
   },
   CATEGORIES: {
-    GET_ALL: '/categories',
+    GET_ALL: '/products/categories',
   },
   CART: {
     GET: '/cart/{userId}',

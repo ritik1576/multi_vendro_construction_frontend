@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Save, X, Loader2 } from 'lucide-react';
 import ProductImageUploader from './ProductImageUploader';
-import { PRODUCT_CATEGORIES, normalizeCategory } from '../../constants/productCategories';
+import { normalizeCategory } from '../../constants/productCategories';
+import { useCategories } from '../../features/categories/hooks/useCategories';
 
 
 const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSubmitting = false }) => {
@@ -29,6 +30,8 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
+  
+  const { categories: categoryList, loading: categoriesLoading } = useCategories();
 
   useEffect(() => {
     if (initialData && mode === 'edit') {
@@ -162,18 +165,23 @@ const ProductForm = ({ mode = 'add', initialData = null, onCancel, onSave, isSub
                   <label htmlFor="category" className="block text-[12px] font-extrabold text-slate-700 uppercase tracking-wider">Category</label>
                   {errors.category && <span className="text-[11px] font-extrabold text-red-500 tracking-wider uppercase">{errors.category}</span>}
                 </div>
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className={`${inputBaseClass} ${getErrorClass('category')}`}
-                >
-                  <option value="">Select Category</option>
-                  {PRODUCT_CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                  <select
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className={`${inputBaseClass} ${getErrorClass('category')}`}
+                    disabled={categoriesLoading}
+                  >
+                    <option value="">Select Category</option>
+                    {categoriesLoading ? (
+                      <option disabled>Loading categories...</option>
+                    ) : (
+                      categoryList.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))
+                    )}
+                  </select>
               </div>
 
               <div>

@@ -71,6 +71,13 @@ export default function ProductListing() {
   const [sortBy, setSortBy] = useState('relevance');
   const [viewMode, setViewMode] = useState('grid');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const PRODUCTS_PER_PAGE = 30;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, searchTerm, sortBy]);
 
   const dispatch = useDispatch();
   const productState = useSelector((state) => state.product || {});
@@ -158,6 +165,15 @@ export default function ProductListing() {
     return filteredList;
   }, [filters, searchTerm, sortBy, products]);
 
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+  const shouldShowPagination = totalProducts > PRODUCTS_PER_PAGE;
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen flex flex-col bg-[#F8FAFC] font-sans text-[#0F172A]">
@@ -207,7 +223,7 @@ export default function ProductListing() {
             </button>
 
             <ProductGrid 
-              products={filteredProducts} 
+              products={paginatedProducts} 
               isLoading={isLoading} 
               error={error} 
               viewMode={viewMode}
@@ -215,15 +231,42 @@ export default function ProductListing() {
             />
 
             {/* Simple Pagination Footer */}
-            {!isLoading && !error && filteredProducts.length > 0 && (
+            {!isLoading && !error && shouldShowPagination && (
               <div className="mt-12 pt-6 border-t border-slate-200 flex items-center justify-center gap-2">
-                <button className="p-2 text-slate-400 hover:text-slate-800">‹</button>
-                <button className="w-8 h-8 flex items-center justify-center rounded bg-[#1E3A8A] text-white font-bold text-sm">1</button>
-                <button className="w-8 h-8 flex items-center justify-center rounded text-slate-500 hover:bg-slate-100 font-bold text-sm">2</button>
-                <button className="w-8 h-8 flex items-center justify-center rounded text-slate-500 hover:bg-slate-100 font-bold text-sm">3</button>
-                <span className="px-2 text-slate-400">...</span>
-                <button className="w-8 h-8 flex items-center justify-center rounded text-slate-500 hover:bg-slate-100 font-bold text-sm">24</button>
-                <button className="p-2 text-slate-400 hover:text-slate-800">›</button>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 text-slate-400 hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >‹</button>
+                
+                {[...Array(totalPages)].map((_, idx) => {
+                  const page = idx + 1;
+                  if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                    return (
+                      <button 
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 flex items-center justify-center rounded font-bold text-sm ${
+                          currentPage === page 
+                            ? 'bg-[#1E3A8A] text-white' 
+                            : 'text-slate-500 hover:bg-slate-100'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }
+                  if (page === currentPage - 2 || page === currentPage + 2) {
+                    return <span key={page} className="px-2 text-slate-400">...</span>;
+                  }
+                  return null;
+                })}
+
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 text-slate-400 hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >›</button>
               </div>
             )}
           </main>
