@@ -40,7 +40,7 @@ const VendorApprovalStatus = () => {
     );
   }
 
-  if (currentStatus === 'approved') {
+  if (String(currentStatus || '').toLowerCase() === 'approved') {
     return <Navigate to="/vendor/dashboard" replace />;
   }
 
@@ -50,7 +50,7 @@ const VendorApprovalStatus = () => {
         <VendorNavbar />
       </div>
       <div className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full flex flex-col items-center">
-        <ApprovalStateCard state={currentStatus || 'pending'} />
+        <ApprovalStateCard state={String(currentStatus || 'pending').toLowerCase()} />
         
         {/* Check Button to refresh status */}
         <div className="mt-8 text-center">

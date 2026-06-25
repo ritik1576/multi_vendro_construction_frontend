@@ -5,6 +5,8 @@ import { Search, ShoppingCart, MapPin, User, ChevronDown, Menu, Grid, Wrench, Za
 import { logout } from '../../../redux/authActions';
 import SearchDropdown from './SearchDropdown';
 import { NotificationDropdown } from '../../../features/notifications/components/NotificationDropdown';
+import { useCategories } from '../../../features/categories/hooks/useCategories';
+import { getCategoryIcon } from '../../../features/categories/utils/categoryIconMap';
 
 export default function ProductListingNavbar({ 
   searchTerm, 
@@ -48,37 +50,16 @@ export default function ProductListingNavbar({
     navigate('/');
   };
 
-  const iconMap = {
-    'For You': Grid,
-    'All': Grid,
-    'Civil Works': Truck,
-    'Paints': Droplet,
-    'Electricals': Zap,
-    'Plumbing': Wrench,
-    'Hardware': Hammer,
-    'Wood & Ply': Hammer,
-    'Glass': Grid,
-    'Lighting': Lightbulb,
-    'Safety Gear': Shield,
-    'Power Tools': Wrench,
-    'Machinery': Truck,
-    'Cement': Truck,
-    'Steel': Hammer,
-    'Bricks': Grid
-  };
+  const { categories: backendCategories } = useCategories();
 
-  const infraMartCategories = [
-    'All', 'Civil Works', 'Paints', 'Electricals', 'Plumbing', 
-    'Hardware', 'Wood & Ply', 'Glass', 'Lighting', 'Safety Gear', 
-    'Power Tools', 'Machinery', 'Bricks', 'Cement', 'Steel'
-  ];
+  const infraMartCategories = ['All', ...backendCategories];
 
   const categories = infraMartCategories.map(catName => {
     const label = catName === 'All' ? 'For You' : catName;
     return {
       id: catName,
       label,
-      icon: iconMap[label] || iconMap[catName] || null,
+      icon: getCategoryIcon(label),
       active: selectedCategory === catName || (selectedCategory === '' && catName === 'All')
     };
   });

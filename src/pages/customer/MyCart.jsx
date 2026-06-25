@@ -68,12 +68,64 @@ function MyCart() {
     dispatch(getProductsRequest());
   }, [dispatch]);
 
-  const cartItems = Array.isArray(cart) ? cart : (cart?.data?.items || cart?.items || []);
-  const subtotal = cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
+  const cartData = cart?.data || cart || {};
+  const cartItems = Array.isArray(cartData) ? cartData : (cartData.items || []);
+  
+  // Calculate raw subtotal from items if fallback is needed
+  const rawSubtotal = cartItems.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
   const deliveryCharge = cartItems.length > 0 ? 99 : 0;
   
-  // Use finalAmount from backend if coupon is applied, else fallback to subtotal + delivery
-  const grandTotal = appliedCoupon && finalAmount !== null ? finalAmount : (subtotal + deliveryCharge);
+  // Safe defaults based on coupon state or backend cart response
+  const subtotal = cartData?.subtotal || cartData?.cartTotal || cartData?.totalPrice || rawSubtotal || 0;
+  
+  const cartTotal = Number(
+    appliedCoupon?.subtotal ||
+    appliedCoupon?.cartTotal ||
+    subtotal ||
+    0
+  );
+
+  const safeAppliedCouponCode = appliedCoupon?.couponCode || appliedCoupon?.code || cartData?.couponCode || "";
+  const safeDiscountAmount = Number(appliedCoupon?.discountAmount || couponDiscount || cartData?.couponDiscount || 0);
+  const safeSubtotal = Number(appliedCoupon?.subtotal || appliedCoupon?.cartTotal || cartTotal || cartData?.subtotal || cartData?.cartTotal || cartData?.totalPrice || rawSubtotal || 0);
+  const safeShippingCharge = Number(
+    appliedCoupon?.shippingCharge !== undefined
+      ? appliedCoupon.shippingCharge
+      : (
+          cartData?.shippingCharge !== undefined
+            ? cartData.shippingCharge
+            : deliveryCharge
+        )
+  );
+  const safeFinalAmount = Number(appliedCoupon?.finalAmount || finalAmount || cartData?.finalAmount || (safeSubtotal - safeDiscountAmount + safeShippingCharge));
+  
+  // Determine active coupon presence
+  const isCouponActive = !!safeAppliedCouponCode && safeDiscountAmount > 0;
+  const displayCouponCode = safeAppliedCouponCode;
+  
+  // Selling Total
+  const displaySubtotal = isCouponActive ? safeSubtotal : (cartData?.totalPrice || rawSubtotal);
+  
+  // Calculate total MRP and Product Discount explicitly
+  const calculatedTotalMRP = cartItems.reduce((sum, item) => {
+    const sellingPrice = getCartItemPrice(item);
+    const matchedProduct = products.find(p => (p.ProductName || p.name || '').toLowerCase() === (item.productName || item.name || '').toLowerCase()) || {};
+    const originalPriceStr = item?.originalPrice || matchedProduct?.price || item?.price || sellingPrice;
+    const originalPrice = Number(String(originalPriceStr).replace(/[^\d]/g, "")) || sellingPrice;
+    const finalOrig = originalPrice > sellingPrice ? originalPrice : sellingPrice;
+    return sum + finalOrig * (item.quantity || 1);
+  }, 0);
+  
+  const displayProductDiscount = Math.max(0, calculatedTotalMRP - displaySubtotal);
+
+  // Coupon Discount
+  const displayCouponDiscount = isCouponActive ? safeDiscountAmount : 0;
+    
+  // Delivery Charge
+  const displayShipping = isCouponActive ? safeShippingCharge : deliveryCharge;
+    
+  // Grand Total
+  const displayGrandTotal = isCouponActive ? safeFinalAmount : (displaySubtotal + displayShipping);
 
   const decreaseQuantity = (id) => {
     const item = cartItems.find(i => (i.id || i.cartItemId || i.cartitemID || i._id) === id);
@@ -135,9 +187,14 @@ function MyCart() {
           <div className="grid gap-8 lg:grid-cols-[1fr_360px] items-start">
             <section className="grid gap-4">
               {cartItems.map((item) => {
-                const itemPrice = getCartItemPrice(item);
-                const itemSubtotal = itemPrice * item.quantity;
+                const sellingPrice = getCartItemPrice(item);
+                const itemSubtotal = item?.totalPrice ?? (sellingPrice * (item?.quantity || 1));
                 const matchedProduct = products.find(p => (p.ProductName || p.name || '').toLowerCase() === (item.productName || item.name || '').toLowerCase()) || {};
+
+                const originalPriceStr = item?.originalPrice || matchedProduct?.price || item?.price || sellingPrice;
+                const originalPrice = Number(String(originalPriceStr).replace(/[^\d]/g, "")) || sellingPrice;
+                const hasItemDiscount = originalPrice > sellingPrice;
+                const itemDiscountAmount = hasItemDiscount ? (originalPrice - sellingPrice) : 0;
 
                 const displayCategory = matchedProduct.category || item.category || 'Material';
                 const displayName = matchedProduct.ProductName || matchedProduct.name || item.productName || item.name || 'Product name not available';
@@ -178,7 +235,15 @@ function MyCart() {
                       <div className="mt-4 flex flex-wrap sm:flex-nowrap items-center justify-between border-t border-slate-100 pt-4 gap-4">
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Unit Price</p>
-                          <p className="text-[15px] font-extrabold text-[#0F172A]">{formatCurrency(itemPrice)}</p>
+                          <div className="flex flex-col">
+                            <p className="text-[15px] font-extrabold text-[#0F172A]">{formatCurrency(sellingPrice)}</p>
+                            {hasItemDiscount && (
+                                <>
+                                  <p className="text-[12px] text-slate-400 line-through">{formatCurrency(originalPrice)}</p>
+                                  <p className="text-[11px] font-bold text-green-600 mt-0.5">{formatCurrency(itemDiscountAmount)} saved</p>
+                                </>
+                            )}
+                          </div>
                         </div>
 
                         <div>
@@ -213,7 +278,7 @@ function MyCart() {
                 appliedCoupon={appliedCoupon}
                 couponError={couponError}
                 isApplying={isApplying}
-                onApply={() => applyCoupon(user?.id || user?.userId || user?._id, subtotal, cartItems)}
+                onApply={() => applyCoupon(user?.id || user?.userId || user?._id, cartData.totalPrice || rawSubtotal, cartItems)}
                 onRemove={() => removeCoupon(user?.id || user?.userId || user?._id)}
                 isLoggedIn={isAuthenticated}
                 onLoginClick={() => { /* Handle login click, e.g., open modal or navigate */ }}
@@ -224,24 +289,43 @@ function MyCart() {
                 <h2 className="text-lg font-extrabold text-[#0F172A] mb-4">Order Summary <span className="text-sm font-semibold text-slate-500">({cartItems.length} Items)</span></h2>
                 
                 <div className="grid gap-3 text-sm">
-                  <div className="flex justify-between gap-4">
-                    <span className="font-medium text-slate-600">Total MRP</span>
-                    <span className="font-extrabold text-[#0F172A]">{formatCurrency(subtotal)}</span>
-                  </div>
+                  {displayProductDiscount > 0 ? (
+                    <>
+                      <div className="flex justify-between gap-4">
+                        <span className="font-medium text-slate-600">MRP Total</span>
+                        <span className="font-medium text-slate-500 line-through">{formatCurrency(calculatedTotalMRP)}</span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="font-medium text-green-600">Product Discount</span>
+                        <span className="font-bold text-green-600">-{formatCurrency(displayProductDiscount)}</span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="font-bold text-[#0F172A]">Selling Total</span>
+                        <span className="font-extrabold text-[#0F172A]">{formatCurrency(displaySubtotal)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between gap-4">
+                      <span className="font-medium text-slate-600">Selling Total</span>
+                      <span className="font-extrabold text-[#0F172A]">{formatCurrency(displaySubtotal)}</span>
+                    </div>
+                  )}
                   
-                  <CouponSummary 
-                    discountAmount={couponDiscount} 
-                    code={appliedCoupon?.code} 
-                  />
+                  {isCouponActive && (
+                    <CouponSummary 
+                      discountAmount={displayCouponDiscount} 
+                      code={displayCouponCode} 
+                    />
+                  )}
 
                   <div className="flex justify-between gap-4">
                     <span className="font-medium text-slate-600">Delivery Charge</span>
-                    <span className="font-extrabold text-[#10B981]">{deliveryCharge ? formatCurrency(deliveryCharge) : 'Free'}</span>
+                    <span className="font-extrabold text-[#10B981]">{displayShipping ? formatCurrency(displayShipping) : 'Free'}</span>
                   </div>
                   
                   <div className="mt-2 flex justify-between gap-4 border-t border-slate-200 pt-4 items-center">
                     <span className="text-base font-extrabold text-[#0F172A]">Grand Total</span>
-                    <span className="text-2xl font-extrabold text-[#1E3A8A]">{formatCurrency(grandTotal)}</span>
+                    <span className="text-2xl font-extrabold text-[#1E3A8A]">{formatCurrency(displayGrandTotal)}</span>
                   </div>
                 </div>
 

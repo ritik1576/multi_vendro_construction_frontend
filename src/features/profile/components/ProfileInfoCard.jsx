@@ -1,27 +1,42 @@
-import { Edit2 } from 'lucide-react';
+import React from 'react';
+import { User, Mail, Phone } from 'lucide-react';
+import ProfileCard from './ui/ProfileCard';
+import SectionHeader from './ui/SectionHeader';
+import ProfileField from './ui/ProfileField';
+import StatusBadge from './ui/StatusBadge';
 
-const ProfileInfoCard = ({ title, icon: Icon, children, onEdit }) => {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="w-5 h-5 text-slate-400" />}
-          <h2 className="text-base font-extrabold text-[#0F172A]">{title}</h2>
+const ProfileInfoCard = ({ title = "Personal Information", profileData, loading }) => {
+  if (loading) {
+    return (
+      <ProfileCard className="animate-pulse">
+        <div className="h-6 w-48 bg-slate-200 rounded mb-8"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
+          <div className="h-12 bg-slate-100 rounded"></div>
+          <div className="h-12 bg-slate-100 rounded"></div>
         </div>
-        {onEdit && (
-          <button 
-            onClick={onEdit}
-            className="text-sm font-bold text-[#1E3A8A] hover:text-[#0F172A] flex items-center gap-1 transition-colors"
-          >
-            <Edit2 className="w-4 h-4" />
-            Edit
-          </button>
-        )}
+      </ProfileCard>
+    );
+  }
+
+  const user = profileData?.user || profileData || {};
+  const customer = profileData?.customer || {};
+  const defaultAddress = profileData?.defaultAddress || {};
+
+  const phone = user.phone || user.phoneNumber || customer.phone || defaultAddress.phone;
+  const fullName = user.fullName || user.name || customer.fullName;
+  const email = user.email || customer.email;
+
+  return (
+    <ProfileCard>
+      <SectionHeader icon={User} title={title} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
+        <ProfileField label="Full Name" value={fullName} />
+        
+        <ProfileField label="Email" value={email} icon={Mail} />
+        
+        <ProfileField label="Phone Number" value={phone} icon={Phone} />
       </div>
-      <div className="p-6">
-        {children}
-      </div>
-    </div>
+    </ProfileCard>
   );
 };
 

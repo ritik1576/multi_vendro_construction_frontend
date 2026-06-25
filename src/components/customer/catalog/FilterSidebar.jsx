@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronDown, ArrowUpDown, Tag, IndianRupee, Package, Filter } from 'lucide-react';
+import { useCategories } from '../../../features/categories/hooks/useCategories';
 
 export default function FilterSidebar({
   categoryOptions,
@@ -18,6 +19,7 @@ export default function FilterSidebar({
   setIsMobileOpen,
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { categories: backendCategories, loading: categoriesLoading } = useCategories();
 
   if (isCollapsed && !isMobileOpen) {
     return (
@@ -94,17 +96,21 @@ export default function FilterSidebar({
             <Tag className="h-3.5 w-3.5 text-slate-500" /> Category
           </h3>
           <div className="space-y-2.5">
-            {['All', 'Bricks', 'Cement', 'Paint', 'Steel'].map((cat) => (
-              <label key={cat} className="flex items-center gap-3 text-[13px] text-slate-700 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={filters.category === cat || (filters.category === 'All' && cat === 'All')}
-                  onChange={() => onCategoryChange(cat)}
-                  className="w-4 h-4 rounded text-[#F97316] border-slate-300 focus:ring-[#F97316] cursor-pointer"
-                />
-                <span>{cat}</span>
-              </label>
-            ))}
+            {categoriesLoading ? (
+               <div className="text-[12px] text-slate-500">Loading categories...</div>
+            ) : (
+              ['All', ...backendCategories].map((cat) => (
+                <label key={cat} className="flex items-center gap-3 text-[13px] text-slate-700 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={filters.category === cat || (filters.category === 'All' && cat === 'All')}
+                    onChange={() => onCategoryChange(cat)}
+                    className="w-4 h-4 rounded text-[#F97316] border-slate-300 focus:ring-[#F97316] cursor-pointer"
+                  />
+                  <span>{cat}</span>
+                </label>
+              ))
+            )}
           </div>
         </div>
 

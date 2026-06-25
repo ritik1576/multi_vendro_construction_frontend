@@ -27,7 +27,7 @@ export const API_ENDPOINTS = {
     DELETE_PRODUCT: '/products/{id}',
   },
   CATEGORIES: {
-    GET_ALL: '/categories',
+    GET_ALL: '/products/categories',
   },
   CART: {
     GET: '/cart/{userId}',
@@ -50,12 +50,14 @@ export const API_ENDPOINTS = {
     APPROVE_VENDOR: '/admin/vendors/{id}/approve',
     REJECT_VENDOR: '/admin/vendors/{id}/reject',
     GET_ALL_ORDERS: '/orders/all-with-items',
+    EMAIL_TEMPLATES: '/admin/email-templates',
   },
   WALLET: {
     GET_BALANCE: '/wallet/balance',
     GET_TRANSACTIONS: '/wallet/transactions',
     ADD_MONEY: '/wallet/add-money',
     WITHDRAW_MONEY: '/wallet/withdraw',
+    TRANSFER_MONEY: '/wallet/transfer',
   },
 };
 

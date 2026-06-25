@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { updateProfile, updatePassword } from '../services/profileService';
+import { updateProfile, updatePassword, getCustomerProfileApi, getVendorProfileApi, getAdminProfileApi } from '../services/profileService';
 import toast from 'react-hot-toast';
 
 export const useProfile = () => {
@@ -8,10 +8,38 @@ export const useProfile = () => {
   const [profileData, setProfileData] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    if (user) {
-      setProfileData(user);
-    }
+    const fetchProfile = async () => {
+      if (!user) return;
+      setLoading(true);
+      setError(null);
+      try {
+        let data = user;
+        const role = user.role?.toLowerCase() || '';
+        
+        if (role === 'vendor') {
+          const res = await getVendorProfileApi();
+          data = res;
+        } else if (role === 'admin') {
+          const res = await getAdminProfileApi();
+          data = res;
+        } else {
+          const res = await getCustomerProfileApi();
+          data = res;
+        }
+        setProfileData(data);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError(err.message || 'Failed to fetch profile');
+        setProfileData(user); // Fallback to auth user
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
   }, [user]);
 
   const handleUpdateProfile = async (data) => {
@@ -57,6 +85,7 @@ export const useProfile = () => {
     user,
     profileData,
     loading,
+    error,
     handleUpdateProfile,
     handleUpdatePassword
   };

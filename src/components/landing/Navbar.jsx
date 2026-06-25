@@ -19,10 +19,11 @@ const Navbar = ({ searchTerm, onSearchChange }) => {
   const isProductDetailPage = location.pathname.startsWith('/product/');
   const isCartPage = location.pathname === '/cart';
   const isOrderPage = location.pathname.startsWith('/orders/');
+  const isKycPage = location.pathname === '/vendor/kyc';
   const isCustomerProductPage = isProductsPage || isProductDetailPage || isCartPage || isOrderPage;
   const isAdminAuthPage = location.pathname.startsWith('/admin/login') || location.pathname.startsWith('/admin/forgot-password') || location.pathname.startsWith('/admin/reset-password');
   const isAuthPage = isRegisterPage || isLoginPage || isForgotPasswordPage || isAdminAuthPage;
-  const hideSearchAndIcons = isLandingPage || isAuthPage;
+  const hideSearchAndIcons = isLandingPage || isAuthPage || isKycPage;
 
   const { isAuthenticated, user } = useSelector((state) => state.auth || {});
   const dispatch = useDispatch();
@@ -81,53 +82,55 @@ const Navbar = ({ searchTerm, onSearchChange }) => {
               </>
             )}
             
-            <div className="hidden md:flex items-center space-x-2 ml-2 pl-4 border-l border-customBorder-light">
-              {isLandingPage ? (
-                <>
-                  <Link to="/login" className="px-4 py-2 rounded-md text-sm font-medium text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
-                    Sign In
-                  </Link>
-                  <Link to="/register" className="px-4 py-2 rounded-md text-sm font-medium text-primary-main bg-orange-50 hover:bg-orange-100 transition-colors">
-                    Register
-                  </Link>
-                </>
-              ) : isAuthenticated && !isAdminAuthPage ? (
-                <>
-                  <span className="text-sm font-medium text-slate-700 mr-2">
-                    Hi, {(user?.fullName || user?.FullName || user?.name || user?.Name || user?.firstName || user?.customerName || user?.shopName || user?.username || user?.UserName || 'User').split(' ')[0]}
-                  </span>
-                  <button 
-                    onClick={handleLogout}
-                    className="px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  {isAuthPage && (
-                    <Link to="/" className="px-4 py-2 rounded-md text-sm font-medium text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
-                      Home
-                    </Link>
-                  )}
-                  {(!isLoginPage || isForgotPasswordPage) && (
+            {!isKycPage && (
+              <div className="hidden md:flex items-center space-x-2 ml-2 pl-4 border-l border-customBorder-light">
+                {isLandingPage ? (
+                  <>
                     <Link to="/login" className="px-4 py-2 rounded-md text-sm font-medium text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
                       Sign In
                     </Link>
-                  )}
-                  {(!isRegisterPage || isForgotPasswordPage) && (
                     <Link to="/register" className="px-4 py-2 rounded-md text-sm font-medium text-primary-main bg-orange-50 hover:bg-orange-100 transition-colors">
                       Register
                     </Link>
-                  )}
-                  {isAdminAuthPage && (
-                    <Link to="/" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
-                      Return to Main Site
-                    </Link>
-                  )}
-                </>
-              )}
-            </div>
+                  </>
+                ) : isAuthenticated && !isAdminAuthPage ? (
+                  <>
+                    <span className="text-sm font-medium text-slate-700 mr-2">
+                      Hi, {(user?.fullName || user?.FullName || user?.name || user?.Name || user?.firstName || user?.customerName || user?.shopName || user?.username || user?.UserName || 'User').split(' ')[0]}
+                    </span>
+                    <button 
+                      onClick={handleLogout}
+                      className="px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {isAuthPage && (
+                      <Link to="/" className="px-4 py-2 rounded-md text-sm font-medium text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
+                        Home
+                      </Link>
+                    )}
+                    {(!isLoginPage || isForgotPasswordPage) && (
+                      <Link to="/login" className="px-4 py-2 rounded-md text-sm font-medium text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
+                        Sign In
+                      </Link>
+                    )}
+                    {(!isRegisterPage || isForgotPasswordPage) && (
+                      <Link to="/register" className="px-4 py-2 rounded-md text-sm font-medium text-primary-main bg-orange-50 hover:bg-orange-100 transition-colors">
+                        Register
+                      </Link>
+                    )}
+                    {isAdminAuthPage && (
+                      <Link to="/" className="px-4 py-2 rounded-md text-sm font-bold text-primary-dark hover:text-primary-main hover:bg-orange-50 transition-colors">
+                        Return to Main Site
+                      </Link>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
           
         </div>
