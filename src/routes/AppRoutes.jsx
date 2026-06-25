@@ -68,7 +68,7 @@ const RootRoute = () => {
 
   // If vendor
   if (user?.vendorId || user?.role === 'vendor') {
-    if (user?.status === 'approved') {
+    if (String(user?.status || '').toLowerCase() === 'approved') {
       return <Navigate to="/vendor/dashboard" replace />;
     }
     return <Navigate to="/vendor/approval-status" replace />;

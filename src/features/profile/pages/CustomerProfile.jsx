@@ -21,7 +21,23 @@ const CustomerProfile = () => {
         )}
 
         <div className="space-y-8">
-          <ProfileHeaderCard user={user || profileData?.user || profileData} roleText="Customer" />
+          {(() => {
+            const userObj = user || profileData?.user || profileData || {};
+            const customerObj = profileData?.customer || {};
+            const addressObj = profileData?.defaultAddress || {};
+            
+            const displayEmail = userObj?.email || customerObj?.email;
+            const displayPhone = userObj?.phone || userObj?.phoneNumber || customerObj?.phone || addressObj?.phone;
+
+            return (
+              <ProfileHeaderCard 
+                user={userObj} 
+                roleText="Customer" 
+                email={displayEmail}
+                phone={displayPhone}
+              />
+            );
+          })()}
 
           <div className="grid grid-cols-1 gap-8">
             <ProfileInfoCard 

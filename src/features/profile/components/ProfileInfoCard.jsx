@@ -35,10 +35,6 @@ const ProfileInfoCard = ({ title = "Personal Information", profileData, loading 
         <ProfileField label="Email" value={email} icon={Mail} />
         
         <ProfileField label="Phone Number" value={phone} icon={Phone} />
-        
-        <ProfileField label="Account Status">
-          <StatusBadge status={user.status || 'Active'} />
-        </ProfileField>
       </div>
     </ProfileCard>
   );
