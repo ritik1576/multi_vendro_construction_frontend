@@ -4,10 +4,10 @@ import VendorLayout from '../../components/vendor/VendorLayout';
 import { 
   ShoppingCart, Clock, Package, CheckCircle, 
   Search, Filter, Calendar, ChevronDown, 
-  MapPin, Box, ChevronLeft, ChevronRight, Eye, Trash2, X
+  MapPin, Box, ChevronLeft, ChevronRight, Eye, X
 } from 'lucide-react';
 import { getVendorOrderDetails } from '../../services/vendorApi';
-import { getVendorOrdersRequest, deleteVendorOrderRequest, updateVendorOrderStatusRequest } from '../../redux/vendorActions';
+import { getVendorOrdersRequest, updateVendorOrderStatusRequest } from '../../redux/vendorActions';
 import toast from 'react-hot-toast';
 
 const ALLOWED_ORDER_ACTIONS = {
@@ -79,20 +79,7 @@ const VendorOrders = () => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, dateFilter, sortBy]);
 
-  const handleDelete = (orderId) => {
-    toast((t) => (
-      <div>
-        <p className="mb-3 text-sm font-medium">Are you sure you want to delete this order?</p>
-        <div className="flex gap-2 justify-end">
-          <button onClick={() => toast.dismiss(t.id)} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded">Cancel</button>
-          <button onClick={() => {
-            toast.dismiss(t.id);
-            dispatch(deleteVendorOrderRequest(vendorId, orderId));
-          }} className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded">Delete</button>
-        </div>
-      </div>
-    ), { duration: Infinity });
-  };
+
 
   const handleUpdateStatus = (orderId, requestedStatus, currentStatus) => {
     if (loading.updateOrder === orderId) return; // Prevent double click
@@ -365,13 +352,6 @@ const VendorOrders = () => {
                 >
                   <Eye className="w-4 h-4 text-slate-400" />
                   View Details
-                </button>
-                <button 
-                  onClick={() => handleDelete(order.apiOrderId)}
-                  className="p-2.5 border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition-colors"
-                  title="Delete Order"
-                >
-                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
 

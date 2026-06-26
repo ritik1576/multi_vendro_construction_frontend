@@ -212,14 +212,9 @@ const AdminReviews = () => {
                   filteredReviews.map(review => (
                     <tr key={review.id} className="hover:bg-slate-50 transition-colors group">
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {review.productThumbnail && (
-                            <img src={review.productThumbnail} alt={review.productName} className="w-10 h-10 rounded object-cover border border-slate-200" />
-                          )}
-                          <div className="flex flex-col">
-                            <span className="text-sm font-extrabold text-slate-900 line-clamp-1">{review.productName || 'Unknown Product'}</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">ID: {review.productId}</span>
-                          </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-extrabold text-slate-900 line-clamp-1">{review.productName || 'Unknown Product'}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">ID: {review.productId}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
