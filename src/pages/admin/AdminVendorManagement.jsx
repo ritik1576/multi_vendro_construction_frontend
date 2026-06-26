@@ -8,6 +8,34 @@ import {
   ArrowUpRight, Mail, Phone, FileText, Loader2, AlertCircle
 } from 'lucide-react';
 
+const getVendorApprovalStatus = (vendor) => {
+  if (!vendor) return 'pending';
+  
+  if (vendor.isApproved === true || vendor.isVerified === true) return 'approved';
+  
+  const statusFields = [
+    vendor.approval_status,
+    vendor.approvalStatus,
+    vendor.status,
+    vendor.vendorStatus,
+    vendor.kycStatus
+  ];
+
+  for (let val of statusFields) {
+    if (typeof val === 'string') {
+      const normalized = val.toLowerCase().replace(/_/g, ' ').trim();
+      if (['pending', 'pending approval', 'under review'].includes(normalized)) {
+        return 'pending';
+      }
+      if (['approved', 'verified', 'active'].includes(normalized)) {
+        return 'approved';
+      }
+    }
+  }
+
+  return 'pending'; // Default fallback
+};
+
 const AdminVendorManagement = () => {
   const location = useLocation();
   const [activeFilter, setActiveFilter] = useState(location.state?.filter || 'All Vendors');
@@ -30,7 +58,7 @@ const AdminVendorManagement = () => {
   // KPIs
   const kpis = [
     { title: 'Total Vendors', value: vendors.length.toString(), icon: Users, isPending: false },
-    { title: 'Pending Approval', value: vendors.filter(v => v.approval_status === 'Pending Approval').length.toString(), icon: Hourglass, isPending: true },
+    { title: 'Pending Approval', value: vendors.filter(v => getVendorApprovalStatus(v) === 'pending').length.toString(), icon: Hourglass, isPending: true },
   ];
 
   // Helper to generate a background color based on name for the avatar
@@ -50,8 +78,8 @@ const AdminVendorManagement = () => {
   const filteredAndSortedVendors = vendors
     .filter(vendor => {
       // 1. Filter by Active Filter
-      if (activeFilter === 'Pending' && vendor.approval_status !== 'Pending Approval' && vendor.approval_status !== 'Pending') return false;
-      if (activeFilter === 'Approved' && vendor.approval_status !== 'Approved' && vendor.approval_status !== 'Verified') return false;
+      if (activeFilter === 'Pending' && getVendorApprovalStatus(vendor) !== 'pending') return false;
+      if (activeFilter === 'Approved' && getVendorApprovalStatus(vendor) !== 'approved') return false;
       
       // 2. Filter by Search Query
       if (searchQuery) {
@@ -226,7 +254,7 @@ const AdminVendorManagement = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {vendor.approval_status === 'Pending Approval' ? (
+                        {getVendorApprovalStatus(vendor) === 'pending' ? (
                           <Link 
                             to={`/admin/vendors/${vendor.id}`} 
                             state={{ vendor }}
