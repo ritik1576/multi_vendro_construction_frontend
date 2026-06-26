@@ -119,6 +119,10 @@ const AdminVendorDetails = () => {
   const kycStatus = kycDetails?.kycStatus || 'Not Submitted';
   const vendorStatus = kycDetails?.vendorStatus || vendor.approval_status;
 
+  const isRejected = vendorStatus === 'Rejected' || kycStatus === 'Rejected';
+  const isApproved = vendorStatus === 'Approved' || vendorStatus === 'Verified' || kycStatus === 'Verified';
+  const isPending = !isRejected && !isApproved;
+
   const getStatusBadge = (status) => {
     switch(status) {
       case 'Approved':
@@ -329,21 +333,32 @@ const AdminVendorDetails = () => {
         )}
 
         {/* Actions */}
-        {vendorStatus !== 'Rejected' && kycStatus !== 'Rejected' && !showRejectReason && (
+        {!showRejectReason && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-end gap-3">
-            <button 
-              onClick={() => setShowRejectReason(true)}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-extrabold rounded-lg shadow-sm transition-colors"
-            >
-              <XCircle className="w-4 h-4" /> Reject Vendor
-            </button>
-            {vendorStatus !== 'Approved' && vendorStatus !== 'Verified' && kycStatus !== 'Verified' && (
+            {!isRejected && (
+              <button 
+                onClick={() => setShowRejectReason(true)}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-extrabold rounded-lg shadow-sm transition-colors"
+              >
+                <XCircle className="w-4 h-4" /> Reject Vendor
+              </button>
+            )}
+            {isPending && (
               <button 
                 onClick={handleApprove}
                 disabled={isProcessing}
                 className="flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve Vendor
+              </button>
+            )}
+            {isRejected && (
+              <button 
+                onClick={handleApprove}
+                disabled={isProcessing}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-extrabold rounded-lg shadow-sm transition-colors"
+              >
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve Again
               </button>
             )}
           </div>
