@@ -94,6 +94,8 @@ const Wallet = () => {
   const [addAmountValue, setAddAmountValue] = useState('');
   const [isWithdrawAmountOpen, setIsWithdrawAmountOpen] = useState(false);
   const [withdrawAmountValue, setWithdrawAmountValue] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
   const filterRef = useRef(null);
 
   useEffect(() => {
@@ -105,6 +107,10 @@ const Wallet = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeFilters]);
 
   const handleFilterSelect = (type, value) => {
     setActiveFilters(prev => ({ ...prev, [type]: value }));
@@ -156,6 +162,9 @@ const Wallet = () => {
 
     return true;
   });
+
+  const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
+  const displayTransactions = filteredTransactions.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const hasActiveFilters = activeFilters.dateRange || activeFilters.status || searchQuery.trim();
 
@@ -324,8 +333,8 @@ const Wallet = () => {
                       Loading transactions...
                     </td>
                   </tr>
-                ) : filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((tx) => (
+                ) : displayTransactions.length > 0 ? (
+                  displayTransactions.map((tx) => (
                     <tr key={tx.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-6">
                         <div className="text-sm font-bold text-[var(--color-primary-dark)] mb-1">
@@ -363,22 +372,41 @@ const Wallet = () => {
           {/* Pagination Footer */}
           <div className="flex flex-col sm:flex-row items-center justify-between p-6 border-t border-[var(--color-customBorder-light)]">
             <span className="text-xs font-bold text-[var(--color-customText-secondary)] mb-4 sm:mb-0">
-              Showing {filteredTransactions.length} of {transactionsData?.totalCount || transactionsList.length} transactions
+              Showing {filteredTransactions.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0} to {Math.min(currentPage * rowsPerPage, filteredTransactions.length)} of {filteredTransactions.length} transactions
             </span>
-            <div className="flex items-center gap-2">
-              <button className="p-2 text-[var(--color-customText-secondary)] border border-[var(--color-customBorder-light)] rounded hover:bg-gray-50 transition-colors">
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center text-xs font-bold text-white bg-[var(--color-primary-main)] rounded">
-                1
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center text-xs font-bold text-[var(--color-customText-secondary)] border border-transparent hover:bg-gray-50 rounded transition-colors">
-                2
-              </button>
-              <button className="p-2 text-[var(--color-customText-secondary)] border border-[var(--color-customBorder-light)] rounded hover:bg-gray-50 transition-colors">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 text-[var(--color-customText-secondary)] border border-[var(--color-customBorder-light)] rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                
+                {[...Array(totalPages)].map((_, i) => (
+                  <button 
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-8 h-8 flex items-center justify-center text-xs font-bold rounded transition-colors ${
+                      currentPage === i + 1
+                        ? 'text-white bg-[var(--color-primary-main)]'
+                        : 'text-[var(--color-customText-secondary)] border border-transparent hover:bg-gray-50'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 text-[var(--color-customText-secondary)] border border-[var(--color-customBorder-light)] rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
           
         </div>
