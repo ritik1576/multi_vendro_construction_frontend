@@ -41,6 +41,8 @@ export const API_ENDPOINTS = {
     PLACE_ORDER: '/orders',
     CANCEL_ORDER: '/orders/{id}/cancel',
     TRACK_ORDER: '/orders/{id}/tracking',
+    CREATE_ONLINE_PAYMENT: '/orders/create-online-payment',
+    VERIFY_PAYMENT: '/orders/verify-payment',
   },
   ADMIN: {
     LOGIN: '/admin/login',

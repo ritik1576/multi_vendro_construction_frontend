@@ -12,7 +12,10 @@ import {
   updateAddressRequest, 
   deleteAddressRequest 
 } from '../../redux/addressActions';
+import toast from 'react-hot-toast';
 import { getWalletBalanceRequest } from '../../redux/walletActions';
+import { loadRazorpayScript } from '../../utils/loadRazorpayScript';
+import { paymentService } from '../../services/paymentService';
 
 const requiredFields = ['name', 'phone', 'line1', 'city', 'state', 'pincode'];
 
@@ -179,7 +182,7 @@ const Checkout = () => {
     setAddressErrors({});
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!canPlaceOrder || !address) {
       return;
     }
@@ -197,6 +200,98 @@ const Checkout = () => {
     
     if (appliedCouponData?.code) {
       orderPayload.couponCode = appliedCouponData.code;
+    }
+
+    if (paymentMethod === 'online') {
+      try {
+        const isScriptLoaded = await loadRazorpayScript();
+        if (!isScriptLoaded) {
+          toast.error('Razorpay SDK failed to load. Are you online?');
+          return;
+        }
+
+        const cartId = cartData?.cartId || cartData?.id;
+        const addressId = address?.id;
+        const couponCode = appliedCouponData?.code || null;
+
+        if (!cartId) {
+          toast.error('Cart id not found. Please refresh cart.');
+          return;
+        }
+        if (!addressId) {
+          toast.error('Please select delivery address.');
+          return;
+        }
+
+        const paymentRes = await paymentService.createOnlinePaymentApi({ 
+          cartId,
+          addressId,
+          couponCode
+        });
+        
+        if (!paymentRes || !paymentRes.razorpayOrderId) {
+          toast.error('Failed to initialize payment. Please try again.');
+          return;
+        }
+
+        const options = {
+          key: paymentRes.key, // Use key returned from backend
+          amount: paymentRes.amount,
+          currency: paymentRes.currency || 'INR',
+          name: 'InfraMart',
+          description: 'Payment for your order',
+          order_id: paymentRes.razorpayOrderId,
+          handler: async function (response) {
+            try {
+              const verifyRes = await paymentService.verifyOnlinePaymentApi({
+                orderId: paymentRes.orderId,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature
+              });
+
+              const finalOrderId = verifyRes?.orderId || verifyRes?.data?.orderId || paymentRes.orderId;
+
+              if (finalOrderId) {
+                toast.success('Payment verified and order placed successfully');
+                dispatch(getCartRequest()); // Refresh Cart
+                
+                // Navigate only with orderId, do not pass stale data
+                navigate('/order-confirmation', { state: { orderId: finalOrderId } });
+              } else {
+                toast.error('Payment verified but order id missing. Please check order history.');
+              }
+            } catch (err) {
+              console.error(err);
+              toast.error('Payment verification failed');
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              toast.error('Payment cancelled');
+            }
+          },
+          prefill: {
+            name: authUser?.name || address.name,
+            email: authUser?.email || '',
+            contact: address.phone,
+          },
+          theme: {
+            color: '#1E3A8A'
+          }
+        };
+        
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.on('payment.failed', function (response) {
+          toast.error('Payment Failed: ' + response.error.description);
+        });
+        paymentObject.open();
+
+      } catch (err) {
+        console.error(err);
+        toast.error('Payment error occurred.');
+      }
+      return;
     }
 
     dispatch(placeOrderRequest(orderPayload));
@@ -463,7 +558,7 @@ const Checkout = () => {
               </div>
               <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-3">
                 {[
-                  { value: 'online', label: 'UPI', subLabel: 'Google Pay, PhonePe, BHIM', disabled: false },
+                  { value: 'online', label: 'Online Payment', subLabel: 'UPI, Cards, NetBanking, Wallets', disabled: false },
                   { value: 'cod', label: 'Cash on Delivery', subLabel: 'Pay at your doorstep', disabled: false },
                   { 
                     value: 'wallet', 
