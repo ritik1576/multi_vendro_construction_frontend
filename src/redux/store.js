@@ -10,6 +10,7 @@ import adminReducer from './adminReducer';
 import addressReducer from './addressReducer';
 import vendorReducer from './vendorReducer';
 import rootSaga from '../saga/rootSaga';
+import notificationReducer from './notificationReducer';
 
 import walletReducer from './walletReducer';
 
@@ -36,6 +37,7 @@ const rootReducer = combineReducers({
   address: addressReducer,
   vendor: vendorReducer,
   wallet: walletReducer,
+  notification: notificationReducer,
 });
 
 const rootPersistConfig = {

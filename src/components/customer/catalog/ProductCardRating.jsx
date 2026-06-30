@@ -2,8 +2,10 @@ import React from 'react';
 import { useReviews } from '../../../features/reviews/hooks/useReviews';
 import { RatingStars } from '../../../features/reviews/components/RatingStars';
 
-export default function ProductCardRating({ productId }) {
-  const { averageRating, totalReviews, isLoading } = useReviews({ productId });
+export default function ProductCardRating({ product }) {
+  const averageRating = product?.averageRating || product?.rating || 0;
+  const totalReviews = product?.totalReviews || product?.reviews || 0;
+  const isLoading = false; // Never loading here since data comes from product
 
   if (isLoading) {
     return <div className="h-4 mt-1 bg-slate-100 animate-pulse rounded w-24"></div>;

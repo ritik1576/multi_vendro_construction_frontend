@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -11,10 +11,14 @@ import { Minus, Plus, Image as ImageIcon } from 'lucide-react';
 import { getLocalProductImage } from '../../../utils/productImages';
 import ProductCardRating from './ProductCardRating';
 
-function ProductImage({ alt, src }) {
+function ProductImage({ alt, src, product }) {
   const [failedSrc, setFailedSrc] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   
-  if (!src || failedSrc === src) {
+  const thumbnailUrl = product?.thumbnailUrl || product?.thumbnail;
+  const imageSrc = thumbnailUrl && !failedSrc ? thumbnailUrl : src;
+  
+  if (!imageSrc || failedSrc === imageSrc) {
     return (
       <div className="flex flex-col items-center justify-center text-slate-300 w-full h-full bg-slate-50">
         <ImageIcon className="w-12 h-12 mb-2 stroke-[1.5]" />
@@ -24,17 +28,27 @@ function ProductImage({ alt, src }) {
   }
 
   return (
-    <img
-      alt={alt || 'Product image'}
-      className="h-full w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
-      loading="lazy"
-      onError={() => setFailedSrc(src)}
-      src={src}
-    />
+    <>
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-slate-100 animate-pulse w-full h-full" />
+      )}
+      <img
+        alt={alt || 'Product image'}
+        className={`h-full w-full object-contain mix-blend-multiply group-hover:scale-105 transition-all duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          setFailedSrc(imageSrc);
+          setIsLoaded(true);
+        }}
+        src={imageSrc}
+      />
+    </>
   );
 }
 
-export default function ProductCardCompact({ product, viewMode = 'grid' }) {
+const ProductCardCompact = memo(function ProductCardCompact({ product, viewMode = 'grid' }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const rawCart = useSelector((state) => state.cart?.cart);
@@ -123,7 +137,7 @@ export default function ProductCardCompact({ product, viewMode = 'grid' }) {
       <div className={`relative flex items-center justify-center overflow-hidden shrink-0 bg-white ${
         isListView ? 'w-32 h-full border-r border-slate-100 p-2' : 'w-full h-48 p-4'
       }`}>
-        <ProductImage alt={productName} src={getLocalProductImage(product)} />
+        <ProductImage alt={productName} src={getLocalProductImage(product)} product={product} />
       </div>
 
       {/* Content Container */}
@@ -139,7 +153,7 @@ export default function ProductCardCompact({ product, viewMode = 'grid' }) {
           {productName}
         </h3>
         
-        <ProductCardRating productId={product?.id || product?._id || product?.productId || product?.ProductName || product?.name} />
+        <ProductCardRating product={product} />
         
         {/* Price Row */}
         <div className="mt-2 flex items-center gap-2 flex-wrap">
@@ -189,4 +203,6 @@ export default function ProductCardCompact({ product, viewMode = 'grid' }) {
       </div>
     </article>
   );
-}
+});
+
+export default ProductCardCompact;

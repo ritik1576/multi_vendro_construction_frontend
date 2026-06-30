@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import { normalizeProductImage } from '../../utils/productImages';
 
@@ -14,46 +14,48 @@ const FeaturedProducts = () => {
     setFailedImages(prev => ({ ...prev, [id]: true }));
   };
 
-  const displayProducts = apiProducts
-    ?.filter(p => p.image || p.thumbnail || (p.images && p.images.length > 0))
-    .filter(p => {
-      const name = (p.name || p.title || '').toLowerCase();
-      if (
-        name.includes('ultratech cement opc 53 gra') || 
-        name.includes('acc cement 50kg') ||
-        name.includes('ambuja')
-      ) {
-        return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      const aName = (a.name || a.title || '').toLowerCase();
-      const bName = (b.name || b.title || '').toLowerCase();
-      const aMatch = aName.includes('white cement') || aName.includes('plywood') || aName.includes('birla white');
-      const bMatch = bName.includes('white cement') || bName.includes('plywood') || bName.includes('birla white');
-      if (aMatch && !bMatch) return -1;
-      if (!aMatch && bMatch) return 1;
-      return 0;
-    })
-    .slice(0, 4)
-    .map((p, idx) => {
-      let img = p.image || p.thumbnail;
-      if (!img && p.images && p.images.length > 0) img = p.images[0];
-      return {
-        id: p.id || p._id || idx,
-        name: p.name || p.title || 'Product',
-        description: p.description || 'Premium construction material',
-        price: p.price || p.basePrice || '0.00',
-        unit: p.unit || 'Piece',
-        rating: p.rating || 4.5,
-        reviews: p.reviews || 0,
-        image: img,
-        tag: '',
-        tagColor: '',
-        priceTag: 'Wholesale'
-      };
-    }) || [];
+  const displayProducts = useMemo(() => {
+    return apiProducts
+      ?.filter(p => p.image || p.thumbnail || (p.images && p.images.length > 0))
+      .filter(p => {
+        const name = (p.name || p.title || '').toLowerCase();
+        if (
+          name.includes('ultratech cement opc 53 gra') || 
+          name.includes('acc cement 50kg') ||
+          name.includes('ambuja')
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const aName = (a.name || a.title || '').toLowerCase();
+        const bName = (b.name || b.title || '').toLowerCase();
+        const aMatch = aName.includes('white cement') || aName.includes('plywood') || aName.includes('birla white');
+        const bMatch = bName.includes('white cement') || bName.includes('plywood') || bName.includes('birla white');
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+        return 0;
+      })
+      .slice(0, 4)
+      .map((p, idx) => {
+        let img = p.image || p.thumbnail;
+        if (!img && p.images && p.images.length > 0) img = p.images[0];
+        return {
+          id: p.id || p._id || idx,
+          name: p.name || p.title || 'Product',
+          description: p.description || 'Premium construction material',
+          price: p.price || p.basePrice || '0.00',
+          unit: p.unit || 'Piece',
+          rating: p.rating || 4.5,
+          reviews: p.reviews || 0,
+          image: img,
+          tag: '',
+          tagColor: '',
+          priceTag: 'Wholesale'
+        };
+      }) || [];
+  }, [apiProducts]);
 
   const renderSkeletons = () => {
     return Array(4).fill(0).map((_, idx) => (
@@ -103,6 +105,8 @@ const FeaturedProducts = () => {
                 <img 
                   src={failedImages[product.id] ? normalizeProductImage('') : normalizeProductImage(product.image)} 
                   alt={product.name} 
+                  loading="lazy"
+                  decoding="async"
                   onError={() => handleImageError(product.id)}
                   className="max-h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
                 />
