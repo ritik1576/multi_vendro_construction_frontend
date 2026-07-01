@@ -25,6 +25,9 @@ import {
 } from '../../redux/walletActions';
 import { Filter, Download, ChevronLeft, ChevronRight, ShieldCheck, Plus, Minus, Search, X } from 'lucide-react';
 import VendorLayout from '../../components/vendor/VendorLayout';
+import { loadRazorpayScript } from '../../utils/loadRazorpayScript';
+import { paymentService } from '../../services/paymentService';
+import toast from 'react-hot-toast';
 
 const Wallet = () => {
   const dispatch = useDispatch();
@@ -61,9 +64,88 @@ const Wallet = () => {
     setIsAddAmountOpen(true);
   };
 
-  const handleAddMoneySubmit = () => {
-    if (addAmountValue && !isNaN(addAmountValue) && Number(addAmountValue) > 0) {
-      dispatch(addWalletMoneyRequest(addAmountValue));
+  const handleAddMoneySubmit = async () => {
+    const amount = Number(addAmountValue);
+    if (!amount || isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount greater than 0.');
+      return;
+    }
+
+    try {
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        toast.error('Razorpay SDK failed to load. Are you online?');
+        return;
+      }
+
+      const createResponse = await paymentService.createWalletAddMoneyPaymentApi({ amount });
+      
+      if (!createResponse || !createResponse.razorpayOrderId) {
+        toast.error('Unable to create payment. Please try again.');
+        return;
+      }
+
+      console.log("Wallet create payment response", createResponse);
+
+      const options = {
+        key: createResponse.key,
+        amount: createResponse.amount,
+        currency: createResponse.currency || 'INR',
+        name: 'InfraMart Wallet',
+        description: 'Add Money to Wallet',
+        order_id: createResponse.razorpayOrderId,
+        handler: async function (response) {
+          console.log("Wallet Razorpay success response", response);
+          
+          try {
+            const verifyPayload = {
+              razorpayOrderId: response.razorpay_order_id || createResponse.razorpayOrderId,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              amount: amount
+            };
+            
+            console.log("Wallet verify payload", verifyPayload);
+            
+            const verifyResponse = await paymentService.verifyWalletAddMoneyApi(verifyPayload);
+            console.log("Wallet verify response", verifyResponse);
+            
+            const message = verifyResponse?.message?.toLowerCase() || '';
+            
+            if (message.includes('wallet recharged') || verifyResponse?.balance !== undefined) {
+              toast.success('Wallet recharged successfully');
+              setIsAddAmountOpen(false);
+              setAddAmountValue('');
+              
+              dispatch(getWalletBalanceRequest());
+              dispatch(getWalletTransactionsRequest());
+            } else {
+              toast.error('Payment verification failed. Please contact support.');
+            }
+          } catch (err) {
+            console.error(err);
+            toast.error('Payment verification failed. Please contact support.');
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            toast.error('Payment cancelled');
+          }
+        },
+        theme: {
+          color: '#1E3A8A'
+        }
+      };
+      
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.on('payment.failed', function (response) {
+        toast.error('Payment Failed: ' + response.error.description);
+      });
+      paymentObject.open();
+
+    } catch (err) {
+      console.error(err);
+      toast.error('Unable to create payment. Please try again.');
     }
   };
 
