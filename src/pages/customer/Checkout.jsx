@@ -605,7 +605,7 @@ const Checkout = () => {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span>Platform Fee <span className="text-[10px] text-[#C2410C] font-bold cursor-pointer hover:underline ml-1">Know More</span></span>
+                  <span>Platform Fee</span>
                   <span className="font-semibold text-emerald-600">{deliveryCharge ? formatCurrency(deliveryCharge) : 'FREE'}</span>
                 </div>
               </div>
