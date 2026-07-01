@@ -11,14 +11,13 @@ import { Minus, Plus, Image as ImageIcon } from 'lucide-react';
 import { getLocalProductImage } from '../../../utils/productImages';
 import ProductCardRating from './ProductCardRating';
 
-function ProductImage({ alt, src, product }) {
-  const [failedSrc, setFailedSrc] = useState(null);
+function ProductImage({ alt, product }) {
+  const [failedSrc, setFailedSrc] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  const thumbnailUrl = product?.thumbnailUrl || product?.thumbnail;
-  const imageSrc = thumbnailUrl && !failedSrc ? thumbnailUrl : src;
+  const imageSrc = product?.thumbnailUrl || product?.thumbnail || product?.images?.[0];
   
-  if (!imageSrc || failedSrc === imageSrc) {
+  if (!imageSrc || failedSrc) {
     return (
       <div className="flex flex-col items-center justify-center text-slate-300 w-full h-full bg-slate-50">
         <ImageIcon className="w-12 h-12 mb-2 stroke-[1.5]" />
@@ -39,7 +38,7 @@ function ProductImage({ alt, src, product }) {
         decoding="async"
         onLoad={() => setIsLoaded(true)}
         onError={() => {
-          setFailedSrc(imageSrc);
+          setFailedSrc(true);
           setIsLoaded(true);
         }}
         src={imageSrc}
@@ -137,7 +136,7 @@ const ProductCardCompact = memo(function ProductCardCompact({ product, viewMode 
       <div className={`relative flex items-center justify-center overflow-hidden shrink-0 bg-white ${
         isListView ? 'w-32 h-full border-r border-slate-100 p-2' : 'w-full h-48 p-4'
       }`}>
-        <ProductImage alt={productName} src={getLocalProductImage(product)} product={product} />
+        <ProductImage alt={productName} product={product} />
       </div>
 
       {/* Content Container */}

@@ -1,10 +1,9 @@
 import React from 'react';
-import { useReviews } from '../../../features/reviews/hooks/useReviews';
 import { RatingStars } from '../../../features/reviews/components/RatingStars';
 
 export default function ProductCardRating({ product }) {
   const averageRating = product?.averageRating || product?.rating || 0;
-  const totalReviews = product?.totalReviews || product?.reviews || 0;
+  const totalReviews = product?.reviewCount || product?.totalReviews || product?.reviews || 0;
   const isLoading = false; // Never loading here since data comes from product
 
   if (isLoading) {

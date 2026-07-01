@@ -73,11 +73,9 @@ function ProductDetail() {
   const { productDetails: product, detailsLoading: isLoading, detailsError: error } = useSelector((state) => state.product);
   
   const productImages =
-    product?.images?.length > 0
+    Array.isArray(product?.images) && product.images.length > 0
       ? product.images
-      : product?.thumbnail
-        ? [product.thumbnail]
-        : [];
+      : [product?.fullImageUrl || product?.thumbnailUrl || product?.thumbnail].filter(Boolean);
 
   const [selectedImage, setSelectedImage] = useState("");
 
@@ -198,7 +196,7 @@ function ProductDetail() {
                 <Expand className="h-4 w-4" />
               </button>
               <div className="w-full h-full flex items-center justify-center">
-                <ProductDetailImage alt={name} src={normalizeProductImage(selectedImage || product?.thumbnail)} />
+                <ProductDetailImage alt={name} src={normalizeProductImage(selectedImage)} />
               </div>
             </div>
 
