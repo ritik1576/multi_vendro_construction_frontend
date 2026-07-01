@@ -111,7 +111,7 @@ const ConfirmOrder = () => {
               <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm space-y-6">
                 <div>
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Order Number</h3>
-                  <p className="text-lg font-bold text-[#0F172A]">{displayOrderId}</p>
+                  <p className="text-lg font-bold text-[#0F172A]">Order #{displayOrderId}</p>
                 </div>
 
                 <div>
