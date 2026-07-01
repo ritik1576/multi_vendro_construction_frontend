@@ -13,6 +13,57 @@ import { Star } from 'lucide-react';
 import { getOrderApiId, getDisplayOrderNumber } from '../../utils/orderHelpers';
 import { useNavigate } from 'react-router-dom';
 
+const getPaymentMethodLabel = (order) => {
+  const payment = order?.paymentMethod;
+
+  const method =
+    typeof payment === "string"
+      ? payment
+      : payment?.method || payment?.name || "";
+
+  const description =
+    typeof payment === "object"
+      ? payment?.description || ""
+      : "";
+
+  const status =
+    typeof payment === "object"
+      ? payment?.paymentStatus || ""
+      : order?.paymentStatus || "";
+
+  const methodLower = String(method).toLowerCase();
+  const statusLower = String(status).toLowerCase();
+
+  if (
+    methodLower.includes("razorpay") ||
+    methodLower.includes("online") ||
+    methodLower.includes("upi")
+  ) {
+    return "Online Payment";
+  }
+
+  if (methodLower.includes("cod") || methodLower.includes("cash")) {
+    return "Cash on Delivery";
+  }
+
+  if (methodLower.includes("wallet")) {
+    return "Wallet";
+  }
+
+  if (statusLower === "paid") {
+    return "Online Payment";
+  }
+
+  return description || "Not available";
+};
+
+const getPaymentStatusLabel = (order) => {
+  const payment = order?.paymentMethod;
+  return typeof payment === "object"
+    ? payment?.paymentStatus
+    : order?.paymentStatus;
+};
+
 function OrderDetail() {
   const { orderId } = useParams();
   const dispatch = useDispatch();
@@ -65,12 +116,12 @@ function OrderDetail() {
   const displayOrder = currentOrder;
 
   const apiOrderId = getOrderApiId(displayOrder) || orderId;
-  const displayOrderId = getDisplayOrderNumber(displayOrder);
+  const displayOrderId = displayOrder?.orderNumber || displayOrder?.tracking?.orderNumber || (displayOrder?.id ? `INFR-LOCAL-${displayOrder.id}` : (displayOrder?._id ? `INFR-LOCAL-${displayOrder._id}` : `INFR-LOCAL-${apiOrderId}`));
   
   const cartItems = displayOrder?.items || [];
   const deliveryCharge = displayOrder?.amount?.delivery ?? ((cartItems.length > 0) ? (displayOrder?.shippingCharge ?? 99) : 0);
   const subtotal = displayOrder?.amount?.itemsSubtotal ?? displayOrder?.subtotal ?? cartItems.reduce((sum, item) => sum + (item.price || getCartItemPrice(item)) * (item.quantity || 1), 0);
-  const grandTotal = displayOrder?.amount?.totalAmount ?? displayOrder?.totalAmount ?? (subtotal + deliveryCharge);
+  const grandTotal = displayOrder?.amount?.totalAmount || displayOrder?.totalAmount || displayOrder?.grandTotal || 0;
   const orderStatus = displayOrder?.displayStatus || displayOrder?.orderStatus || displayOrder?.status || 'Pending';
 
   const getStepIndex = (status) => {
@@ -315,10 +366,10 @@ function OrderDetail() {
                       <div>
                         <h3 className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Payment Method</h3>
                         <p className="text-[13px] font-bold text-[#0F172A]">
-                          {displayOrder?.paymentMethod?.method || displayOrder?.paymentMethod || 'Cash on Delivery'}
+                          {getPaymentMethodLabel(displayOrder)}
                         </p>
                         <p className="text-[13px] text-slate-600 mt-0.5">
-                          {displayOrder?.paymentMethod === 'online' ? 'Paid Online' : 'Pay at your doorstep'}
+                          {String(getPaymentStatusLabel(displayOrder) || 'Pending').toLowerCase() === 'paid' || getPaymentMethodLabel(displayOrder) === 'Online Payment' ? 'Paid Online' : 'Pay at your doorstep'}
                         </p>
                       </div>
                     </div>
