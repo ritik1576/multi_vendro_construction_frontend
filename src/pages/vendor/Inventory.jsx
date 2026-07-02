@@ -47,10 +47,10 @@ const Inventory = () => {
   };
 
   const getProductStatus = (product) => {
-    const stock = Number(product.stockQuantity || product.qty || 0);
-    if (stock <= 0) return 'OUT OF STOCK';
+    const stock = Number(product.stockQuantity ?? product.qty ?? 0);
+    if (stock <= 0 || product.inStock === false || product.inStock === 'false') return 'OUT OF STOCK';
     if (stock <= 20) return 'LOW STOCK';
-    return 'HEALTHY';
+    return 'ACTIVE';
   };
 
   const getProductPrice = (product) => Number(product.price || 0);
@@ -169,7 +169,7 @@ const Inventory = () => {
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
                 <option value="All">Stock Status</option>
-                <option value="HEALTHY">Healthy</option>
+                <option value="ACTIVE">Active</option>
                 <option value="LOW STOCK">Low Stock</option>
                 <option value="OUT OF STOCK">Out of Stock</option>
               </select>
@@ -196,7 +196,7 @@ const Inventory = () => {
               <div className="inline-flex items-center bg-orange-100 border border-orange-200 rounded-full px-3 py-1">
                 <span className="text-xs font-bold text-[#F97316]">
                   <span className="text-orange-700/70 mr-1">Status:</span>
-                  {selectedStatus === 'HEALTHY' ? 'Healthy' : selectedStatus === 'LOW STOCK' ? 'Low Stock' : 'Out of Stock'}
+                  {selectedStatus === 'ACTIVE' ? 'Active' : selectedStatus === 'LOW STOCK' ? 'Low Stock' : 'Out of Stock'}
                 </span>
                 <button onClick={() => setSelectedStatus('All')} className="ml-2 p-0.5 rounded-full hover:bg-orange-200 text-[#F97316] transition-colors">
                   <X className="h-3 w-3" />
@@ -267,9 +267,9 @@ const Inventory = () => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      {getProductStatus(item) === 'HEALTHY' && (
+                      {getProductStatus(item) === 'ACTIVE' && (
                         <span className="inline-flex items-center rounded bg-emerald-50 px-2.5 py-0.5 text-[11px] font-extrabold tracking-wider uppercase text-emerald-700">
-                          Healthy
+                          Active
                         </span>
                       )}
                       {getProductStatus(item) === 'LOW STOCK' && (
@@ -288,7 +288,7 @@ const Inventory = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-[14px] font-extrabold ${getProductStatus(item) === 'OUT OF STOCK' ? 'text-red-500' : 'text-[#0F172A]'}`}>
-                        {item.stockQuantity || item.qty || 0}
+                        {item.stockQuantity ?? item.qty ?? 0}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">

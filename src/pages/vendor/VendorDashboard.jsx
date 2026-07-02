@@ -61,14 +61,6 @@ const VendorDashboard = () => {
             <h1 className="text-2xl font-extrabold text-[#0F172A]">Welcome, {vendorName}</h1>
             <p className="text-sm font-medium text-slate-500 mt-1">Here is your business summary and performance metrics.</p>
           </div>
-          
-          {/* KYC Status Badge */}
-          {kycStatus && !loadingKyc && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm">
-              <div className={`w-2 h-2 rounded-full ${kycStatus.status === 'APPROVED' ? 'bg-emerald-500' : kycStatus.status === 'PENDING' ? 'bg-orange-500' : 'bg-red-500'}`}></div>
-              <span className="text-[13px] font-extrabold text-slate-700 tracking-wider">KYC: {kycStatus.status}</span>
-            </div>
-          )}
         </div>
 
         {/* KPI Section */}

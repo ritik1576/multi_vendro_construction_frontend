@@ -1,46 +1,33 @@
-import { useState, useCallback, useEffect } from 'react';
-import { categoryService } from '../services/categoryService';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getCategoriesRequest } from '../../../redux/categoryActions';
 import { normalizeCategory } from '../utils/categoryIconMap';
 
 export const useCategories = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const { categories: rawCategories, loading, error } = useSelector(state => state.category);
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await categoryService.getCategoriesApi();
-      let dataList = [];
-      if (Array.isArray(response)) {
-        dataList = response;
-      } else if (response?.data && Array.isArray(response.data)) {
-        dataList = response.data;
-      } else if (response?.data?.data && Array.isArray(response.data.data)) {
-        dataList = response.data.data;
-      }
-      
-      // Extract string names and normalize
-      const mapped = dataList.map(item => {
-        const catName = typeof item === 'string' ? item : (item.name || item.categoryName || item.category || '');
-        return normalizeCategory(catName);
-      }).filter(Boolean);
-
-      // Remove duplicates
-      const unique = [...new Set(mapped)];
-      setCategories(unique);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to load categories');
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchCategories = useCallback(() => {
+    dispatch(getCategoriesRequest());
+  }, [dispatch]);
 
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    if (!rawCategories || rawCategories.length === 0) {
+      fetchCategories();
+    }
+  }, [rawCategories, fetchCategories]);
+
+  const categories = useMemo(() => {
+    let dataList = rawCategories || [];
+    if (!Array.isArray(dataList)) return [];
+
+    const mapped = dataList.map(item => {
+      const catName = typeof item === 'string' ? item : (item.name || item.categoryName || item.category || '');
+      return normalizeCategory(catName);
+    }).filter(Boolean);
+
+    return [...new Set(mapped)];
+  }, [rawCategories]);
 
   return { categories, loading, error, refetch: fetchCategories };
 };

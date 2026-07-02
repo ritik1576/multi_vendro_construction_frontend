@@ -61,6 +61,7 @@ const Checkout = () => {
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [addressErrors, setAddressErrors] = useState({});
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   
   const { addresses = [], loading: isLoadingAddresses } = useSelector((state) => state.address || {});
   const { balanceData } = useSelector((state) => state.wallet || {});
@@ -203,10 +204,12 @@ const Checkout = () => {
     }
 
     if (paymentMethod === 'online') {
+      setIsPaymentProcessing(true);
       try {
         const isScriptLoaded = await loadRazorpayScript();
         if (!isScriptLoaded) {
-          toast.error('Razorpay SDK failed to load. Are you online?');
+          setIsPaymentProcessing(false);
+          toast.error('Unable to load payment gateway. Please try again.');
           return;
         }
 
@@ -215,10 +218,12 @@ const Checkout = () => {
         const couponCode = appliedCouponData?.code || null;
 
         if (!cartId) {
+          setIsPaymentProcessing(false);
           toast.error('Cart id not found. Please refresh cart.');
           return;
         }
         if (!addressId) {
+          setIsPaymentProcessing(false);
           toast.error('Please select delivery address.');
           return;
         }
@@ -230,7 +235,8 @@ const Checkout = () => {
         });
         
         if (!paymentRes || !paymentRes.razorpayOrderId) {
-          toast.error('Failed to initialize payment. Please try again.');
+          setIsPaymentProcessing(false);
+          toast.error('Unable to start payment. Please try again.');
           return;
         }
 
@@ -242,6 +248,8 @@ const Checkout = () => {
           description: 'Payment for your order',
           order_id: paymentRes.razorpayOrderId,
           handler: async function (response) {
+            setIsPaymentProcessing(true);
+            const verifyToastId = toast.loading('Verifying Payment...');
             try {
               const verifyRes = await paymentService.verifyOnlinePaymentApi({
                 orderId: paymentRes.orderId,
@@ -253,21 +261,28 @@ const Checkout = () => {
               const finalOrderId = verifyRes?.orderId || verifyRes?.data?.orderId || paymentRes.orderId;
 
               if (finalOrderId) {
+                toast.dismiss(verifyToastId);
                 toast.success('Payment verified and order placed successfully');
                 dispatch(getCartRequest()); // Refresh Cart
+                setIsPaymentProcessing(false);
                 
                 // Navigate only with orderId, do not pass stale data
                 navigate('/order-confirmation', { state: { orderId: finalOrderId } });
               } else {
+                toast.dismiss(verifyToastId);
+                setIsPaymentProcessing(false);
                 toast.error('Payment verified but order id missing. Please check order history.');
               }
             } catch (err) {
+              toast.dismiss(verifyToastId);
               console.error(err);
+              setIsPaymentProcessing(false);
               toast.error('Payment verification failed');
             }
           },
           modal: {
             ondismiss: function () {
+              setIsPaymentProcessing(false);
               toast.error('Payment cancelled');
             }
           },
@@ -283,12 +298,15 @@ const Checkout = () => {
         
         const paymentObject = new window.Razorpay(options);
         paymentObject.on('payment.failed', function (response) {
+          setIsPaymentProcessing(false);
           toast.error('Payment Failed: ' + response.error.description);
         });
         paymentObject.open();
+        setIsPaymentProcessing(false);
 
       } catch (err) {
         console.error(err);
+        setIsPaymentProcessing(false);
         toast.error('Payment error occurred.');
       }
       return;
@@ -352,7 +370,8 @@ const Checkout = () => {
                 <button
                   type="button"
                   onClick={handleBeginEdit}
-                  className="inline-flex items-center justify-center rounded border border-slate-300 bg-white px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-[#1E3A8A] transition hover:bg-slate-50"
+                  disabled={isPaymentProcessing}
+                  className={`inline-flex items-center justify-center rounded border border-slate-300 bg-white px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-[#1E3A8A] transition ${isPaymentProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-50'}`}
                 >
                   ADD NEW ADDRESS
                 </button>
@@ -527,14 +546,16 @@ const Checkout = () => {
                                       <button
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleDeleteAddress(addr.id); }}
-                                        className="rounded border border-slate-200 px-4 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                                        disabled={isPaymentProcessing}
+                                        className={`rounded border border-slate-200 px-4 py-1.5 text-[11px] font-bold text-slate-600 transition-colors ${isPaymentProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-50 hover:text-slate-900'}`}
                                       >
                                         REMOVE
                                       </button>
                                       <button
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleEditAddress(addr); }}
-                                        className="rounded border border-slate-200 px-4 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                                        disabled={isPaymentProcessing}
+                                        className={`rounded border border-slate-200 px-4 py-1.5 text-[11px] font-bold text-slate-600 transition-colors ${isPaymentProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-50 hover:text-slate-900'}`}
                                       >
                                         EDIT
                                       </button>
@@ -569,8 +590,8 @@ const Checkout = () => {
                 ].map((option) => (
                   <label
                     key={option.value}
-                    onClick={() => !option.disabled && setPaymentMethod(option.value)}
-                    className={`flex ${option.disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} items-start gap-4 rounded-xl border p-5 transition-all ${paymentMethod === option.value ? 'border-2 border-[#1E3A8A] shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}
+                    onClick={() => !option.disabled && !isPaymentProcessing && setPaymentMethod(option.value)}
+                    className={`flex ${option.disabled || isPaymentProcessing ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} items-start gap-4 rounded-xl border p-5 transition-all ${paymentMethod === option.value ? 'border-2 border-[#1E3A8A] shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}
                   >
                     <div className="mt-1 shrink-0">
                       <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === option.value ? 'border-[#1E3A8A]' : 'border-slate-300'}`}>
@@ -605,7 +626,7 @@ const Checkout = () => {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span>Platform Fee <span className="text-[10px] text-[#C2410C] font-bold cursor-pointer hover:underline ml-1">Know More</span></span>
+                  <span>Platform Fee</span>
                   <span className="font-semibold text-emerald-600">{deliveryCharge ? formatCurrency(deliveryCharge) : 'FREE'}</span>
                 </div>
               </div>
@@ -620,10 +641,20 @@ const Checkout = () => {
               <button
                 type="button"
                 onClick={handlePlaceOrder}
-                disabled={!canPlaceOrder}
-                className={`mt-6 w-full rounded px-4 py-3.5 text-[15px] font-bold text-white shadow-sm transition ${canPlaceOrder ? 'bg-[#C2410C] hover:bg-[#9A3412]' : 'cursor-not-allowed bg-slate-300'}`}
+                disabled={!canPlaceOrder || isPaymentProcessing}
+                className={`mt-6 w-full rounded px-4 py-3.5 text-[15px] font-bold text-white shadow-sm transition ${canPlaceOrder && !isPaymentProcessing ? 'bg-[#C2410C] hover:bg-[#9A3412]' : 'cursor-not-allowed bg-slate-300'}`}
               >
-                CONTINUE
+                {isPaymentProcessing && paymentMethod === 'online' ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Opening Payment...
+                  </span>
+                ) : (
+                  'CONTINUE'
+                )}
               </button>
 
               {!canPlaceOrder && (

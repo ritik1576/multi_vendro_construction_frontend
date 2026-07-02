@@ -73,11 +73,9 @@ function ProductDetail() {
   const { productDetails: product, detailsLoading: isLoading, detailsError: error } = useSelector((state) => state.product);
   
   const productImages =
-    product?.images?.length > 0
+    Array.isArray(product?.images) && product.images.length > 0
       ? product.images
-      : product?.thumbnail
-        ? [product.thumbnail]
-        : [];
+      : [product?.fullImageUrl || product?.thumbnailUrl || product?.thumbnail].filter(Boolean);
 
   const [selectedImage, setSelectedImage] = useState("");
 
@@ -198,7 +196,7 @@ function ProductDetail() {
                 <Expand className="h-4 w-4" />
               </button>
               <div className="w-full h-full flex items-center justify-center">
-                <ProductDetailImage alt={name} src={normalizeProductImage(selectedImage || product?.thumbnail)} />
+                <ProductDetailImage alt={name} src={normalizeProductImage(selectedImage)} />
               </div>
             </div>
 
@@ -303,10 +301,6 @@ function ProductDetail() {
               {/* Shipping info small */}
               <div className="flex flex-col gap-2 text-[12px] text-slate-600 mb-5">
                  <div className="flex items-center gap-2">
-                   <Truck className="h-4 w-4 text-slate-400" />
-                   <span>Ships in 24 hrs from <strong>Mumbai Hub</strong></span>
-                 </div>
-                 <div className="flex items-center gap-2">
                    <RotateCcw className="h-4 w-4 text-slate-400" />
                    <span><strong>7 Day</strong> Return Policy</span>
                  </div>
@@ -358,36 +352,23 @@ function ProductDetail() {
               {/* Tech Specs */}
               <div>
                 <h3 className="text-[15px] font-bold text-[#0F172A] mb-3">Technical Specifications</h3>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
-                    <Box className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Coverage</p>
-                      <p className="text-[13px] font-medium text-slate-700 mt-0.5">140-150 sq.ft/L</p>
-                    </div>
+                {product.technicalSpecifications && Object.keys(product.technicalSpecifications).length > 0 ? (
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {Object.entries(product.technicalSpecifications).map(([key, value]) => (
+                      <div key={key} className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
+                        <Box className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                          </p>
+                          <p className="text-[13px] font-medium text-slate-700 mt-0.5">{value}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
-                    <Clock className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Drying Time</p>
-                      <p className="text-[13px] font-medium text-slate-700 mt-0.5">30 Mins (Surface)</p>
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
-                    <Box className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Recoatability</p>
-                      <p className="text-[13px] font-medium text-slate-700 mt-0.5">4-6 Hours</p>
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-2.5">
-                    <Droplets className="h-4 w-4 text-[#1E3A8A] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Dilution</p>
-                      <p className="text-[13px] font-medium text-slate-700 mt-0.5">40-45% with Water</p>
-                    </div>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-[13px] italic text-slate-500">No technical specifications available.</p>
+                )}
               </div>
             </div>
           </div>

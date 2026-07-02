@@ -47,7 +47,7 @@ const EditProduct = () => {
         brand: product.brand || '',
         price: product.price ? product.price.toString() : '0.00',
         discountPrice: product.discountPrice ? product.discountPrice.toString() : '0.00',
-        stock: (product.stockQuantity || product.quantity || product.qty || 0).toString(),
+        stock: (product.stockQuantity ?? product.quantity ?? product.qty ?? 0).toString(),
         sku: product.sku || '',
         unit: product.unit || '',
         shortDescription: product.shortDescription || '',
@@ -186,9 +186,9 @@ const EditProduct = () => {
                     <span className="text-sm font-bold text-slate-500">Status</span>
                     {Number(productData.stock) > 20 ? (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase tracking-wider">
-                        Healthy
+                        Active
                       </span>
-                    ) : Number(productData.stock) > 0 ? (
+                    ) : Number(productData.stock) > 0 && productData.inStock !== false && productData.inStock !== 'false' ? (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-amber-100 text-amber-700 uppercase tracking-wider">
                         Low Stock
                       </span>

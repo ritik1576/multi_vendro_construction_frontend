@@ -5,56 +5,7 @@ import ProductListingNavbar from '../../components/customer/catalog/ProductListi
 import { formatCurrency } from '../../context/cartUtils';
 import { orderService } from '../../services/orderService';
 
-const getPaymentMethodLabel = (order) => {
-  const payment = order?.paymentMethod;
-
-  const method =
-    typeof payment === "string"
-      ? payment
-      : payment?.method || payment?.name || "";
-
-  const description =
-    typeof payment === "object"
-      ? payment?.description || ""
-      : "";
-
-  const status =
-    typeof payment === "object"
-      ? payment?.paymentStatus || ""
-      : order?.paymentStatus || "";
-
-  const methodLower = String(method).toLowerCase();
-  const statusLower = String(status).toLowerCase();
-
-  if (
-    methodLower.includes("razorpay") ||
-    methodLower.includes("online") ||
-    methodLower.includes("upi")
-  ) {
-    return "Online Payment";
-  }
-
-  if (methodLower.includes("cod") || methodLower.includes("cash")) {
-    return "Cash on Delivery";
-  }
-
-  if (methodLower.includes("wallet")) {
-    return "Wallet";
-  }
-
-  if (statusLower === "paid") {
-    return "Online Payment";
-  }
-
-  return description || "Not available";
-};
-
-const getPaymentStatusLabel = (order) => {
-  const payment = order?.paymentMethod;
-  return typeof payment === "object"
-    ? payment?.paymentStatus
-    : order?.paymentStatus;
-};
+// Legacy helpers removed
 
 const ConfirmOrder = () => {
   const location = useLocation();
@@ -97,64 +48,42 @@ const ConfirmOrder = () => {
   }
 
   // Determine display values
-  let displayOrderId = 'Pending';
-  let displayPaymentMethod = 'Cash on Delivery';
+  let displayOrderId = '';
+  let displayPaymentMethod = { title: '', desc: '' };
   let displayTotalAmount = 0;
-  let displayAddress = {
-    name: 'Customer',
-    line1: '',
-    line2: '',
-    city: '',
-    state: '',
-    pincode: '',
-    country: 'India',
-    phone: ''
-  };
-  let trackOrderId = 'INF-99824';
+  let displayAddress = {};
+  let trackOrderId = '';
 
-  if (backendOrder) {
-    const orderData = backendOrder.data || backendOrder;
-    const orderNum = orderData.orderNumber || orderData.tracking?.orderNumber || (orderData.id ? `INFR-LOCAL-${orderData.id}` : (orderData._id ? `INFR-LOCAL-${orderData._id}` : ''));
-    displayOrderId = orderNum ? `Order #${orderNum}` : 'Order Confirmed';
+  const orderData = backendOrder ? (backendOrder.data || backendOrder) : passedOrderData;
+  
+  if (orderData) {
+    displayOrderId = orderData.orderNumber || '';
+    displayTotalAmount = orderData.amount?.totalAmount || 0;
     
-    displayPaymentMethod = getPaymentMethodLabel(orderData);
-    displayTotalAmount = orderData.amount?.totalAmount || orderData.totalAmount || orderData.grandTotal || 0;
-    
-    if (orderData.shippingAddress) {
-      displayAddress = orderData.shippingAddress;
+    if (orderData.deliveryAddress) {
+      displayAddress = orderData.deliveryAddress;
     }
     
-    trackOrderId = orderData.id || orderData._id || orderData.orderNumber || 'INF-99824';
-  } else {
-    // Fallback for COD or if passedOrderData exists
-    const fallbackOrderData = passedOrderData || {
-      totalAmount: 45000,
-      paymentMethod: 'cod',
-      shippingAddress: {
-        name: 'Ravi Kumar',
-        line1: 'Plot 22, Metro City Towers',
-        line2: 'Industrial Area, Sector 8',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560038',
-        country: 'India',
-        phone: '+91 98765 43210'
-      }
-    };
+    const pm = orderData.paymentMethod || {};
+    let pmTitle = pm.method || '';
+    let pmDesc = pm.description || '';
 
-    displayOrderId = lastPlacedOrder?.id || lastPlacedOrder?._id || lastPlacedOrder?.orderId || 'Pending';
-    displayTotalAmount = fallbackOrderData.totalAmount || fallbackOrderData.amount?.totalAmount || fallbackOrderData.grandTotal || 0;
-    
-    if (fallbackOrderData.paymentMethod === 'online') {
-      displayPaymentMethod = 'Online Payment';
-    } else if (fallbackOrderData.paymentMethod === 'wallet') {
-      displayPaymentMethod = 'Wallet Payment';
-    } else {
-      displayPaymentMethod = 'Cash on Delivery';
+    if (pm.method === 'UPI') {
+      pmTitle = 'UPI';
+      pmDesc = pmDesc || 'Paid via UPI';
+    } else if (pm.method === 'COD') {
+      pmTitle = 'Cash on Delivery';
+      pmDesc = pmDesc || 'Pay on Delivery';
+    } else if (pm.method === 'WALLET') {
+      pmTitle = 'Wallet';
+      pmDesc = pmDesc || 'Paid using Wallet Balance';
     }
     
-    displayAddress = fallbackOrderData.shippingAddress;
-    trackOrderId = lastPlacedOrder?.id || lastPlacedOrder?._id || lastPlacedOrder?.orderId || 'INF-99824';
+    displayPaymentMethod = { title: pmTitle, desc: pmDesc };
+    trackOrderId = orderData.orderNumber || '';
+  } else if (lastPlacedOrder) {
+    displayOrderId = lastPlacedOrder.orderNumber || '';
+    trackOrderId = lastPlacedOrder.orderNumber || '';
   }
 
   return (
@@ -182,13 +111,14 @@ const ConfirmOrder = () => {
               <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm space-y-6">
                 <div>
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Order Number</h3>
-                  <p className="text-lg font-bold text-[#0F172A]">{displayOrderId}</p>
+                  <p className="text-lg font-bold text-[#0F172A]">Order #{displayOrderId}</p>
                 </div>
 
                 <div>
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Payment Method</h3>
-                  <div className="inline-flex items-center rounded bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-700">
-                    {displayPaymentMethod}
+                  <div className="inline-flex flex-col items-start justify-center rounded bg-slate-100 px-3 py-1.5">
+                    <span className="text-[12px] font-bold text-slate-700">{displayPaymentMethod.title}</span>
+                    {displayPaymentMethod.desc && <span className="text-[10px] text-slate-500">{displayPaymentMethod.desc}</span>}
                   </div>
                 </div>
                 
@@ -201,12 +131,10 @@ const ConfirmOrder = () => {
               <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-4">Delivery Address</h3>
                 <div className="space-y-1.5 text-[13px] text-slate-600">
-                  <p className="text-[14px] font-bold text-[#0F172A] mb-2">{displayAddress?.name || ''}</p>
-                  <p>{displayAddress?.line1 || ''}</p>
-                  {displayAddress?.line2 && <p>{displayAddress.line2}</p>}
-                  <p>{displayAddress?.city || ''}, {displayAddress?.state || ''} - {displayAddress?.pincode || ''}</p>
-                  <p>{displayAddress?.country || ''}</p>
-                  <p className="mt-3 font-semibold text-slate-700">Mobile: {displayAddress?.phone || ''}</p>
+                  {displayAddress?.contactName && <p className="text-[14px] font-bold text-[#0F172A] mb-2">{displayAddress.contactName}</p>}
+                  {displayAddress?.addressLine && <p>{displayAddress.addressLine}</p>}
+                  {displayAddress?.cityStatePincode && <p>{displayAddress.cityStatePincode}</p>}
+                  {displayAddress?.contactPhone && <p className="mt-3 font-semibold text-slate-700">Mobile: {displayAddress.contactPhone}</p>}
                 </div>
               </div>
             </div>
