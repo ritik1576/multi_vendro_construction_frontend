@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import ProductListingNavbar from '../../components/customer/catalog/ProductListingNavbar';
 import { formatCurrency } from '../../context/cartUtils';
 import { orderService } from '../../services/orderService';
@@ -9,32 +8,49 @@ import { orderService } from '../../services/orderService';
 
 const ConfirmOrder = () => {
   const location = useLocation();
-  const lastPlacedOrder = useSelector(state => state.order.lastPlacedOrder);
-  
-  const passedOrderData = location.state?.orderData;
-  const passedOrderId = location.state?.orderId;
+  const searchParams = new URLSearchParams(location.search);
+  const orderId = searchParams.get('orderId');
 
-  const [backendOrder, setBackendOrder] = useState(null);
-  const [loading, setLoading] = useState(!!passedOrderId);
+  const [backendOrder, setBackendOrder] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("latestOrder");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const savedId = parsed?.id || parsed?.orderId || parsed?.data?.id;
+        if (savedId && String(savedId) === String(orderId)) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse session storage", e);
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState(!backendOrder && !!orderId);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (passedOrderId) {
+      if (orderId) {
         try {
-          setLoading(true);
-          const data = await orderService.getOrderById(passedOrderId);
+          if (!backendOrder) setLoading(true);
+          const data = await orderService.getOrderById(orderId);
           setBackendOrder(data);
+          sessionStorage.setItem("latestOrder", JSON.stringify(data));
         } catch (error) {
           console.error("Failed to fetch order details", error);
+          if (!backendOrder) setError("Failed to load order details.");
         } finally {
           setLoading(false);
         }
       } else {
         setLoading(false);
+        setError("Invalid order ID.");
       }
     };
     fetchOrder();
-  }, [passedOrderId]);
+  }, [orderId]);
 
   if (loading) {
     return (
@@ -47,6 +63,18 @@ const ConfirmOrder = () => {
     );
   }
 
+  if (error && !backendOrder) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <ProductListingNavbar />
+        <div className="flex h-[60vh] items-center justify-center flex-col">
+          <p className="text-red-500 font-bold mb-4">{error}</p>
+          <Link to="/" className="text-[#1E3A8A] underline">Return Home</Link>
+        </div>
+      </div>
+    );
+  }
+
   // Determine display values
   let displayOrderId = '';
   let displayPaymentMethod = { title: '', desc: '' };
@@ -54,36 +82,39 @@ const ConfirmOrder = () => {
   let displayAddress = {};
   let trackOrderId = '';
 
-  const orderData = backendOrder ? (backendOrder.data || backendOrder) : passedOrderData;
+  const orderData = backendOrder ? (backendOrder.data || backendOrder) : null;
   
   if (orderData) {
-    displayOrderId = orderData.orderNumber || '';
-    displayTotalAmount = orderData.amount?.totalAmount || 0;
+    displayOrderId = orderData.orderNumber || orderData.id || '';
+    displayTotalAmount = orderData.amount?.totalAmount || orderData.totalAmount || 0;
     
-    if (orderData.deliveryAddress) {
-      displayAddress = orderData.deliveryAddress;
+    if (orderData.deliveryAddress || orderData.shippingAddress) {
+      displayAddress = orderData.deliveryAddress || orderData.shippingAddress;
     }
     
     const pm = orderData.paymentMethod || {};
-    let pmTitle = pm.method || '';
-    let pmDesc = pm.description || '';
+    const pmMethod = typeof pm === 'string' ? pm : pm.method;
+    const pmDescription = typeof pm === 'string' ? '' : pm.description;
 
-    if (pm.method === 'UPI') {
+    let pmTitle = pmMethod || '';
+    let pmDesc = pmDescription || '';
+
+    if (pmTitle === 'UPI') {
       pmTitle = 'UPI';
       pmDesc = pmDesc || 'Paid via UPI';
-    } else if (pm.method === 'COD') {
+    } else if (pmTitle === 'COD' || pmTitle === 'Cash on Delivery') {
       pmTitle = 'Cash on Delivery';
       pmDesc = pmDesc || 'Pay on Delivery';
-    } else if (pm.method === 'WALLET') {
+    } else if (pmTitle === 'WALLET' || pmTitle === 'Wallet') {
       pmTitle = 'Wallet';
       pmDesc = pmDesc || 'Paid using Wallet Balance';
+    } else if (pmTitle === 'Online') {
+      pmTitle = 'Online Payment';
+      pmDesc = pmDesc || 'Paid securely online';
     }
     
     displayPaymentMethod = { title: pmTitle, desc: pmDesc };
-    trackOrderId = orderData.orderNumber || '';
-  } else if (lastPlacedOrder) {
-    displayOrderId = lastPlacedOrder.orderNumber || '';
-    trackOrderId = lastPlacedOrder.orderNumber || '';
+    trackOrderId = orderData.orderNumber || orderData.id || '';
   }
 
   return (

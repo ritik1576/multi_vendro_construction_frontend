@@ -16,6 +16,8 @@ import toast from 'react-hot-toast';
 import { getWalletBalanceRequest } from '../../redux/walletActions';
 import { loadRazorpayScript } from '../../utils/loadRazorpayScript';
 import { paymentService } from '../../services/paymentService';
+import { cartService } from '../../services/cartService';
+import { orderService } from '../../services/orderService';
 
 const requiredFields = ['name', 'phone', 'line1', 'city', 'state', 'pincode'];
 
@@ -188,14 +190,32 @@ const Checkout = () => {
       return;
     }
 
+    const userId = authUser?.id || authUser?.userId || authUser?._id || 21;
+    setIsPaymentProcessing(true);
+
+    let freshCartData;
+    try {
+      const freshCart = await cartService.getCart(userId);
+      freshCartData = freshCart?.data || freshCart;
+      if (!freshCartData || !freshCartData.items || freshCartData.items.length === 0) {
+        setIsPaymentProcessing(false);
+        toast.error('Cart is empty or failed to fetch cart.');
+        return;
+      }
+    } catch (err) {
+      console.error('Failed to fetch latest cart', err);
+      setIsPaymentProcessing(false);
+      toast.error('Failed to sync cart data. Please try again.');
+      return;
+    }
+
     const orderPayload = {
-      userId: authUser?.id || authUser?.userId || authUser?._id || 21,
+      userId,
       addressId: address.id,
       paymentMethod: paymentMethod === 'wallet' ? 'Wallet' : paymentMethod === 'cod' ? 'COD' : 'Online',
-      items: cartItems.map(item => ({
-        cartItemId: item.cartItemId || item.id,
-        productId: item.productId || item.productID || item.id,
-        quantity: item.quantity || 1
+      items: freshCartData.items.map(item => ({
+        cartItemId: item.cartItemId,
+        quantity: item.quantity
       }))
     };
     
@@ -204,7 +224,6 @@ const Checkout = () => {
     }
 
     if (paymentMethod === 'online') {
-      setIsPaymentProcessing(true);
       try {
         const isScriptLoaded = await loadRazorpayScript();
         if (!isScriptLoaded) {
@@ -213,7 +232,7 @@ const Checkout = () => {
           return;
         }
 
-        const cartId = cartData?.cartId || cartData?.id;
+        const cartId = freshCartData?.cartId || freshCartData?.id;
         const addressId = address?.id;
         const couponCode = appliedCouponData?.code || null;
 
@@ -266,8 +285,8 @@ const Checkout = () => {
                 dispatch(getCartRequest()); // Refresh Cart
                 setIsPaymentProcessing(false);
                 
-                // Navigate only with orderId, do not pass stale data
-                navigate('/order-confirmation', { state: { orderId: finalOrderId } });
+                sessionStorage.setItem("latestOrder", JSON.stringify(verifyRes?.data || { id: finalOrderId }));
+                navigate(`/order-confirmation?orderId=${finalOrderId}`);
               } else {
                 toast.dismiss(verifyToastId);
                 setIsPaymentProcessing(false);
@@ -312,23 +331,19 @@ const Checkout = () => {
       return;
     }
 
-    dispatch(placeOrderRequest(orderPayload));
-    
-    const confirmationData = {
-      totalAmount: total,
-      paymentMethod: paymentMethod,
-      shippingAddress: {
-        name: address.name,
-        line1: address.line1,
-        line2: address.line2,
-        city: address.city,
-        state: address.state,
-        pincode: address.pincode,
-        country: address.country,
-        phone: address.phone
-      }
-    };
-    navigate('/order-confirmation', { state: { orderData: confirmationData } });
+    try {
+      const response = await orderService.placeOrder(orderPayload);
+      toast.success('Order placed successfully');
+      dispatch(getCartRequest()); // Refresh Cart
+      setIsPaymentProcessing(false);
+      
+      sessionStorage.setItem("latestOrder", JSON.stringify(response.data));
+      navigate(`/order-confirmation?orderId=${response.data.id || response.data.orderId}`);
+    } catch (err) {
+      console.error('Order placement failed', err);
+      setIsPaymentProcessing(false);
+      toast.error(err.response?.data?.message || 'Failed to place order');
+    }
   };
 
   useEffect(() => {
